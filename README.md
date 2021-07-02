@@ -1,0 +1,5 @@
+```
+source environment.env
+pip install -r requirements.txt
+flask run
+```
