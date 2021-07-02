@@ -140,6 +140,21 @@ def add_review():
   db.session.commit()
   return 'Done', 200
 
+"""
+Request
+  {
+    'beach_id': '1'
+  }
+
+Response
+  {
+    'data': [
+      {
+        
+      }
+    ]
+  }
+"""
 @app.route("/review/get")
 def get_reviews():
   beach_id = request.json.get('beach_id')
