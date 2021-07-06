@@ -23,8 +23,8 @@ class Spot(db.Model):
     num_reviews = db.Column(db.Integer)
     entry_map = db.Column(db.String)
 
-    reviews = db.relationship("Review")
-    images = db.relationship("Image")
+    reviews = db.relationship("Review", backref="spot")
+    images = db.relationship("Image", backref="spot")
 
 class Review(db.Model):
     id = db.Column(db.Integer, primary_key=True)

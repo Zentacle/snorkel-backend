@@ -63,8 +63,8 @@ def get_user_videos():
     })
   return { 'data': output }
 
-@app.route("/user/signup")
-def get_spots():
+@app.route("/user/signup", methods=["POST"])
+def user_signup():
   display_name = request.json.get('display_name')
   email = request.json.get('email')
   username = request.json.get('username')
@@ -78,7 +78,7 @@ def get_spots():
   )
   db.session.add(user)
   db.session.commit()
-  return 'Done', user.id
+  return { 'user_id': user.id }
 
 @app.route("/spots/get")
 def get_spots():
@@ -133,10 +133,14 @@ def add_review():
   )
   db.session.add(review)
 
-  spot = Spot.query.filter_by(beach_id=beach_id).all()
-  new_rating = ((spot.rating * spot.num_ratings) + rating) / (spot.num_ratings + 1)
-  spot.rating = new_rating
-  spot.num_ratings += 1
+  spot = Spot.query.filter_by(id=beach_id).first()
+  if not spot.num_reviews:
+    spot.num_reviews = 1
+    spot.rating = rating
+  else:
+    new_rating = ((spot.rating * spot.num_reviews) + rating) / (spot.num_reviews + 1)
+    spot.rating = new_rating
+    spot.num_reviews += 1
   db.session.commit()
   return 'Done', 200
 
@@ -150,16 +154,16 @@ Response
   {
     'data': [
       {
-        
+
       }
     ]
   }
 """
 @app.route("/review/get")
 def get_reviews():
-  beach_id = request.json.get('beach_id')
+  beach_id = request.args.get('beach_id')
 
-  reviews = Spot.query.filter_by(beach_id=beach_id).all()
+  reviews = Review.query.filter_by(beach_id=beach_id).all()
   output = []
   for review in reviews:
     spot_data = review.__dict__
