@@ -2,10 +2,9 @@ from __future__ import print_function
 from flask import Flask, request, redirect, url_for, session, jsonify, render_template
 from flask_cors import CORS
 import os
-from sendgrid import SendGridAPIClient
-from sendgrid.helpers.mail import Mail
 import os.path
 from app.models import *
+from sqlalchemy.orm import joinedload
 
 app = Flask(__name__)
 app.secret_key = 'the random string'
@@ -163,10 +162,12 @@ Response
 def get_reviews():
   beach_id = request.args.get('beach_id')
 
-  reviews = Review.query.filter_by(beach_id=beach_id).all()
+  reviews = Review.query.options(joinedload('user')).filter_by(beach_id=beach_id).all()
   output = []
   for review in reviews:
     spot_data = review.__dict__
+    spot_data['user'] = review.user.__dict__
+    spot_data['user'].pop('_sa_instance_state', None)
     spot_data.pop('_sa_instance_state', None)
     output.append(spot_data)
   return { 'data': output }

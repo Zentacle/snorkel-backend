@@ -9,7 +9,7 @@ class User(db.Model):
     username = db.Column(db.String)
     profile_pic = db.Column(db.String)
 
-    reviews = db.relationship("Review")
+    reviews = db.relationship("Review", backref=db.backref('user', lazy=True))
     images = db.relationship("Image")
 
 class Spot(db.Model):
