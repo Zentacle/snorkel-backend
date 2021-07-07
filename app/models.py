@@ -1,4 +1,5 @@
 from flask_sqlalchemy import SQLAlchemy
+from datetime import datetime
 
 db = SQLAlchemy()
 
@@ -32,7 +33,9 @@ class Review(db.Model):
     text = db.Column(db.String)
     author_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     beach_id = db.Column(db.Integer, db.ForeignKey('spot.id'), nullable=False)
-    visibility = db.Column(db.Integer, nullable=True) # in meters
+    visibility = db.Column(db.Integer, nullable=True) # in ft
+    date_posted = db.Column(db.DateTime, nullable=False,
+        default=datetime.utcnow)
     activity_type = db.Column(db.String)
 
 class Image(db.Model):
