@@ -40,11 +40,10 @@ def getAllData():
     users = User.query.all()
     output = []
     for user in users:
-      output.append({
-        'email': user.email,
-        'video_id': user.video_id,
-        'is_processed': user.is_processed,
-      })
+      user_data = user.__dict__
+      user_data.pop('password', None)
+      user_data.pop('_sa_instance_state', None)
+      output.append(user_data)
     return { 'data': output }
 
 """
@@ -92,7 +91,7 @@ def user_signup():
   responseObject = {
     'status': 'success',
     'message': 'Successfully registered.',
-    'auth_token': auth_token.decode()
+    'auth_token': auth_token
   }
   return responseObject, 201
 
@@ -105,13 +104,13 @@ def user_login():
   user = User.query.filter_by(email=email).first()
   if not user:
     user = User.query.filter_by(username=username).first()
-  if bcrypt.checkpw(password, user.password):
+  if bcrypt.checkpw(password.encode('utf-8'), user.password):
     auth_token = user.encode_auth_token(user.id)
     if auth_token:
       responseObject = {
           'status': 'success',
           'message': 'Successfully logged in.',
-          'auth_token': auth_token.decode()
+          'auth_token': auth_token
       }
       return responseObject
   else:
@@ -148,10 +147,15 @@ def add_spot():
 
 @app.route("/review/add", methods=["POST"])
 def add_review():
-  token = request.json.get('token')
+  auth_header = request.headers.get('Authorization')
+  if auth_header:
+      auth_token = auth_header.split(" ")[1]
+  else:
+      auth_token = ''
   user = None
-  if token:
-    user_id = user.decode_auth_token(token)
+  if auth_token:
+    user_id = User.decode_auth_token(auth_token)
+    print(user_id)
     user = User.query.filter_by(id=user_id).first()
   else:
     email = request.json.get('email')
@@ -210,6 +214,7 @@ def get_reviews():
   for review in reviews:
     spot_data = review.__dict__
     spot_data['user'] = review.user.__dict__
+    spot_data['user'].pop('password', None)
     spot_data['user'].pop('_sa_instance_state', None)
     spot_data.pop('_sa_instance_state', None)
     output.append(spot_data)

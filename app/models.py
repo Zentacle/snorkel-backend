@@ -1,5 +1,5 @@
 from flask_sqlalchemy import SQLAlchemy
-from datetime import datetime
+from datetime import datetime, timedelta
 from flask import current_app as app
 import jwt
 
@@ -27,8 +27,8 @@ class User(db.Model):
         """
         try:
             payload = {
-                'exp': datetime.datetime.utcnow() + datetime.timedelta(days=0, seconds=5),
-                'iat': datetime.datetime.utcnow(),
+                'exp': datetime.utcnow() + timedelta(days=365),
+                'iat': datetime.utcnow(),
                 'sub': user_id
             }
             return jwt.encode(
@@ -47,7 +47,7 @@ class User(db.Model):
         :return: integer|string
         """
         try:
-            payload = jwt.decode(auth_token, app.config.get('SECRET_KEY'))
+            payload = jwt.decode(auth_token, app.config.get('SECRET_KEY'), algorithms="HS256")
             return payload['sub']
         except jwt.ExpiredSignatureError:
             return 'Signature expired. Please log in again.'
