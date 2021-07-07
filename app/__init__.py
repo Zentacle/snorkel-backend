@@ -62,6 +62,10 @@ def get_user_videos():
     })
   return { 'data': output }
 
+"""
+Save the response token as an Authorization header with the format
+Authorization: Bearer <token>
+"""
 @app.route("/user/signup", methods=["POST"])
 def user_signup():
   display_name = request.json.get('display_name')
@@ -95,6 +99,10 @@ def user_signup():
   }
   return responseObject, 201
 
+"""
+Save the response token as an Authorization header with the format
+Authorization: Bearer <token>
+"""
 @app.route("/user/login", methods=["POST"])
 def user_login():
   email = request.json.get('email')
