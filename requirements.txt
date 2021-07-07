@@ -1,4 +1,6 @@
+bcrypt==3.2.0
 certifi==2021.5.30
+cffi==1.14.5
 chardet==4.0.0
 click==8.0.1
 Flask==2.0.1
@@ -11,6 +13,7 @@ itsdangerous==2.0.1
 Jinja2==3.0.1
 MarkupSafe==2.0.1
 psycopg2-binary==2.9.1
+pycparser==2.20
 python-http-client==3.3.2
 requests==2.25.1
 sendgrid==6.7.0

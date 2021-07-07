@@ -1,17 +1,57 @@
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
+from flask import current_app as app
+import jwt
 
 db = SQLAlchemy()
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    email = db.Column(db.String, unique=False, nullable=False)
+    email = db.Column(db.String, unique=True, nullable=False)
     display_name = db.Column(db.String)
-    username = db.Column(db.String)
+    username = db.Column(db.String, unique=True)
     profile_pic = db.Column(db.String)
+    password = db.Column(db.String)
+    registered_on = db.Column(db.DateTime, nullable=False,
+        default=datetime.utcnow)
+    admin = db.Column(db.Boolean, nullable=False, default=False)
 
     reviews = db.relationship("Review", backref=db.backref('user', lazy=True))
     images = db.relationship("Image")
+
+    def encode_auth_token(self, user_id):
+        """
+            Generates the Auth Token
+            :return: string
+        """
+        try:
+            payload = {
+                'exp': datetime.datetime.utcnow() + datetime.timedelta(days=0, seconds=5),
+                'iat': datetime.datetime.utcnow(),
+                'sub': user_id
+            }
+            return jwt.encode(
+                payload,
+                app.config.get('SECRET_KEY'),
+                algorithm='HS256'
+            )
+        except Exception as e:
+            return e
+
+    @staticmethod
+    def decode_auth_token(auth_token):
+        """
+        Decodes the auth token
+        :param auth_token:
+        :return: integer|string
+        """
+        try:
+            payload = jwt.decode(auth_token, app.config.get('SECRET_KEY'))
+            return payload['sub']
+        except jwt.ExpiredSignatureError:
+            return 'Signature expired. Please log in again.'
+        except jwt.InvalidTokenError:
+            return 'Invalid token. Please log in again.'
 
 class Spot(db.Model):
     id = db.Column(db.Integer, primary_key=True)

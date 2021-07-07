@@ -5,6 +5,7 @@ import os
 import os.path
 from app.models import *
 from sqlalchemy.orm import joinedload
+import bcrypt
 
 app = Flask(__name__)
 app.secret_key = 'the random string'
@@ -68,16 +69,53 @@ def user_signup():
   email = request.json.get('email')
   username = request.json.get('username')
   profile_pic = request.json.get('profile_pic')
+  unencrypted_password = request.json.get('password')
+  password = bcrypt.hashpw(unencrypted_password, bcrypt.gensalt())
+
+  user = User.query.filter_by(email=email).first()
+  if user:
+    return 'An account with this email already exists', 400
+  user = User.query.filter_by(username=username).first()
+  if user:
+    return 'An account with this username already exists', 400
 
   user = User(
     display_name=display_name,
     email=email,
+    password=password,
     username=username,
     profile_pic=profile_pic
   )
   db.session.add(user)
   db.session.commit()
-  return { 'user_id': user.id }
+  auth_token = user.encode_auth_token(user.id)
+  responseObject = {
+    'status': 'success',
+    'message': 'Successfully registered.',
+    'auth_token': auth_token.decode()
+  }
+  return responseObject, 201
+
+@app.route("/user/login", methods=["POST"])
+def user_login():
+  email = request.json.get('email')
+  username = request.json.get('username')
+  password = request.json.get('password')
+  
+  user = User.query.filter_by(email=email).first()
+  if not user:
+    user = User.query.filter_by(username=username).first()
+  if bcrypt.checkpw(password, user.password):
+    auth_token = user.encode_auth_token(user.id)
+    if auth_token:
+      responseObject = {
+          'status': 'success',
+          'message': 'Successfully logged in.',
+          'auth_token': auth_token.decode()
+      }
+      return responseObject
+  else:
+    return 'Wrong password or user does not exist', 400
 
 @app.route("/spots/get")
 def get_spots():
