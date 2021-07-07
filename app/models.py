@@ -19,6 +19,7 @@ class User(db.Model):
     reviews = db.relationship("Review", backref=db.backref('user', lazy=True))
     images = db.relationship("Image")
 
+    # https://realpython.com/token-based-authentication-with-flask/
     def encode_auth_token(self, user_id):
         """
             Generates the Auth Token
