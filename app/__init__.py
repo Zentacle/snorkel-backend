@@ -70,7 +70,7 @@ def user_signup():
   username = request.json.get('username')
   profile_pic = request.json.get('profile_pic')
   unencrypted_password = request.json.get('password')
-  password = bcrypt.hashpw(unencrypted_password, bcrypt.gensalt())
+  password = bcrypt.hashpw(unencrypted_password.encode('utf-8'), bcrypt.gensalt())
 
   user = User.query.filter_by(email=email).first()
   if user:
@@ -148,11 +148,16 @@ def add_spot():
 
 @app.route("/review/add", methods=["POST"])
 def add_review():
-  # token = request.json.get('token')
+  token = request.json.get('token')
+  user = None
+  if token:
+    user_id = user.decode_auth_token(token)
+    user = User.query.filter_by(id=user_id).first()
+  else:
+    email = request.json.get('email')
+    user = User.query.filter_by(email=email).first()
   # idinfo = id_token.verify_oauth2_token(token, Request(), CLIENT_ID)
   # email = idinfo['email']
-  email = request.json.get('email')
-  user = User.query.filter_by(email=email).first()
 
   beach_id = request.json.get('beach_id')
   visibility = request.json.get('visibility')
