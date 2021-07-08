@@ -1,7 +1,5 @@
 from flask_sqlalchemy import SQLAlchemy
-from datetime import datetime, timedelta
-from flask import current_app as app
-import jwt
+from datetime import datetime
 
 db = SQLAlchemy()
 
@@ -18,41 +16,6 @@ class User(db.Model):
 
     reviews = db.relationship("Review", backref=db.backref('user', lazy=True))
     images = db.relationship("Image")
-
-    # https://realpython.com/token-based-authentication-with-flask/
-    def encode_auth_token(self, user_id):
-        """
-            Generates the Auth Token
-            :return: string
-        """
-        try:
-            payload = {
-                'exp': datetime.utcnow() + timedelta(days=365),
-                'iat': datetime.utcnow(),
-                'sub': user_id
-            }
-            return jwt.encode(
-                payload,
-                app.config.get('SECRET_KEY'),
-                algorithm='HS256'
-            )
-        except Exception as e:
-            return e
-
-    @staticmethod
-    def decode_auth_token(auth_token):
-        """
-        Decodes the auth token
-        :param auth_token:
-        :return: integer|string
-        """
-        try:
-            payload = jwt.decode(auth_token, app.config.get('SECRET_KEY'), algorithms="HS256")
-            return payload['sub']
-        except jwt.ExpiredSignatureError:
-            return 'Signature expired. Please log in again.'
-        except jwt.InvalidTokenError:
-            return 'Invalid token. Please log in again.'
 
 class Spot(db.Model):
     id = db.Column(db.Integer, primary_key=True)
