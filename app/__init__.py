@@ -201,6 +201,17 @@ def get_spots():
     output.append(spot_data)
   return { 'data': output }
 
+@app.route("/spots/search")
+def search_spots():
+  search_term = request.args.get('search_term')
+  spots = Spot.query.filter(Spot.name.like('%' + search_term + '%')).all()
+  output = []
+  for spot in spots:
+    spot_data = spot.__dict__
+    spot_data.pop('_sa_instance_state', None)
+    output.append(spot_data)
+  return { 'data': output }
+
 @app.route("/spots/add", methods=["POST"])
 def add_spot():
   name = request.json.get('name')
