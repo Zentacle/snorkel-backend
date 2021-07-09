@@ -169,6 +169,15 @@ def user_login():
   else:
     return 'Wrong password or user does not exist', 400
 
+@app.route("/user/me")
+@jwt_required()
+def get_me():
+    user = get_current_user()
+    user_data = user.__dict__
+    user_data.pop('password', None)
+    user_data.pop('_sa_instance_state', None)
+    return user_data
+
 @app.route("/refresh")
 @jwt_required(refresh=True)
 def refresh_token():
