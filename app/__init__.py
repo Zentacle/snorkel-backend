@@ -151,7 +151,9 @@ def user_login():
   user = User.query.filter_by(email=email).first()
   if not user:
     user = User.query.filter_by(username=username).first()
-  if bcrypt.checkpw(password.encode('utf-8'), user.password.encode('utf-8')):
+  app.logger.info(password.encode('utf-8'))
+  app.logger.info(user.password)
+  if bcrypt.checkpw(password.encode('utf-8'), user.password):
     auth_token = create_access_token(identity=user.id)
     refresh_token = create_refresh_token(identity=user.id)
     if auth_token:
