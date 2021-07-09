@@ -20,7 +20,7 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["JWT_SECRET_KEY"] = "super-secret"  # Change this!
 app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(hours=1)
 app.config["JWT_REFRESH_TOKEN_EXPIRES"] = timedelta(days=30)
-app.config["JWT_TOKEN_LOCATION"] = ["headers", "cookies"]
+app.config["JWT_TOKEN_LOCATION"] = ["cookies", "headers"]
 app.config["JWT_SESSION_COOKIE"] = False
 #app.config["JWT_COOKIE_SECURE"] = True # Uncomment when running in production
 
@@ -162,7 +162,6 @@ def user_login():
           'auth_token': auth_token
       }
       resp = make_response(responseObject)
-      print(resp)
       set_access_cookies(resp, auth_token)
       set_refresh_cookies(resp, refresh_token)
       return resp
@@ -178,9 +177,15 @@ def refresh_token():
 
 @app.route("/spots/get")
 def get_spots():
-  users = Spot.query.all()
+  if request.args.get('beach_id'):
+    beach_id = request.args.get('beach_id')
+    spot = Spot.query.filter_by(id=beach_id).first()
+    spot_data = spot.__dict__
+    spot_data.pop('_sa_instance_state', None)
+    return { 'data': spot_data }
+  spots = Spot.query.all()
   output = []
-  for spot in users:
+  for spot in spots:
     spot_data = spot.__dict__
     spot_data.pop('_sa_instance_state', None)
     output.append(spot_data)
