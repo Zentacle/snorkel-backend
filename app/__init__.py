@@ -108,7 +108,7 @@ def user_signup():
   username = request.json.get('username')
   profile_pic = request.json.get('profile_pic')
   unencrypted_password = request.json.get('password')
-  password = bcrypt.hashpw(unencrypted_password.encode('utf-8'), bcrypt.gensalt())
+  password = bcrypt.hashpw(unencrypted_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
 
   user = User.query.filter_by(email=email).first()
   if user:
@@ -153,7 +153,7 @@ def user_login():
     user = User.query.filter_by(username=username).first()
   app.logger.info(password.encode('utf-8'))
   app.logger.info(user.password)
-  if bcrypt.checkpw(password.encode('utf-8'), user.password):
+  if bcrypt.checkpw(password.encode('utf-8'), user.password.encode('utf-8')):
     auth_token = create_access_token(identity=user.id)
     refresh_token = create_refresh_token(identity=user.id)
     if auth_token:
