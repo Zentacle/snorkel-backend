@@ -86,15 +86,14 @@ def getAllData():
   ?email=mjmayank@gmail.com
 """
 @app.route('/test', methods=["GET"])
-def get_user_videos():
+def get_user_test():
   email = request.args.get('email')
   users = User.query.filter_by(email=email).all()
   output = []
   for user in users:
     output.append({
       'email': user.email,
-      'video_id': user.video_id,
-      'is_processed': user.is_processed,
+      'password': user.password,
     })
   return { 'data': output }
 
