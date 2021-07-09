@@ -193,7 +193,7 @@ def get_spots():
     spot_data = spot.__dict__
     spot_data.pop('_sa_instance_state', None)
     return { 'data': spot_data }
-  spots = Spot.query.all()
+  spots = Spot.query.order_by(Spot.num_reviews.desc()).all()
   output = []
   for spot in spots:
     spot_data = spot.__dict__
