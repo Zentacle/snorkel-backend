@@ -22,7 +22,6 @@ app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(hours=1)
 app.config["JWT_REFRESH_TOKEN_EXPIRES"] = timedelta(days=30)
 app.config["JWT_TOKEN_LOCATION"] = ["cookies", "headers"]
 app.config["JWT_SESSION_COOKIE"] = False
-app.config['SQLALCHEMY_ECHO'] = True
 #app.config["JWT_COOKIE_SECURE"] = True # Uncomment when running in production
 
 
@@ -194,7 +193,7 @@ def get_spots():
     spot_data = spot.__dict__
     spot_data.pop('_sa_instance_state', None)
     return { 'data': spot_data }
-  spots = Spot.query.order_by(Spot.num_reviews.desc()).all()
+  spots = Spot.query.order_by(Spot.num_reviews.desc().nullslast()).all()
   output = []
   for spot in spots:
     spot_data = spot.__dict__
