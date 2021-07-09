@@ -199,13 +199,15 @@ def add_spot():
   description = request.json.get('description')
   location_google = request.json.get('location_google')
   hero_img = request.json.get('hero_img')
+  entry_map = request.json.get('entry_map')
 
   spot = Spot(
     name=name,
     location_city=location_city,
     description=description,
     location_google=location_google,
-    hero_img=hero_img
+    hero_img=hero_img,
+    entry_map=entry_map
   )
   db.session.add(spot)
   db.session.commit()
