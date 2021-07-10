@@ -193,7 +193,16 @@ def get_spots():
     spot_data = spot.__dict__
     spot_data.pop('_sa_instance_state', None)
     return { 'data': spot_data }
-  spots = Spot.query.order_by(Spot.num_reviews.desc().nullslast()).all()
+  sort = Spot.num_reviews.desc().nullslast()
+  sort_param = request.args.get('sort')
+  if sort_param:
+    if sort_param == 'latest':
+      sort = Spot.last_review_date.desc().nullslast()
+    if sort_param == 'most_reviewed':
+      sort = Spot.num_reviews.desc().nullslast()
+    if sort_param == 'top':
+      sort = Spot.rating.desc().nullslast()
+  spots = Spot.query.order_by(sort).all()
   output = []
   for spot in spots:
     spot_data = spot.__dict__
@@ -283,6 +292,8 @@ def add_review():
     new_rating = ((spot.rating * spot.num_reviews) + rating) / (spot.num_reviews + 1)
     spot.rating = new_rating
     spot.num_reviews += 1
+  spot.last_review_date = datetime.utcnow()
+  spot.last_review_viz = visibility
   db.session.commit()
   return 'Done', 200
 

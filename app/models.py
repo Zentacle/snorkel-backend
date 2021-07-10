@@ -25,8 +25,10 @@ class Spot(db.Model):
     location_city = db.Column(db.String)
     description = db.Column(db.String)
     rating = db.Column(db.Integer)
-    num_reviews = db.Column(db.Integer)
+    num_reviews = db.Column(db.Integer, default=0)
     entry_map = db.Column(db.String)
+    last_review_date = db.Column(db.DateTime)
+    last_review_viz = db.Column(db.Integer)
 
     reviews = db.relationship("Review", backref="spot")
     images = db.relationship("Image", backref="spot")
