@@ -98,10 +98,9 @@ def get_user_test():
   return { 'data': output }
 
 """
-Save the response token as an Authorization header with the format
-Authorization: Bearer <token>
+Auth data goes in a cookie
 """
-@app.route("/user/signup", methods=["POST"])
+@app.route("/user/register", methods=["POST"])
 def user_signup():
   display_name = request.json.get('display_name')
   email = request.json.get('email')

@@ -27,6 +27,7 @@ class Spot(db.Model):
     rating = db.Column(db.Integer)
     num_reviews = db.Column(db.Integer, default=0)
     entry_map = db.Column(db.String)
+    # max_depth = db.Column(db.String)
     last_review_date = db.Column(db.DateTime)
     last_review_viz = db.Column(db.Integer)
 
