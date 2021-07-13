@@ -172,6 +172,23 @@ def user_login():
   else:
     return 'Wrong password or user does not exist', 400
 
+@app.route("/user/patch", methods=["PATCH"])
+def patch_user():
+  user_id = request.json.get('id')
+  user = User.query.filter_by(id=user_id).first()
+  updates = request.json
+  updates.pop('id', None)
+  try:
+    for key in updates.keys():
+      setattr(user, key, updates.get(key))
+  except ValueError as e:
+    return e, 500
+  db.session.commit()
+  user_data = user.__dict__
+  user_data.pop('_sa_instance_state', None)
+  user_data.pop('password', None)
+  return user_data, 200
+
 @app.route("/user/me")
 @jwt_required()
 def get_me():
@@ -323,7 +340,7 @@ Response
 def get_reviews():
   beach_id = request.args.get('beach_id')
 
-  reviews = Review.query.options(joinedload('user')).filter_by(beach_id=beach_id).all()
+  reviews = Review.query.options(joinedload('user')).order_by(Review.date_posted.asc()).filter_by(beach_id=beach_id).all()
   output = []
   for review in reviews:
     spot_data = review.__dict__
