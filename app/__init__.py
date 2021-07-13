@@ -156,10 +156,16 @@ def user_login():
     auth_token = create_access_token(identity=user.id)
     refresh_token = create_refresh_token(identity=user.id)
     if auth_token:
+      user_data = user.__dict__
+      user_data.pop('password', None)
+      user_data.pop('_sa_instance_state', None)
       responseObject = {
+        'data': {
           'status': 'success',
           'message': 'Successfully logged in.',
           'auth_token': auth_token
+        },
+        'user': user_data
       }
       resp = make_response(responseObject)
       set_access_cookies(resp, auth_token)
