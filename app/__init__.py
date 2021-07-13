@@ -6,6 +6,7 @@ import os
 import os.path
 from app.models import *
 from sqlalchemy.orm import joinedload
+from sqlalchemy import or_
 import bcrypt
 from flask_jwt_extended import *
 from datetime import timezone, timedelta
@@ -144,12 +145,9 @@ Authorization: Bearer <token>
 @app.route("/user/login", methods=["POST"])
 def user_login():
   email = request.json.get('email')
-  username = request.json.get('username')
   password = request.json.get('password')
   
-  user = User.query.filter_by(email=email).first()
-  if not user:
-    user = User.query.filter_by(username=username).first()
+  user = User.query.filter(or_(User.email==email, User.username==email)).first()
   if not user:
     return 'Wrong password or user does not exist', 400
   if bcrypt.checkpw(password.encode('utf-8'), user.password.encode('utf-8')):
