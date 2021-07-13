@@ -6,7 +6,7 @@ import os
 import os.path
 from app.models import *
 from sqlalchemy.orm import joinedload
-from sqlalchemy import or_
+from sqlalchemy import or_, and_
 import bcrypt
 from flask_jwt_extended import *
 from datetime import timezone, timedelta
@@ -232,6 +232,10 @@ def add_spot():
   location_google = request.json.get('location_google')
   hero_img = request.json.get('hero_img')
   entry_map = request.json.get('entry_map')
+
+  spot = Spot.query.filter(and_(Spot.name==name, Spot.location_city==location_city)).first()
+  if spot:
+    return 'Spot already exists', 409
 
   spot = Spot(
     name=name,
