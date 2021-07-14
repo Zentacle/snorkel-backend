@@ -10,6 +10,7 @@ from sqlalchemy import or_, and_
 import bcrypt
 from flask_jwt_extended import *
 from datetime import timezone, timedelta
+from flask_migrate import Migrate
 
 app = Flask(__name__)
 app.secret_key = 'the random string'
@@ -19,7 +20,7 @@ SQLALCHEMY_DATABASE_URI = (os.environ.get('DATABASE_URL').replace("://", "ql://"
 app.config["SQLALCHEMY_DATABASE_URI"] = SQLALCHEMY_DATABASE_URI
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["JWT_SECRET_KEY"] = "super-secret"  # Change this!
-app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(seconds=10)
+app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(hours=1)
 app.config["JWT_REFRESH_TOKEN_EXPIRES"] = timedelta(days=30)
 app.config["JWT_TOKEN_LOCATION"] = ["cookies", "headers"]
 app.config["JWT_SESSION_COOKIE"] = False
@@ -29,6 +30,8 @@ app.config["JWT_SESSION_COOKIE"] = False
 cors = CORS(app)
 jwt = JWTManager(app)
 db.init_app(app)
+migrate = Migrate(compare_type=True)
+migrate.init_app(app, db)
 
 # Register a callback function that loades a user from your database whenever
 # a protected route is accessed. This should return any python object on a
