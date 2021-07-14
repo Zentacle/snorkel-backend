@@ -112,10 +112,10 @@ def user_signup():
 
   user = User.query.filter_by(email=email).first()
   if user:
-    return 'An account with this email already exists', 400
+    return { 'msg': 'An account with this email already exists' }, 400
   user = User.query.filter_by(username=username).first()
   if user:
-    return 'An account with this username already exists', 400
+    return { 'msg': 'An account with this username already exists' }, 400
 
   user = User(
     display_name=display_name,
@@ -149,7 +149,7 @@ def user_login():
   
   user = User.query.filter(or_(User.email==email, User.username==email)).first()
   if not user:
-    return 'Wrong password or user does not exist', 400
+    return { 'msg': 'Wrong password or user does not exist' }, 400
   if bcrypt.checkpw(password.encode('utf-8'), user.password.encode('utf-8')):
     auth_token = create_access_token(identity=user.id)
     refresh_token = create_refresh_token(identity=user.id)
@@ -170,7 +170,7 @@ def user_login():
       set_refresh_cookies(resp, refresh_token)
       return resp
   else:
-    return 'Wrong password or user does not exist', 400
+    return { 'msg': 'Wrong password or user does not exist' }, 400
 
 @app.route("/user/patch", methods=["PATCH"])
 def patch_user():
@@ -252,7 +252,7 @@ def add_spot():
 
   spot = Spot.query.filter(and_(Spot.name==name, Spot.location_city==location_city)).first()
   if spot:
-    return 'Spot already exists', 409
+    return { 'msg': 'Spot already exists' }, 409
 
   spot = Spot(
     name=name,
