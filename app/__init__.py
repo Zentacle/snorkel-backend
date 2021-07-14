@@ -19,7 +19,7 @@ SQLALCHEMY_DATABASE_URI = (os.environ.get('DATABASE_URL').replace("://", "ql://"
 app.config["SQLALCHEMY_DATABASE_URI"] = SQLALCHEMY_DATABASE_URI
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["JWT_SECRET_KEY"] = "super-secret"  # Change this!
-app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(hours=1)
+app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(seconds=10)
 app.config["JWT_REFRESH_TOKEN_EXPIRES"] = timedelta(days=30)
 app.config["JWT_TOKEN_LOCATION"] = ["cookies", "headers"]
 app.config["JWT_SESSION_COOKIE"] = False
@@ -190,13 +190,16 @@ def patch_user():
   return user_data, 200
 
 @app.route("/user/me")
-@jwt_required()
+@jwt_required(refresh=True)
 def get_me():
     user = get_current_user()
     user_data = user.__dict__
     user_data.pop('password', None)
     user_data.pop('_sa_instance_state', None)
-    return user_data
+    resp = make_response(user_data)
+    auth_token = create_access_token(identity=user.id)
+    set_access_cookies(resp, auth_token)
+    return resp
 
 @app.route("/refresh")
 @jwt_required(refresh=True)
