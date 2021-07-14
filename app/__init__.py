@@ -340,7 +340,7 @@ Response
 def get_reviews():
   beach_id = request.args.get('beach_id')
 
-  reviews = Review.query.options(joinedload('user')).order_by(Review.date_posted.asc()).filter_by(beach_id=beach_id).all()
+  reviews = Review.query.options(joinedload('user')).order_by(Review.date_posted.desc()).filter_by(beach_id=beach_id).all()
   output = []
   for review in reviews:
     spot_data = review.__dict__
