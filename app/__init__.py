@@ -319,7 +319,7 @@ def add_review():
     spot.num_reviews = 1
     spot.rating = rating
   else:
-    new_rating = ((spot.rating * spot.num_reviews) + rating) / (spot.num_reviews + 1)
+    new_rating = str(round(((float(spot.rating) * (spot.num_reviews*1.0)) + rating) / (spot.num_reviews + 1), 2))
     spot.rating = new_rating
     spot.num_reviews += 1
   spot.last_review_date = datetime.utcnow()
