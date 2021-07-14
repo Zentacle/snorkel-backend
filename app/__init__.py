@@ -1,9 +1,11 @@
 from __future__ import print_function
 from flask import Flask, request, redirect, url_for, session, jsonify, render_template
 from flask.helpers import make_response
+from sqlalchemy.sql.expression import distinct
 from flask_cors import CORS
 import os
 import os.path
+
 from app.models import *
 from sqlalchemy.orm import joinedload
 import bcrypt
@@ -332,3 +334,26 @@ def get_reviews():
     output.append(spot_data)
   return { 'data': output }
 
+
+# returns count for each rating for individual beach/area ["1"] ["2"] ["3"], etc
+# returns count for total ratings ["total"]
+# returns average rating for beach ["average"]
+@app.route("/review/getsummary")
+def get_summary_reviews():
+  beach_id = request.args.get('beach_id')
+  reviews = db.session.query(db.func.count(Review.rating), Review.rating).filter_by(beach_id=beach_id).group_by(Review.rating).all()
+  count = Review.query.filter_by(beach_id=beach_id).count()
+  average = db.session.query(db.func.avg(Review.rating)).filter_by(beach_id=beach_id).all()
+  output = {}
+  for review in reviews:
+    output[str(review[1])] = review[0]
+  output["total"] = count
+  output["average"] = average[0][0]
+  for i in range(1, 6):
+    num = str(i)
+    try:
+      output[num]
+    except:
+      output[num] = 0
+
+  return {'data': output}
