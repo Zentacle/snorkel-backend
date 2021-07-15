@@ -218,6 +218,7 @@ def get_spots():
     spot = Spot.query.filter_by(id=beach_id).first()
     spot_data = spot.__dict__
     spot_data.pop('_sa_instance_state', None)
+    spot_data["ratings"] = get_summary_reviews_helper(beach_id)
     return { 'data': spot_data }
   sort = Spot.num_reviews.desc().nullslast()
   sort_param = request.args.get('sort')
@@ -359,3 +360,25 @@ def get_reviews():
     output.append(spot_data)
   return { 'data': output }
 
+# returns count for each rating for individual beach/area ["1"] ["2"] ["3"], etc
+# returns count for total ratings ["total"]
+# returns average rating for beach ["average"]
+@app.route("/review/getsummary")
+def get_summary_reviews():
+  return {"data": get_summary_reviews_helper(request.args.get('beach_id'))}
+
+def get_summary_reviews_helper(beach_id):
+  reviews = db.session.query(db.func.count(Review.rating), Review.rating).filter_by(beach_id=beach_id).group_by(Review.rating).all()
+  #average = db.session.query(db.func.avg(Review.rating)).filter_by(beach_id=beach_id).first()
+  output = {}
+  for review in reviews:
+    output[str(review[1])] = review[0]
+  #output["average"] = average[0][0]
+  for i in range(1, 6):
+    num = str(i)
+    try:
+      output[num]
+    except:
+      output[num] = 0
+
+  return output
