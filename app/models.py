@@ -24,7 +24,7 @@ class Spot(db.Model):
     location_google = db.Column(db.String)
     location_city = db.Column(db.String)
     description = db.Column(db.String)
-    rating = db.Column(db.Integer)
+    rating = db.Column(db.String)
     num_reviews = db.Column(db.Integer, default=0)
     entry_map = db.Column(db.String)
     # max_depth = db.Column(db.String)
@@ -42,6 +42,8 @@ class Review(db.Model):
     beach_id = db.Column(db.Integer, db.ForeignKey('spot.id'), nullable=False)
     visibility = db.Column(db.Integer, nullable=True) # in ft
     date_posted = db.Column(db.DateTime, nullable=False,
+        default=datetime.utcnow)
+    date_dived = db.Column(db.DateTime, nullable=True,
         default=datetime.utcnow)
     activity_type = db.Column(db.String)
 
