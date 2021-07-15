@@ -1,16 +1,16 @@
 from __future__ import print_function
 from flask import Flask, request, redirect, url_for, session, jsonify, render_template
 from flask.helpers import make_response
+from sqlalchemy.sql.expression import distinct
 from flask_cors import CORS
 import os
 import os.path
+
 from app.models import *
 from sqlalchemy.orm import joinedload
-from sqlalchemy import or_, and_
 import bcrypt
 from flask_jwt_extended import *
 from datetime import timezone, timedelta
-from flask_migrate import Migrate
 
 app = Flask(__name__)
 app.secret_key = 'the random string'
@@ -30,8 +30,6 @@ app.config["JWT_SESSION_COOKIE"] = False
 cors = CORS(app)
 jwt = JWTManager(app)
 db.init_app(app)
-migrate = Migrate(compare_type=True)
-migrate.init_app(app, db)
 
 # Register a callback function that loades a user from your database whenever
 # a protected route is accessed. This should return any python object on a
@@ -115,10 +113,10 @@ def user_signup():
 
   user = User.query.filter_by(email=email).first()
   if user:
-    return { 'msg': 'An account with this email already exists' }, 400
+    return 'An account with this email already exists', 400
   user = User.query.filter_by(username=username).first()
   if user:
-    return { 'msg': 'An account with this username already exists' }, 400
+    return 'An account with this username already exists', 400
 
   user = User(
     display_name=display_name,
@@ -148,11 +146,14 @@ Authorization: Bearer <token>
 @app.route("/user/login", methods=["POST"])
 def user_login():
   email = request.json.get('email')
+  username = request.json.get('username')
   password = request.json.get('password')
   
-  user = User.query.filter(or_(User.email==email, User.username==email)).first()
+  user = User.query.filter_by(email=email).first()
   if not user:
-    return { 'msg': 'Wrong password or user does not exist' }, 400
+    user = User.query.filter_by(username=username).first()
+  if not user:
+    return 'Wrong password or user does not exist', 400
   if bcrypt.checkpw(password.encode('utf-8'), user.password.encode('utf-8')):
     auth_token = create_access_token(identity=user.id)
     refresh_token = create_refresh_token(identity=user.id)
@@ -173,36 +174,16 @@ def user_login():
       set_refresh_cookies(resp, refresh_token)
       return resp
   else:
-    return { 'msg': 'Wrong password or user does not exist' }, 400
-
-@app.route("/user/patch", methods=["PATCH"])
-def patch_user():
-  user_id = request.json.get('id')
-  user = User.query.filter_by(id=user_id).first()
-  updates = request.json
-  updates.pop('id', None)
-  try:
-    for key in updates.keys():
-      setattr(user, key, updates.get(key))
-  except ValueError as e:
-    return e, 500
-  db.session.commit()
-  user_data = user.__dict__
-  user_data.pop('_sa_instance_state', None)
-  user_data.pop('password', None)
-  return user_data, 200
+    return 'Wrong password or user does not exist', 400
 
 @app.route("/user/me")
-@jwt_required(refresh=True)
+@jwt_required()
 def get_me():
     user = get_current_user()
     user_data = user.__dict__
     user_data.pop('password', None)
     user_data.pop('_sa_instance_state', None)
-    resp = make_response(user_data)
-    auth_token = create_access_token(identity=user.id)
-    set_access_cookies(resp, auth_token)
-    return resp
+    return user_data
 
 @app.route("/refresh")
 @jwt_required(refresh=True)
@@ -218,6 +199,11 @@ def get_spots():
     spot = Spot.query.filter_by(id=beach_id).first()
     spot_data = spot.__dict__
     spot_data.pop('_sa_instance_state', None)
+    ###################################
+    
+    spot_data["ratings"] = get_summary_reviews_helper(beach_id)
+
+    #####################################
     return { 'data': spot_data }
   sort = Spot.num_reviews.desc().nullslast()
   sort_param = request.args.get('sort')
@@ -255,10 +241,6 @@ def add_spot():
   location_google = request.json.get('location_google')
   hero_img = request.json.get('hero_img')
   entry_map = request.json.get('entry_map')
-
-  spot = Spot.query.filter(and_(Spot.name==name, Spot.location_city==location_city)).first()
-  if spot:
-    return { 'msg': 'Spot already exists' }, 409
 
   spot = Spot(
     name=name,
@@ -299,7 +281,7 @@ def add_review():
     user = User.query.filter_by(email=email).first()
 
   beach_id = request.json.get('beach_id')
-  visibility = request.json.get('visibility') if request.json.get('visibility') != '' else None
+  visibility = request.json.get('visibility')
   text = request.json.get('text')
   rating = request.json.get('rating')
   activity_type = request.json.get('activity_type')
@@ -319,7 +301,7 @@ def add_review():
     spot.num_reviews = 1
     spot.rating = rating
   else:
-    new_rating = str(round(((float(spot.rating) * (spot.num_reviews*1.0)) + rating) / (spot.num_reviews + 1), 2))
+    new_rating = ((spot.rating * spot.num_reviews) + rating) / (spot.num_reviews + 1)
     spot.rating = new_rating
     spot.num_reviews += 1
   spot.last_review_date = datetime.utcnow()
@@ -346,7 +328,7 @@ Response
 def get_reviews():
   beach_id = request.args.get('beach_id')
 
-  reviews = Review.query.options(joinedload('user')).order_by(Review.date_posted.desc()).filter_by(beach_id=beach_id).all()
+  reviews = Review.query.options(joinedload('user')).filter_by(beach_id=beach_id).all()
   output = []
   for review in reviews:
     spot_data = review.__dict__
@@ -357,3 +339,31 @@ def get_reviews():
     output.append(spot_data)
   return { 'data': output }
 
+
+# returns count for each rating for individual beach/area ["1"] ["2"] ["3"], etc
+# returns count for total ratings ["total"]
+# returns average rating for beach ["average"]
+@app.route("/review/getsummary")
+def get_summary_reviews():
+  return {"data": get_summary_reviews_helper(request.args.get('beach_id'))}
+
+
+
+
+
+
+def get_summary_reviews_helper(beach_id):
+  reviews = db.session.query(db.func.count(Review.rating), Review.rating).filter_by(beach_id=beach_id).group_by(Review.rating).all()
+  #average = db.session.query(db.func.avg(Review.rating)).filter_by(beach_id=beach_id).first()
+  output = {}
+  for review in reviews:
+    output[str(review[1])] = review[0]
+  #output["average"] = average[0][0]
+  for i in range(1, 6):
+    num = str(i)
+    try:
+      output[num]
+    except:
+      output[num] = 0
+
+  return output
