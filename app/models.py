@@ -51,7 +51,7 @@ class Spot(db.Model):
     def get_dict(self):
         data = self.__dict__
         data.pop('_sa_instance_state', None)
-        data['url'] = '/Beach/'+str(self.id)+'/'+demicrosoft(self.name)
+        data['url'] = '/Beach/'+str(self.id)+'/'+demicrosoft(self.name).lower()
         return data
 
 class Review(db.Model):
