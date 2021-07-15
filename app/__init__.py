@@ -301,7 +301,7 @@ def add_review():
   beach_id = request.json.get('beach_id')
   visibility = request.json.get('visibility')
   text = request.json.get('text')
-  rating = request.json.get('rating')
+  rating = request.json.get('rating') if request.json.get('rating') != '' else None
   activity_type = request.json.get('activity_type')
 
   review = Review(
