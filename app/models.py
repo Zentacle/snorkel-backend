@@ -17,6 +17,11 @@ class User(db.Model):
     reviews = db.relationship("Review", backref=db.backref('user', lazy=True))
     images = db.relationship("Image")
 
+    def do_something():
+        return {
+            'hello': 'test',
+        }
+
 class Spot(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String, nullable=False)
@@ -34,6 +39,11 @@ class Spot(db.Model):
     reviews = db.relationship("Review", backref="spot")
     images = db.relationship("Image", backref="spot")
 
+    def do_something():
+        return {
+            'hello': 'test',
+        }
+
 class Review(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     rating = db.Column(db.Integer, nullable=False)
@@ -46,6 +56,11 @@ class Review(db.Model):
     date_dived = db.Column(db.DateTime, nullable=True,
         default=datetime.utcnow)
     activity_type = db.Column(db.String)
+
+    def do_something():
+        return {
+            'hello': 'test',
+        }
 
 class Image(db.Model):
     id = db.Column(db.Integer, primary_key=True)
