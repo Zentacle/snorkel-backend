@@ -1,7 +1,14 @@
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
+import re
 
 db = SQLAlchemy()
+
+def demicrosoft(fn):
+    fn = re.sub('[()]', '', fn)
+    for ch in [' ']:
+        fn = fn.replace(ch,"_")
+    return fn
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -16,6 +23,13 @@ class User(db.Model):
 
     reviews = db.relationship("Review", backref=db.backref('user', lazy=True))
     images = db.relationship("Image")
+
+    def get_dict(self):
+        data = self.__dict__
+        data = self.__dict__
+        data.pop('password', None)
+        data.pop('_sa_instance_state', None)
+        return data
 
 class Spot(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -34,6 +48,12 @@ class Spot(db.Model):
     reviews = db.relationship("Review", backref="spot")
     images = db.relationship("Image", backref="spot")
 
+    def get_dict(self):
+        data = self.__dict__
+        data.pop('_sa_instance_state', None)
+        data['url'] = '/Beach/'+str(self.id)+'/'+demicrosoft(self.name)
+        return data
+
 class Review(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     rating = db.Column(db.Integer, nullable=False)
@@ -46,6 +66,11 @@ class Review(db.Model):
     date_dived = db.Column(db.DateTime, nullable=True,
         default=datetime.utcnow)
     activity_type = db.Column(db.String)
+
+    def get_dict(self):
+        data = self.__dict__
+        data.pop('_sa_instance_state', None)
+        return data
 
 class Image(db.Model):
     id = db.Column(db.Integer, primary_key=True)

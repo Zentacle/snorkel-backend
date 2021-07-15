@@ -80,10 +80,7 @@ def getAllData():
     users = User.query.all()
     output = []
     for user in users:
-      user_data = user.__dict__
-      user_data.pop('password', None)
-      user_data.pop('_sa_instance_state', None)
-      output.append(user_data)
+      output.append(user.get_dict())
     return { 'data': output }
 
 """
@@ -157,16 +154,13 @@ def user_login():
     auth_token = create_access_token(identity=user.id)
     refresh_token = create_refresh_token(identity=user.id)
     if auth_token:
-      user_data = user.__dict__
-      user_data.pop('password', None)
-      user_data.pop('_sa_instance_state', None)
       responseObject = {
         'data': {
           'status': 'success',
           'message': 'Successfully logged in.',
           'auth_token': auth_token
         },
-        'user': user_data
+        'user': user.get_dict()
       }
       resp = make_response(responseObject)
       set_access_cookies(resp, auth_token)
@@ -187,19 +181,13 @@ def patch_user():
   except ValueError as e:
     return e, 500
   db.session.commit()
-  user_data = user.__dict__
-  user_data.pop('_sa_instance_state', None)
-  user_data.pop('password', None)
-  return user_data, 200
+  return user.get_dict(), 200
 
 @app.route("/user/me")
 @jwt_required(refresh=True)
 def get_me():
     user = get_current_user()
-    user_data = user.__dict__
-    user_data.pop('password', None)
-    user_data.pop('_sa_instance_state', None)
-    resp = make_response(user_data)
+    resp = make_response(user.get_dict())
     auth_token = create_access_token(identity=user.id)
     set_access_cookies(resp, auth_token)
     return resp
@@ -216,8 +204,7 @@ def get_spots():
   if request.args.get('beach_id'):
     beach_id = request.args.get('beach_id')
     spot = Spot.query.filter_by(id=beach_id).first()
-    spot_data = spot.__dict__
-    spot_data.pop('_sa_instance_state', None)
+    spot_data = spot.get_dict()
     spot_data["ratings"] = get_summary_reviews_helper(beach_id)
     return { 'data': spot_data }
   sort = Spot.num_reviews.desc().nullslast()
@@ -232,8 +219,7 @@ def get_spots():
   spots = Spot.query.order_by(sort).all()
   output = []
   for spot in spots:
-    spot_data = spot.__dict__
-    spot_data.pop('_sa_instance_state', None)
+    spot_data = spot.get_dict()
     output.append(spot_data)
   return { 'data': output }
 
@@ -243,8 +229,7 @@ def search_spots():
   spots = Spot.query.filter(Spot.name.ilike('%' + search_term + '%')).all()
   output = []
   for spot in spots:
-    spot_data = spot.__dict__
-    spot_data.pop('_sa_instance_state', None)
+    spot_data = spot.get_dict()
     output.append(spot_data)
   return { 'data': output }
 
@@ -285,8 +270,7 @@ def patch_spot():
   except ValueError as e:
     return e, 500
   db.session.commit()
-  spot_data = spot.__dict__
-  spot_data.pop('_sa_instance_state', None)
+  spot_data = spot.get_dict()
   return spot_data, 200
 
 @app.route("/review/add", methods=["POST"])
@@ -352,12 +336,9 @@ def get_reviews():
   reviews = Review.query.options(joinedload('user')).order_by(Review.date_posted.desc()).filter_by(beach_id=beach_id).all()
   output = []
   for review in reviews:
-    spot_data = review.__dict__
-    spot_data['user'] = review.user.__dict__
-    spot_data['user'].pop('password', None)
-    spot_data['user'].pop('_sa_instance_state', None)
-    spot_data.pop('_sa_instance_state', None)
-    output.append(spot_data)
+    data = review.get_dict()
+    data['user'] = review.user.get_dict()
+    output.append(data)
   return { 'data': output }
 
 # returns count for each rating for individual beach/area ["1"] ["2"] ["3"], etc
