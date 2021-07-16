@@ -4,6 +4,7 @@ from flask.helpers import make_response
 from flask_cors import CORS
 import os
 import os.path
+
 from app.models import *
 from sqlalchemy.orm import joinedload
 from sqlalchemy import or_, and_
@@ -363,3 +364,19 @@ def get_summary_reviews_helper(beach_id):
       output[num] = 0
 
   return output
+
+@app.route("/spots/recs")
+@jwt_required()
+def get_recs():
+  user_id = get_jwt_identity()
+  # (SELECT * FROM SPOT a LEFT JOIN REVIEW b ON a.id = b.beach_id WHERE b.author_id = user_id) as my_spots
+  # SELECT * FROM SPOT A LEFT JOIN my_spots B ON A.id = B.id WHERE b.id IS NULL
+  spots_been_to = db.session.query(Spot.id).join(Review, Spot.id == Review.beach_id, isouter=True).filter(Review.author_id==user_id).subquery()
+  spots = Spot.query \
+    .filter(Spot.id.not_in(spots_been_to)) \
+    .all()
+  data = []
+  for spot in spots:
+    data.append(spot.get_dict())
+
+  return { 'data': data }
