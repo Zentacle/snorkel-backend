@@ -404,3 +404,87 @@ def get_recs():
     data.append(spot.get_dict())
 
   return { 'data': data }
+
+fake_users = [
+  'Barbara Moreno',
+  'Mary Lash',
+  'Hiram Lee',
+  'Carmen Flowers',
+  'Emily Arnold',
+  'Jeffrey Smith',
+  'George Stephenson',
+  'Nelda Paschall',
+  'Linda McGinnis',
+  'Eduardo Jones',
+  'Roy Kawamura',
+  'Susan Landers',
+]
+
+@app.route("/review/fake", methods=["POST"])
+def submit_fake_review():
+  beach_id = request.json.get('beach_id')
+  import random
+  found_one = False
+  while not found_one:
+    username = random.choice(fake_users)
+    user = User.query.filter_by(display_name=username).first()
+    if not user:
+      continue
+    review = Review.query.filter(and_(Review.author_id == user.id, Review.beach_id == beach_id)).first()
+    if not review:
+      found_one = True
+
+  visibility = request.json.get('visibility') if request.json.get('visibility') != '' else None
+  text = request.json.get('text')
+  rating = request.json.get('rating')
+  activity_type = request.json.get('activity_type')
+  if not rating:
+    return { 'msg': 'Please select a rating' }, 401
+  if not activity_type:
+    return { 'msg': 'Please select scuba or snorkel' }, 401
+
+  review = Review(
+    author_id=user.id,
+    beach_id=beach_id,
+    visibility=visibility,
+    text=text,
+    rating=rating,
+    activity_type=activity_type,
+  )
+  db.session.add(review)
+
+  spot = Spot.query.filter_by(id=beach_id).first()
+  if not spot.num_reviews:
+    spot.num_reviews = 1
+    spot.rating = rating
+  else:
+    new_rating = str(round(((float(spot.rating) * (spot.num_reviews*1.0)) + rating) / (spot.num_reviews + 1), 2))
+    spot.rating = new_rating
+    spot.num_reviews += 1
+  spot.last_review_date = datetime.utcnow()
+  spot.last_review_viz = visibility
+  db.session.commit()
+  return 'Done', 200
+
+@app.route("/user/register/fake", methods=["POST"])
+def user_signup_fake():
+  display_name = request.json.get('display_name')
+  username = display_name.replace(" ", "_").lower()
+  email = username + '@zentacle.com'
+  unencrypted_password = 'password'
+  password = bcrypt.hashpw(unencrypted_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+
+  user = User.query.filter_by(display_name=display_name).first()
+  if user:
+    return { 'msg': 'A fake account with this name already exists' }, 400
+
+  user = User(
+    display_name=display_name,
+    email=email,
+    password=password,
+    username=username,
+    is_fake=True,
+  )
+  db.session.add(user)
+  db.session.commit()
+  return user.get_dict()
