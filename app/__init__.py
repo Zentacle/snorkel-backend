@@ -289,6 +289,8 @@ def add_review():
   text = request.json.get('text')
   rating = request.json.get('rating')
   activity_type = request.json.get('activity_type')
+  if not rating:
+    return { 'msg': 'Please select a rating' }, 401
   if not activity_type:
     return { 'msg': 'Please select scuba or snorkel' }, 401
 
