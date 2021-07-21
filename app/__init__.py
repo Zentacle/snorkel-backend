@@ -365,6 +365,26 @@ def get_summary_reviews_helper(beach_id):
 
   return output
 
+@app.route("/review/delete")
+def delete_review():
+  review_id = request.args.get('review_id')
+
+  review = Review.query.filter_by(id=review_id).first()
+  beach_id = review.beach_id
+  rating = review.rating
+
+  spot = Spot.query.filter_by(id=beach_id).first()
+  if spot.num_reviews == 1:
+    spot.num_reviews = 0
+    spot.rating = None
+  else:
+    new_rating = str(round(((float(spot.rating) * (spot.num_reviews*1.0)) - rating) / (spot.num_reviews - 1), 2))
+    spot.rating = new_rating
+    spot.num_reviews -= 1
+  Review.query.filter_by(id=review_id).delete()
+  db.session.commit()
+  return {}
+
 @app.route("/spots/recs")
 @jwt_required()
 def get_recs():
