@@ -20,6 +20,7 @@ class User(db.Model):
     registered_on = db.Column(db.DateTime, nullable=False,
         default=datetime.utcnow)
     admin = db.Column(db.Boolean, nullable=False, default=False)
+    is_fake=db.Column(db.Boolean, default=False)
 
     reviews = db.relationship("Review", backref=db.backref('user', lazy=True))
     images = db.relationship("Image")
