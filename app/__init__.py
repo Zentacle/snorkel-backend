@@ -217,7 +217,7 @@ def get_spots():
       sort = Spot.num_reviews.desc().nullslast()
     if sort_param == 'top':
       sort = Spot.rating.desc().nullslast()
-  spots = Spot.query.order_by(sort).all()
+  spots = Spot.query.order_by(sort).limit(15).all()
   output = []
   for spot in spots:
     spot_data = spot.get_dict()
