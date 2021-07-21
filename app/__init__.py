@@ -388,9 +388,11 @@ def delete_review():
   return {}
 
 @app.route("/spots/recs")
-@jwt_required()
+@jwt_required(optional=True)
 def get_recs():
   user_id = get_jwt_identity()
+  if not user_id:
+    return { 'data': {} }, 401
   # (SELECT * FROM SPOT a LEFT JOIN REVIEW b ON a.id = b.beach_id WHERE b.author_id = user_id) as my_spots
   # SELECT * FROM SPOT A LEFT JOIN my_spots B ON A.id = B.id WHERE b.id IS NULL
   spots_been_to = db.session.query(Spot.id).join(Review, Spot.id == Review.beach_id, isouter=True).filter(Review.author_id==user_id).subquery()
