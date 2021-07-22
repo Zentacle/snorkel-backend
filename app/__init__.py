@@ -12,6 +12,7 @@ import bcrypt
 from flask_jwt_extended import *
 from datetime import timezone, timedelta
 from flask_migrate import Migrate
+import dateutil.parser
 
 app = Flask(__name__)
 app.secret_key = 'the random string'
@@ -289,6 +290,7 @@ def add_review():
   text = request.json.get('text')
   rating = request.json.get('rating')
   activity_type = request.json.get('activity_type')
+  date_dived = dateutil.parser.isoparse(request.json.get('date_dived')) if request.json.get('date_dived') else None
   if not rating:
     return { 'msg': 'Please select a rating' }, 401
   if not activity_type:
@@ -301,6 +303,7 @@ def add_review():
     text=text,
     rating=rating,
     activity_type=activity_type,
+    date_dived=date_dived,
   )
   db.session.add(review)
 
@@ -312,8 +315,9 @@ def add_review():
     new_rating = str(round(((float(spot.rating) * (spot.num_reviews*1.0)) + rating) / (spot.num_reviews + 1), 2))
     spot.rating = new_rating
     spot.num_reviews += 1
-  spot.last_review_date = datetime.utcnow()
-  spot.last_review_viz = visibility
+  if visibility and (date_dived > spot.last_review_date):
+    spot.last_review_date = date_dived
+    spot.last_review_viz = visibility
   db.session.commit()
   return 'Done', 200
 
