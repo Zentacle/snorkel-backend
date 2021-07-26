@@ -42,9 +42,10 @@ class Spot(db.Model):
     rating = db.Column(db.String)
     num_reviews = db.Column(db.Integer, default=0)
     entry_map = db.Column(db.String)
-    # max_depth = db.Column(db.String)
+    max_depth = db.Column(db.String)
     last_review_date = db.Column(db.DateTime)
     last_review_viz = db.Column(db.Integer)
+    is_verified = db.Column(db.Boolean, nullable=False, default=False)
 
     reviews = db.relationship("Review", backref="spot")
     images = db.relationship("Image", backref="spot")
