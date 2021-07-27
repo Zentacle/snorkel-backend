@@ -325,6 +325,7 @@ def add_review():
   text = request.json.get('text')
   rating = request.json.get('rating')
   activity_type = request.json.get('activity_type')
+  imageURLs = request.json.get('images')
   date_dived = dateutil.parser.isoparse(request.json.get('date_dived')) if request.json.get('date_dived') else datetime.utcnow()
   if not rating:
     return { 'msg': 'Please select a rating' }, 401
@@ -340,6 +341,15 @@ def add_review():
     activity_type=activity_type,
     date_dived=date_dived,
   )
+
+  for imageURL in imageURLs:
+    image = Image(
+      url=imageURL,
+      beach_id=beach_id,
+      user_id=user.id,
+    )
+    review.images.append(image)
+
   db.session.add(review)
 
   spot = Spot.query.filter_by(id=beach_id).first()
@@ -530,3 +540,11 @@ def user_signup_fake():
   db.session.commit()
   user.id
   return user.get_dict()
+
+@app.route("/images")
+def get_images():
+    images = Image.query.all()
+    output = []
+    for image in images:
+      output.append(image.get_dict())
+    return { 'data': output }
