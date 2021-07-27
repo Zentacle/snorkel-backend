@@ -366,7 +366,24 @@ def add_review():
     spot.last_review_date = date_dived
     spot.last_review_viz = visibility
   db.session.commit()
-  return 'Done', 200
+  message = Mail(
+      from_email=('no-reply@straightshotvideo.com', 'Zentacle'),
+      to_emails='mjmayank@gmail.com')
+
+  message.template_id = 'd-3188c5ee843443bf91c5eecf3b66f26d'
+  message.dynamic_template_data = {
+      'beach_name': spot.name,
+      'display_name': user.display_name,
+      'text': text,
+      'url': 'https://www.zentacle.com/'+str(beach_id),
+  }
+  try:
+      sg = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
+      sg.send(message)
+  except Exception as e:
+      print(e.body)
+  review.id
+  return { 'data': review.get_dict() }, 200
 
 """
 Request
