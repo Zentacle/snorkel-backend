@@ -236,6 +236,7 @@ def search_spots():
   return { 'data': output }
 
 @app.route("/spots/add", methods=["POST"])
+@jwt_required(optional=True)
 def add_spot():
   name = request.json.get('name')
   location_city = request.json.get('location_city')
@@ -243,6 +244,7 @@ def add_spot():
   location_google = request.json.get('location_google')
   hero_img = request.json.get('hero_img')
   entry_map = request.json.get('entry_map')
+  is_verified = True if get_current_user() and get_current_user().admin else False
 
   spot = Spot.query.filter(and_(Spot.name==name, Spot.location_city==location_city)).first()
   if spot:
@@ -254,14 +256,19 @@ def add_spot():
     description=description,
     location_google=location_google,
     hero_img=hero_img,
-    entry_map=entry_map
+    entry_map=entry_map,
+    is_verified=is_verified,
   )
   db.session.add(spot)
   db.session.commit()
-  return 'Done', 200
+  spot.id #need this to get data loaded, not sure why
+  return { 'data': spot.get_dict() }, 200
 
 @app.route("/spots/patch", methods=["PATCH"])
+@jwt_required()
 def patch_spot():
+  if not get_current_user().admin:
+    return { 'msg': "Only admins can do that" }, 401
   beach_id = request.json.get('id')
   spot = Spot.query.filter_by(id=beach_id).first()
   updates = request.json
@@ -308,6 +315,8 @@ def add_review():
   db.session.add(review)
 
   spot = Spot.query.filter_by(id=beach_id).first()
+  if not spot:
+    return { 'msg': 'Couldn\'t find that spot' }, 404
   if not spot.num_reviews:
     spot.num_reviews = 1
     spot.rating = rating
@@ -315,7 +324,7 @@ def add_review():
     new_rating = str(round(((float(spot.rating) * (spot.num_reviews*1.0)) + rating) / (spot.num_reviews + 1), 2))
     spot.rating = new_rating
     spot.num_reviews += 1
-  if visibility and (date_dived > spot.last_review_date):
+  if visibility and (not spot.last_review_date or date_dived > spot.last_review_date):
     spot.last_review_date = date_dived
     spot.last_review_viz = visibility
   db.session.commit()
@@ -491,4 +500,5 @@ def user_signup_fake():
   )
   db.session.add(user)
   db.session.commit()
+  user.id
   return user.get_dict()
