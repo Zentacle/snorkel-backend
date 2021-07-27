@@ -228,7 +228,12 @@ def get_spots():
 @app.route("/spots/search")
 def search_spots():
   search_term = request.args.get('search_term')
-  spots = Spot.query.filter(Spot.name.ilike('%' + search_term + '%')).all()
+  spots = Spot.query.filter(
+    or_(
+      Spot.name.ilike('%' + search_term + '%'), \
+      Spot.location_city.ilike('%'+ search_term + '%')
+    )
+  ).all()
   output = []
   for spot in spots:
     spot_data = spot.get_dict()
