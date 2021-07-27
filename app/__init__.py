@@ -251,6 +251,9 @@ def add_spot():
   entry_map = request.json.get('entry_map')
   is_verified = True if get_current_user() and get_current_user().admin else False
 
+  if not name or not location_city:
+    return { 'msg': 'Please enter a name and location' }, 404
+
   spot = Spot.query.filter(and_(Spot.name==name, Spot.location_city==location_city)).first()
   if spot:
     return { 'msg': 'Spot already exists' }, 409
