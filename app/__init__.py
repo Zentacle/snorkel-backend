@@ -325,7 +325,7 @@ def add_review():
   text = request.json.get('text')
   rating = request.json.get('rating')
   activity_type = request.json.get('activity_type')
-  date_dived = dateutil.parser.isoparse(request.json.get('date_dived')) if request.json.get('date_dived') else None
+  date_dived = dateutil.parser.isoparse(request.json.get('date_dived')) if request.json.get('date_dived') else datetime.utcnow
   if not rating:
     return { 'msg': 'Please select a rating' }, 401
   if not activity_type:
