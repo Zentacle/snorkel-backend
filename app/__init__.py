@@ -13,6 +13,8 @@ from flask_jwt_extended import *
 from datetime import timezone, timedelta
 from flask_migrate import Migrate
 import dateutil.parser
+from sendgrid import SendGridAPIClient
+from sendgrid.helpers.mail import Mail
 
 app = Flask(__name__)
 app.secret_key = 'the random string'
@@ -138,6 +140,21 @@ def user_signup():
   resp = make_response(responseObject)
   set_access_cookies(resp, auth_token)
   set_refresh_cookies(resp, refresh_token)
+  message = Mail(
+      from_email=('no-reply@straightshotvideo.com', 'Zentacle'),
+      to_emails='mjmayank@gmail.com')
+
+  message.template_id = 'd-926fe53d5696480fb65b92af8cd8484e'
+  message.dynamic_template_data = {
+      'display_name': display_name,
+      'username': username,
+      'email': email,
+  }
+  try:
+      sg = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
+      sg.send(message)
+  except Exception as e:
+      print(e.body)
   return resp
 
 """
@@ -218,7 +235,7 @@ def get_spots():
       sort = Spot.num_reviews.desc().nullslast()
     if sort_param == 'top':
       sort = Spot.rating.desc().nullslast()
-  spots = Spot.query.order_by(sort).limit(15).all()
+  spots = Spot.query.filter(Spot.is_verified.isnot(False)).order_by(sort).limit(15).all()
   output = []
   for spot in spots:
     spot_data = spot.get_dict()
