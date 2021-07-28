@@ -1,10 +1,13 @@
 from __future__ import print_function
+from botocore.exceptions import ClientError
 from flask import Flask, request, redirect, url_for, session, jsonify, render_template
 from flask.helpers import make_response
 from flask_cors import CORS
 import os
 import os.path
-
+import logging
+import boto3
+from botocore import client
 from app.models import *
 from sqlalchemy.orm import joinedload
 from sqlalchemy import or_, and_
@@ -530,3 +533,21 @@ def user_signup_fake():
   db.session.commit()
   user.id
   return user.get_dict()
+
+@app.route("/image/getpost", methods=["POST"])
+def create_presigned_post(fields=None, conditions=None, expiration=3600):
+  bucket_name = "snorkel"
+  object_name = request.json.get("filename")
+  s3_client = boto3.client('s3')
+  try:
+    response = s3_client.generate_presigned_post(bucket_name,
+      object_name,
+      Fields=fields,
+      Conditions=conditions,
+      ExpiresIn=expiration)
+  except ClientError as e:
+    logging.error(e)
+    return None
+  return response
+
+
