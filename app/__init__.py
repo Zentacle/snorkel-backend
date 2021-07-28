@@ -161,6 +161,11 @@ def user_signup():
         'display_name': display_name,
         'url': 'https://www.zentacle.com/setpassword?userid='+str(user.id)
     }
+    try:
+        sg = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
+        sg.send(message)
+    except Exception as e:
+        print(e.body)
   message = Mail(
       from_email=('no-reply@zentacle.com', 'Zentacle'),
       to_emails='mjmayank@gmail.com')
