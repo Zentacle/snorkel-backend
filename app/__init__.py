@@ -15,6 +15,9 @@ from flask_migrate import Migrate
 import dateutil.parser
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
+import logging
+import boto3
+from botocore.exceptions import ClientError
 
 app = Flask(__name__)
 app.secret_key = 'the random string'
@@ -567,3 +570,22 @@ def get_images():
     for image in images:
       output.append(image.get_dict())
     return { 'data': output }
+
+@app.route("/s3-upload")
+def create_presigned_post():
+    bucket_name = 'snorkel'
+    object_name = request.args.get('file')
+    expiration=3600
+
+    # Generate a presigned S3 POST URL
+    s3_client = boto3.client('s3', region_name='us-east-1')
+    try:
+        response = s3_client.generate_presigned_post(Bucket=bucket_name,
+                                                     Key=object_name,
+                                                     ExpiresIn=expiration)
+    except ClientError as e:
+        logging.error(e)
+        return None
+
+    # The response contains the presigned URL and required fields
+    return response
