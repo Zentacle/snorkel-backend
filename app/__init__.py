@@ -127,9 +127,10 @@ def user_signup():
   user = User.query.filter_by(email=email).first()
   if user:
     return { 'msg': 'An account with this email already exists' }, 400
-  user = User.query.filter_by(username=username).first()
-  if user:
-    return { 'msg': 'An account with this username already exists' }, 400
+  if username:
+    user = User.query.filter_by(username=username).first()
+    if user:
+      return { 'msg': 'An account with this username already exists' }, 400
 
   user = User(
     display_name=display_name,
