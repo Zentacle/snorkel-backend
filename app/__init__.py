@@ -176,6 +176,28 @@ def user_signup():
         print(e.body)
   return resp
 
+@app.route("/user/register/password", methods=["POST"])
+def user_finish_signup():
+  user_id = request.json.get('user_id')
+  user = User.query.filter_by(id=user_id).first()
+  if user.password:
+    return { 'msg': 'This user has already registered a password' }, 401
+  unencrypted_password = request.json.get('password')
+  password = bcrypt.hashpw(unencrypted_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+  user.password = password
+  db.session.commit()
+  auth_token = create_access_token(identity=user.id)
+  refresh_token = create_refresh_token(identity=user.id)
+  responseObject = {
+    'status': 'success',
+    'message': 'Successfully registered.',
+    'auth_token': auth_token
+  }
+  resp = make_response(responseObject)
+  set_access_cookies(resp, auth_token)
+  set_refresh_cookies(resp, refresh_token)
+  return resp
+
 """
 Save the response token as an Authorization header with the format
 Authorization: Bearer <token>
