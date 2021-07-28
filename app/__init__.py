@@ -117,6 +117,15 @@ def user_signup():
   unencrypted_password = request.json.get('password')
   password = bcrypt.hashpw(unencrypted_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
 
+  if not unencrypted_password:
+    return { 'msg': 'Please enter a password' }, 400
+  if not email:
+    return { 'msg': 'Please enter an email' }, 400
+  if not display_name:
+    return { 'msg': 'Please enter a name' }, 400
+  if not username:
+    return { 'msg': 'Please enter a username' }, 400
+
   user = User.query.filter_by(email=email).first()
   if user:
     return { 'msg': 'An account with this email already exists' }, 400
@@ -144,7 +153,7 @@ def user_signup():
   set_access_cookies(resp, auth_token)
   set_refresh_cookies(resp, refresh_token)
   message = Mail(
-      from_email=('no-reply@straightshotvideo.com', 'Zentacle'),
+      from_email=('no-reply@zentacle.com', 'Zentacle'),
       to_emails='mjmayank@gmail.com')
 
   message.template_id = 'd-926fe53d5696480fb65b92af8cd8484e'
