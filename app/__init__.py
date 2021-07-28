@@ -117,14 +117,10 @@ def user_signup():
   unencrypted_password = request.json.get('password')
   password = bcrypt.hashpw(unencrypted_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
 
-  if not unencrypted_password:
-    return { 'msg': 'Please enter a password' }, 400
   if not email:
     return { 'msg': 'Please enter an email' }, 400
   if not display_name:
     return { 'msg': 'Please enter a name' }, 400
-  if not username:
-    return { 'msg': 'Please enter a username' }, 400
 
   user = User.query.filter_by(email=email).first()
   if user:
@@ -152,6 +148,16 @@ def user_signup():
   resp = make_response(responseObject)
   set_access_cookies(resp, auth_token)
   set_refresh_cookies(resp, refresh_token)
+  if not unencrypted_password:
+    message = Mail(
+      from_email=('no-reply@zentacle.com', 'Zentacle'),
+      to_emails=email)
+
+    message.template_id = 'd-b683fb33f315435e8d2177def8e57d6f'
+    message.dynamic_template_data = {
+        'display_name': display_name,
+        'url': 'https://www.zentacle.com/setpassword?userid='+user.id
+    }
   message = Mail(
       from_email=('no-reply@zentacle.com', 'Zentacle'),
       to_emails='mjmayank@gmail.com')
