@@ -69,6 +69,8 @@ class Review(db.Model):
         default=datetime.utcnow)
     activity_type = db.Column(db.String)
 
+    images = db.relationship("Image", backref=db.backref('review', lazy=True))
+
     def get_dict(self):
         data = self.__dict__
         data.pop('_sa_instance_state', None)
@@ -80,3 +82,8 @@ class Image(db.Model):
     beach_id = db.Column(db.Integer, db.ForeignKey('spot.id'), nullable=True)
     review_id = db.Column(db.Integer, db.ForeignKey('review.id'), nullable=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+
+    def get_dict(self):
+        data = self.__dict__
+        data.pop('_sa_instance_state', None)
+        return data
