@@ -150,11 +150,12 @@ def user_signup():
       'username': username,
       'email': email,
   }
-  try:
-      sg = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
-      sg.send(message)
-  except Exception as e:
-      print(e.body)
+  if not os.environ.get('FLASK_ENV') == 'development':
+    try:
+        sg = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
+        sg.send(message)
+    except Exception as e:
+        print(e.body)
   return resp
 
 """
@@ -377,11 +378,12 @@ def add_review():
       'text': text,
       'url': 'https://www.zentacle.com/'+str(beach_id),
   }
-  try:
-      sg = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
-      sg.send(message)
-  except Exception as e:
-      print(e.body)
+  if not os.environ.get('FLASK_ENV') == 'development':
+    try:
+        sg = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
+        sg.send(message)
+    except Exception as e:
+        print(e.body)
   review.id
   return { 'data': review.get_dict() }, 200
 
