@@ -158,7 +158,7 @@ def user_signup():
     message.template_id = 'd-b683fb33f315435e8d2177def8e57d6f'
     message.dynamic_template_data = {
         'display_name': display_name,
-        'url': 'https://www.zentacle.com/setpassword?userid='+user.id
+        'url': 'https://www.zentacle.com/setpassword?userid='+str(user.id)
     }
   message = Mail(
       from_email=('no-reply@zentacle.com', 'Zentacle'),
