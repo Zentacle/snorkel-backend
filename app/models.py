@@ -32,9 +32,15 @@ class User(db.Model):
         if data.get('_sa_instance_state'):
             data.pop('_sa_instance_state', None)
         data.pop('password', None)
-        data.pop('is_fake')
         data.pop('email')
-        data.pop('admin')
+        try:
+            data.pop('is_fake')
+        except KeyError as e:
+            print(e.body)
+        try:
+            data.pop('admin')
+        except KeyError as e:
+            print(e.body)
         return data
 
 class Spot(db.Model):
