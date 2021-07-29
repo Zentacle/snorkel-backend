@@ -35,15 +35,15 @@ class User(db.Model):
         try:
             data.pop('email')
         except KeyError as e:
-            print(e.body)
+            print(e)
         try:
             data.pop('is_fake')
         except KeyError as e:
-            print(e.body)
+            print(e)
         try:
             data.pop('admin')
         except KeyError as e:
-            print(e.body)
+            print(e)
         return data
 
 class Spot(db.Model):
