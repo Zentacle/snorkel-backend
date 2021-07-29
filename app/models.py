@@ -29,11 +29,12 @@ class User(db.Model):
 
     def get_dict(self):
         data = self.__dict__
-        data = self.__dict__
-        if data.get('password'):
-            data.pop('password', None)
         if data.get('_sa_instance_state'):
             data.pop('_sa_instance_state', None)
+        data.pop('password', None)
+        data.pop('is_fake')
+        data.pop('email')
+        data.pop('admin')
         return data
 
 class Spot(db.Model):

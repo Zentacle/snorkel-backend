@@ -641,3 +641,14 @@ def create_presigned_post():
 
     # The response contains the presigned URL and required fields
     return response
+
+@app.route("/user/get")
+def get_user():
+    username = request.args.get('username')
+    user = User.query.options(joinedload('reviews')).order_by(Review.date_posted.desc()).filter_by(username=username).first()
+    user_data = user.get_dict()
+    review_data = []
+    for review in user.reviews:
+      review_data.append(review.get_dict())
+    user_data['reviews'] = review_data
+    return { 'data': user_data }
