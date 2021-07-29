@@ -13,6 +13,8 @@ def demicrosoft(fn):
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String, unique=True, nullable=False)
+    first_name = db.Column(db.String)
+    last_name = db.Column(db.String)
     display_name = db.Column(db.String)
     username = db.Column(db.String, unique=True)
     profile_pic = db.Column(db.String)

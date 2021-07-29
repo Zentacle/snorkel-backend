@@ -110,7 +110,8 @@ Auth data goes in a cookie
 """
 @app.route("/user/register", methods=["POST"])
 def user_signup():
-  display_name = request.json.get('display_name')
+  first_name = request.json.get('first_name')
+  last_name = request.json.get('last_name')
   email = request.json.get('email')
   username = request.json.get('username')
   profile_pic = request.json.get('profile_pic')
@@ -121,7 +122,7 @@ def user_signup():
 
   if not email:
     return { 'msg': 'Please enter an email' }, 400
-  if not display_name:
+  if not first_name:
     return { 'msg': 'Please enter a name' }, 400
 
   user = User.query.filter_by(email=email).first()
@@ -133,7 +134,9 @@ def user_signup():
       return { 'msg': 'An account with this username already exists' }, 400
 
   user = User(
-    display_name=display_name,
+    first_name=first_name,
+    last_name=last_name,
+    display_name=first_name + ' ' + last_name,
     email=email,
     password=password,
     username=username,
@@ -158,7 +161,7 @@ def user_signup():
 
     message.template_id = 'd-b683fb33f315435e8d2177def8e57d6f'
     message.dynamic_template_data = {
-        'display_name': display_name,
+        'first_name': first_name,
         'url': 'https://www.zentacle.com/setpassword?userid='+str(user.id)
     }
     try:
@@ -172,7 +175,7 @@ def user_signup():
 
   message.template_id = 'd-926fe53d5696480fb65b92af8cd8484e'
   message.dynamic_template_data = {
-      'display_name': display_name,
+      'first_name': first_name,
       'username': username,
       'email': email,
   }
@@ -422,7 +425,7 @@ def add_review():
   message.template_id = 'd-3188c5ee843443bf91c5eecf3b66f26d'
   message.dynamic_template_data = {
       'beach_name': spot.name,
-      'display_name': user.display_name,
+      'first_name': user.first_name,
       'text': text,
       'url': 'https://www.zentacle.com/'+str(beach_id),
   }
@@ -544,8 +547,8 @@ def submit_fake_review():
   import random
   found_one = False
   while not found_one:
-    username = random.choice(fake_users)
-    user = User.query.filter_by(display_name=username).first()
+    fakename = random.choice(fake_users)
+    user = User.query.filter_by(display_name=fakename).first()
     if not user:
       continue
     review = Review.query.filter(and_(Review.author_id == user.id, Review.beach_id == beach_id)).first()
@@ -588,6 +591,8 @@ def submit_fake_review():
 def user_signup_fake():
   display_name = request.json.get('display_name')
   username = display_name.replace(" ", "_").lower()
+  first_name = display_name.split(' ')[0]
+  last_name = display_name.split(' ')[1]
   email = username + '@zentacle.com'
   unencrypted_password = 'password'
   password = bcrypt.hashpw(unencrypted_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
@@ -597,6 +602,8 @@ def user_signup_fake():
     return { 'msg': 'A fake account with this name already exists' }, 400
 
   user = User(
+    first_name=first_name,
+    last_name=last_name,
     display_name=display_name,
     email=email,
     password=password,
