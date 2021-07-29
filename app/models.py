@@ -28,8 +28,10 @@ class User(db.Model):
     def get_dict(self):
         data = self.__dict__
         data = self.__dict__
-        data.pop('password', None)
-        data.pop('_sa_instance_state', None)
+        if data.get('password'):
+            data.pop('password', None)
+        if data.get('_sa_instance_state'):
+            data.pop('_sa_instance_state', None)
         return data
 
 class Spot(db.Model):
@@ -52,7 +54,8 @@ class Spot(db.Model):
 
     def get_dict(self):
         data = self.__dict__
-        data.pop('_sa_instance_state', None)
+        if data.get('_sa_instance_state'):
+            data.pop('_sa_instance_state', None)
         data['url'] = '/Beach/'+str(self.id)+'/'+demicrosoft(self.name).lower()
         return data
 
@@ -73,7 +76,8 @@ class Review(db.Model):
 
     def get_dict(self):
         data = self.__dict__
-        data.pop('_sa_instance_state', None)
+        if data.get('_sa_instance_state'):
+            data.pop('_sa_instance_state', None)
         return data
 
 class Image(db.Model):
@@ -85,5 +89,6 @@ class Image(db.Model):
 
     def get_dict(self):
         data = self.__dict__
-        data.pop('_sa_instance_state', None)
+        if data.get('_sa_instance_state'):
+            data.pop('_sa_instance_state', None)
         return data
