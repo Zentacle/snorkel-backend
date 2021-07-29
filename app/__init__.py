@@ -645,10 +645,17 @@ def create_presigned_post():
 @app.route("/user/get")
 def get_user():
     username = request.args.get('username')
-    user = User.query.options(joinedload('reviews')).order_by(Review.date_posted.desc()).filter_by(username=username).first()
+    user = User.query \
+      .options(joinedload('reviews')) \
+      .filter(User.id == Review.id) \
+      .order_by(Review.date_posted.desc()) \
+      .filter_by(username=username).first()
     user_data = user.get_dict()
-    review_data = []
+    reviews_data = []
     for review in user.reviews:
-      review_data.append(review.get_dict())
-    user_data['reviews'] = review_data
+      review.spot
+      review_data = review.get_dict()
+      review_data['spot'] = review.spot.get_dict()
+      reviews_data.append(review_data)
+    user_data['reviews'] = reviews_data
     return { 'data': user_data }
