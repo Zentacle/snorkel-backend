@@ -32,7 +32,10 @@ class User(db.Model):
         if data.get('_sa_instance_state'):
             data.pop('_sa_instance_state', None)
         data.pop('password', None)
-        data.pop('email')
+        try:
+            data.pop('email')
+        except KeyError as e:
+            print(e.body)
         try:
             data.pop('is_fake')
         except KeyError as e:
