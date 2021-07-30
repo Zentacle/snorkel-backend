@@ -457,11 +457,15 @@ Response
 def get_reviews():
   beach_id = request.args.get('beach_id')
 
-  reviews = Review.query.options(joinedload('user')).order_by(Review.date_posted.desc()).filter_by(beach_id=beach_id).all()
+  reviews = Review.query.options(joinedload('user')).options(joinedload('shorediving_data')).order_by(Review.date_posted.desc()).filter_by(beach_id=beach_id).all()
   output = []
   for review in reviews:
     data = review.get_dict()
     data['user'] = review.user.get_dict()
+    try:
+      data['shorediving_data'] = review.shorediving_data.get_dict()
+    except Exception:
+      pass
     output.append(data)
   return { 'data': output }
 
@@ -659,3 +663,71 @@ def get_user():
       reviews_data.append(review_data)
     user_data['reviews'] = reviews_data
     return { 'data': user_data }
+
+@app.route("/review/add/shorediving", methods=["POST"])
+def add_shore_review():
+  beach_id = request.json.get('beach_id')
+  reviews = request.json.get('data')
+
+  for review_json in reviews:
+    username = review_json.get('username')
+    user = User.query.filter_by(username=username).first()
+    display_name = review_json.get('display_name')
+    first_name = review_json.get('first_name')
+    if not user:
+      user = User(
+        username=username,
+        display_name=display_name,
+        first_name=first_name,
+        email='noreply+'+username+'@zentacle.com',
+      )
+      db.session.add(user)
+      db.session.commit()
+
+    visibility = review_json.get('visibility') if review_json.get('visibility') != '' else None
+    text = review_json.get('text')
+    rating = review_json.get('rating')
+    activity_type = review_json.get('activity_type')
+    date_posted = dateutil.parser.isoparse(review_json.get('date_dived'))
+    date_dived = dateutil.parser.isoparse(review_json.get('date_dived')) if review_json.get('date_dived') else datetime.utcnow()
+    if not rating:
+      return { 'msg': 'Please select a rating' }, 401
+    if not activity_type:
+      return { 'msg': 'Please select scuba or snorkel' }, 401
+
+    review = Review(
+      author_id=user.id,
+      beach_id=beach_id,
+      visibility=visibility,
+      text=text,
+      rating=rating,
+      activity_type=activity_type,
+      date_dived=date_dived,
+      date_posted=date_posted,
+    )
+
+    shorediving_data = ShoreDivingReview(
+      shorediving_url=review_json.get('shorediving_url'),
+      shorediving_id=review_json.get('shorediving_id'),
+      review=review,
+    )
+
+    db.session.add(review)
+    db.session.add(shorediving_data)
+
+    spot = Spot.query.filter_by(id=beach_id).first()
+    if not spot:
+      return { 'msg': 'Couldn\'t find that spot' }, 404
+    if not spot.num_reviews:
+      spot.num_reviews = 1
+      spot.rating = rating
+    else:
+      new_rating = str(round(((float(spot.rating) * (spot.num_reviews*1.0)) + rating) / (spot.num_reviews + 1), 2))
+      spot.rating = new_rating
+      spot.num_reviews += 1
+    if visibility and (not spot.last_review_date or date_dived > spot.last_review_date):
+      spot.last_review_date = date_dived
+      spot.last_review_viz = visibility
+    db.session.commit()
+    review.id
+  return { 'msg': 'all done' }, 200
