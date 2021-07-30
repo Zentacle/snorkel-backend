@@ -457,7 +457,7 @@ Response
 def get_reviews():
   beach_id = request.args.get('beach_id')
 
-  reviews = Review.query.options(joinedload('user')).options(joinedload('shorediving_data')).order_by(Review.date_posted.desc()).filter_by(beach_id=beach_id).all()
+  reviews = Review.query.options(joinedload('user')).options(joinedload('shorediving_data')).options(joinedload('images')).order_by(Review.date_posted.desc()).filter_by(beach_id=beach_id).all()
   output = []
   for review in reviews:
     data = review.get_dict()
@@ -466,6 +466,10 @@ def get_reviews():
       data['shorediving_data'] = review.shorediving_data.get_dict()
     except Exception:
       pass
+    image_data = []
+    for image in review.images:
+      image_data.append(image.get_dict())
+    data['images'] = image_data
     output.append(data)
   return { 'data': output }
 
