@@ -503,6 +503,8 @@ def delete_review():
   review = Review.query.filter_by(id=review_id).first()
   beach_id = review.beach_id
   rating = review.rating
+  for image in review.images:
+    Image.query.filter_by(id=image.id).delete()
 
   spot = Spot.query.filter_by(id=beach_id).first()
   if spot.num_reviews == 1:
