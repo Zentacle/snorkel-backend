@@ -10,6 +10,20 @@ def demicrosoft(fn):
         fn = fn.replace(ch,"_")
     return fn
 
+class ShoreDivingReview(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    shorediving_id = db.Column(db.String)
+    shorediving_url = db.Column(db.String)
+    review_id = db.Column(db.Integer, db.ForeignKey('review.id'))
+
+    review = db.relationship("Review", back_populates="shorediving_data", uselist=False)
+
+    def get_dict(self):
+        data = self.__dict__
+        if data.get('_sa_instance_state'):
+            data.pop('_sa_instance_state', None)
+        return data
+
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String, unique=True, nullable=False)
@@ -34,16 +48,16 @@ class User(db.Model):
         data.pop('password', None)
         try:
             data.pop('email')
-        except KeyError as e:
-            print(e)
+        except KeyError:
+            pass
         try:
             data.pop('is_fake')
-        except KeyError as e:
-            print(e)
+        except KeyError:
+            pass
         try:
             data.pop('admin')
-        except KeyError as e:
-            print(e)
+        except KeyError:
+            pass
         return data
 
 class Spot(db.Model):
@@ -85,6 +99,7 @@ class Review(db.Model):
     activity_type = db.Column(db.String)
 
     images = db.relationship("Image", backref=db.backref('review', lazy=True))
+    shorediving_data = db.relationship("ShoreDivingReview", back_populates="review", uselist=False)
 
     def get_dict(self):
         data = self.__dict__
