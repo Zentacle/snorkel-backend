@@ -496,6 +496,21 @@ def get_summary_reviews_helper(beach_id):
 
   return output
 
+@app.route("/review/patch", methods=["PATCH"])
+def patch_review():
+  beach_id = request.json.get('id')
+  spot = Review.query.filter_by(id=beach_id).first()
+  updates = request.json
+  updates.pop('id', None)
+  try:
+    for key in updates.keys():
+      setattr(spot, key, updates.get(key))
+  except ValueError as e:
+    return e, 500
+  db.session.commit()
+  spot_data = spot.get_dict()
+  return spot_data, 200
+
 @app.route("/review/delete")
 def delete_review():
   review_id = request.args.get('review_id')
