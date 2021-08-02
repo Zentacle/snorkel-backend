@@ -521,6 +521,8 @@ def delete_review():
   for image in review.images:
     Image.query.filter_by(id=image.id).delete()
 
+  ShoreDivingReview.query.filter_by(id=review.shorediving_data.id).delete()
+
   spot = Spot.query.filter_by(id=beach_id).first()
   if spot.num_reviews == 1:
     spot.num_reviews = 0
