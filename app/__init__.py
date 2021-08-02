@@ -287,7 +287,12 @@ def get_spots():
       sort = Spot.num_reviews.desc().nullslast()
     if sort_param == 'top':
       sort = Spot.rating.desc().nullslast()
-  query = Spot.query.filter(Spot.is_verified.isnot(False)).order_by(sort)
+  query = Spot.query
+  if request.args.get('unverified'):
+    query = query.filter(Spot.is_verified.isnot(True))
+  else:
+    query = query.filter(Spot.is_verified.isnot(False))
+  query = query.order_by(sort)
   if request.args.get('limit') != 'none':
     query = query.limit(15)
   spots = query.all()
@@ -754,3 +759,8 @@ def add_shore_review():
     db.session.commit()
     review.id
   return { 'msg': 'all done' }, 200
+
+@app.route("/spot/recalc", methods=["POST"])
+def recalc_spot_rating():
+
+  summary = get_summary_reviews_helper(beach_id)
