@@ -364,6 +364,7 @@ def patch_spot():
   except ValueError as e:
     return e, 500
   db.session.commit()
+  spot.id
   spot_data = spot.get_dict()
   return spot_data, 200
 
