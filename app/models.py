@@ -19,10 +19,10 @@ class ShoreDivingReview(db.Model):
     review = db.relationship("Review", back_populates="shorediving_data", uselist=False)
 
     def get_dict(self):
-        data = self.__dict__
-        if data.get('_sa_instance_state'):
-            data.pop('_sa_instance_state', None)
-        return data
+        return {
+            'shorediving_url': self.shorediving_url,
+            'id': self.id
+        }
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -115,7 +115,7 @@ class Image(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
 
     def get_dict(self):
-        data = self.__dict__
-        if data.get('_sa_instance_state'):
-            data.pop('_sa_instance_state', None)
-        return data
+        return {
+            'url': self.url,
+            'id': self.id
+        }

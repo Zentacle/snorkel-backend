@@ -462,8 +462,15 @@ Response
 @app.route("/review/get")
 def get_reviews():
   beach_id = request.args.get('beach_id')
+  limit = request.args.get('limit')
+  offset = int(request.args.get('offset')) if request.args.get('offset') else 0
 
-  reviews = Review.query.options(joinedload('user')).options(joinedload('shorediving_data')).options(joinedload('images')).order_by(Review.date_posted.desc()).filter_by(beach_id=beach_id).all()
+  query = Review.query.options(joinedload('user')).options(joinedload('shorediving_data')).options(joinedload('images')).order_by(Review.date_posted.desc()).filter_by(beach_id=beach_id)
+  if limit:
+    query = query.limit(limit)
+  if offset:
+    query = query.offset(offset)
+  reviews = query.all()
   output = []
   for review in reviews:
     data = review.get_dict()
@@ -477,7 +484,7 @@ def get_reviews():
       image_data.append(image.get_dict())
     data['images'] = image_data
     output.append(data)
-  return { 'data': output }
+  return { 'data': output, 'next_offset': offset + len(output) }
 
 # returns count for each rating for individual beach/area ["1"] ["2"] ["3"], etc
 # returns count for total ratings ["total"]
