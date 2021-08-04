@@ -326,7 +326,8 @@ def add_spot():
   location_google = request.json.get('location_google')
   hero_img = request.json.get('hero_img')
   entry_map = request.json.get('entry_map')
-  is_verified = True if get_current_user() and get_current_user().admin else False
+  user = get_current_user()
+  is_verified = True if user and user.admin else False
 
   if not name or not location_city:
     return { 'msg': 'Please enter a name and location' }, 404
@@ -334,6 +335,25 @@ def add_spot():
   spot = Spot.query.filter(and_(Spot.name==name, Spot.location_city==location_city)).first()
   if spot:
     return { 'msg': 'Spot already exists' }, 409
+
+  if not user or not user.admin:
+    message = Mail(
+        from_email=('no-reply@zentacle.com', 'Zentacle'),
+        to_emails='mjmayank@gmail.com')
+
+    message.template_id = 'd-df22c68e00c345108a3ac18ebf65bdaf'
+    message.dynamic_template_data = {
+        'beach_name': spot.name,
+        'user_display_name': user.first_name,
+        'description': description,
+        'location': location_city,
+    }
+    if not os.environ.get('FLASK_ENV') == 'development':
+      try:
+          sg = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
+          sg.send(message)
+      except Exception as e:
+          print(e.body)
 
   spot = Spot(
     name=name,
@@ -425,7 +445,7 @@ def add_review():
     spot.last_review_viz = visibility
   db.session.commit()
   message = Mail(
-      from_email=('no-reply@straightshotvideo.com', 'Zentacle'),
+      from_email=('no-reply@zentacle.com', 'Zentacle'),
       to_emails='mjmayank@gmail.com')
 
   message.template_id = 'd-3188c5ee843443bf91c5eecf3b66f26d'
