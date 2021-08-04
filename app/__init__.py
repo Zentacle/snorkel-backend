@@ -559,6 +559,7 @@ def get_recs():
   spots_been_to = db.session.query(Spot.id).join(Review, Spot.id == Review.beach_id, isouter=True).filter(Review.author_id==user_id).subquery()
   spots = Spot.query \
     .filter(Spot.id.not_in(spots_been_to)) \
+    .filter(Spot.is_verified.isnot(False)) \
     .all()
   data = []
   for spot in spots:
@@ -770,5 +771,6 @@ def add_shore_review():
 
 @app.route("/spot/recalc", methods=["POST"])
 def recalc_spot_rating():
-
+  beach_id = request.json.get('beach_id')
   summary = get_summary_reviews_helper(beach_id)
+  return {}
