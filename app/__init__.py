@@ -7,7 +7,7 @@ import os.path
 
 from app.models import *
 from sqlalchemy.orm import joinedload
-from sqlalchemy import or_, and_
+from sqlalchemy import or_, and_, not_
 import bcrypt
 from flask_jwt_extended import *
 from datetime import timezone, timedelta
@@ -84,7 +84,16 @@ def delete():
 
 @app.route("/getall")
 def getAllData():
-    users = User.query.all()
+    users = None
+    if request.args.get('real'):
+      users = User.query.filter(
+        and_(
+          not_(User.email.contains('zentacle.com')),
+          User.is_fake.is_not(True)
+        )
+      )
+    else:
+      users = User.query.all()
     output = []
     for user in users:
       output.append(user.get_dict())
@@ -708,8 +717,6 @@ def get_user():
     username = request.args.get('username')
     user = User.query \
       .options(joinedload('reviews')) \
-      .filter(User.id == Review.id) \
-      .order_by(Review.date_posted.asc()) \
       .filter_by(username=username).first()
     user_data = user.get_dict()
     reviews_data = []

@@ -38,7 +38,11 @@ class User(db.Model):
     admin = db.Column(db.Boolean, nullable=False, default=False)
     is_fake=db.Column(db.Boolean, default=False)
 
-    reviews = db.relationship("Review", backref=db.backref('user', lazy=True))
+    reviews = db.relationship(
+        "Review",
+        backref=db.backref('user', lazy=True),
+        order_by="asc(Review.date_dived)",
+    )
     images = db.relationship("Image")
 
     def get_dict(self):
