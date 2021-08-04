@@ -709,7 +709,7 @@ def get_user():
     user = User.query \
       .options(joinedload('reviews')) \
       .filter(User.id == Review.id) \
-      .order_by(Review.date_posted.desc()) \
+      .order_by(Review.date_posted.asc()) \
       .filter_by(username=username).first()
     user_data = user.get_dict()
     reviews_data = []
