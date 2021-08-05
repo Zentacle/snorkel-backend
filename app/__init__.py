@@ -223,7 +223,60 @@ def user_google_signup():
     #     raise ValueError('Wrong hosted domain.')
 
     # ID token is valid. Get the user's Google Account ID from the decoded token.
-    userid = idinfo['sub']
+    email = idinfo.get('email')
+    first_name = idinfo.get('given_name')
+    last_name = idinfo.get('last_name')
+    display_name = idinfo.get('name')
+    profile_pic = idinfo.get('picture')
+    user = User(
+      first_name=first_name,
+      last_name=last_name,
+      display_name=display_name,
+      email=email,
+      profile_pic=profile_pic
+    )
+    db.session.add(user)
+    db.session.commit()
+    auth_token = create_access_token(identity=user.id)
+    refresh_token = create_refresh_token(identity=user.id)
+    responseObject = {
+      'status': 'success',
+      'message': 'Successfully registered.',
+      'auth_token': auth_token
+    }
+    resp = make_response(responseObject)
+    set_access_cookies(resp, auth_token)
+    set_refresh_cookies(resp, refresh_token)
+    message = Mail(
+      from_email=('no-reply@zentacle.com', 'Zentacle'),
+      to_emails=email)
+
+    message.template_id = 'd-b683fb33f315435e8d2177def8e57d6f'
+    message.dynamic_template_data = {
+        'first_name': first_name,
+        'url': 'https://www.zentacle.com/setpassword?userid='+str(user.id)
+    }
+    try:
+        sg = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
+        sg.send(message)
+    except Exception as e:
+        print(e.body)
+    message = Mail(
+        from_email=('no-reply@zentacle.com', 'Zentacle'),
+        to_emails='mjmayank@gmail.com')
+
+    message.template_id = 'd-926fe53d5696480fb65b92af8cd8484e'
+    message.dynamic_template_data = {
+        'first_name': first_name,
+        'email': email,
+    }
+    if not os.environ.get('FLASK_ENV') == 'development':
+      try:
+          sg = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
+          sg.send(message)
+      except Exception as e:
+          print(e.body)
+    return resp
   except ValueError:
     return { 'data': token }, 401
     # Invalid token
