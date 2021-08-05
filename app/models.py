@@ -78,9 +78,11 @@ class Spot(db.Model):
     last_review_date = db.Column(db.DateTime)
     last_review_viz = db.Column(db.Integer)
     is_verified = db.Column(db.Boolean, nullable=False, default=False)
+    submitter_id = db.Column(db.Integer, db.ForeignKey('user.id'))
 
     reviews = db.relationship("Review", backref="spot")
     images = db.relationship("Image", backref="spot")
+    submitter = db.relationship("User", uselist=False)
 
     def get_dict(self):
         data = self.__dict__
