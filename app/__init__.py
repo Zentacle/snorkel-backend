@@ -4,6 +4,8 @@ from flask.helpers import make_response
 from flask_cors import CORS
 import os
 import os.path
+import logging
+import sys
 
 from app.models import *
 from sqlalchemy.orm import joinedload
@@ -33,6 +35,7 @@ app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(hours=1)
 app.config["JWT_REFRESH_TOKEN_EXPIRES"] = timedelta(days=30)
 app.config["JWT_TOKEN_LOCATION"] = ["cookies", "headers"]
 app.config["JWT_SESSION_COOKIE"] = False
+app.logger.addHandler(logging.StreamHandler(sys.stdout))
 #app.config["JWT_COOKIE_SECURE"] = True # Uncomment when running in production
 
 
