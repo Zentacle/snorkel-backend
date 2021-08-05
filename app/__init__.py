@@ -1,5 +1,5 @@
 from __future__ import print_function
-from flask import Flask, request, redirect, url_for, session, jsonify, render_template
+from flask import Flask, request, session, jsonify
 from flask.helpers import make_response
 from flask_cors import CORS
 import os
@@ -22,6 +22,7 @@ import boto3
 from botocore.exceptions import ClientError
 from google.oauth2 import id_token
 from google.auth.transport import requests
+from app.helpers import create_account, login
 
 app = Flask(__name__)
 app.secret_key = 'the random string'
@@ -133,75 +134,18 @@ def user_signup():
   username = request.json.get('username')
   profile_pic = request.json.get('profile_pic')
   unencrypted_password = request.json.get('password')
-  password = bcrypt.hashpw(unencrypted_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8') \
-    if unencrypted_password \
-    else None
+  display_name = first_name + ' ' + last_name
 
-  if not email:
-    return { 'msg': 'Please enter an email' }, 400
-  if not first_name:
-    return { 'msg': 'Please enter a name' }, 400
-
-  user = User.query.filter_by(email=email).first()
-  if user:
-    return { 'msg': 'An account with this email already exists' }, 400
-  if username:
-    user = User.query.filter_by(username=username).first()
-    if user:
-      return { 'msg': 'An account with this username already exists' }, 400
-
-  user = User(
+  resp = create_account(
+    db,
     first_name=first_name,
     last_name=last_name,
-    display_name=first_name + ' ' + last_name,
+    display_name=display_name,
     email=email,
-    password=password,
+    profile_pic=profile_pic,
     username=username,
-    profile_pic=profile_pic
+    unencrypted_password=unencrypted_password,
   )
-  db.session.add(user)
-  db.session.commit()
-  auth_token = create_access_token(identity=user.id)
-  refresh_token = create_refresh_token(identity=user.id)
-  responseObject = {
-    'status': 'success',
-    'message': 'Successfully registered.',
-    'auth_token': auth_token
-  }
-  resp = make_response(responseObject)
-  set_access_cookies(resp, auth_token)
-  set_refresh_cookies(resp, refresh_token)
-  if not unencrypted_password:
-    message = Mail(
-      from_email=('no-reply@zentacle.com', 'Zentacle'),
-      to_emails=email)
-
-    message.template_id = 'd-b683fb33f315435e8d2177def8e57d6f'
-    message.dynamic_template_data = {
-        'first_name': first_name,
-        'url': 'https://www.zentacle.com/setpassword?userid='+str(user.id)
-    }
-    try:
-        sg = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
-        sg.send(message)
-    except Exception as e:
-        print(e.body)
-  message = Mail(
-      from_email=('no-reply@zentacle.com', 'Zentacle'),
-      to_emails='mjmayank@gmail.com')
-
-  message.template_id = 'd-926fe53d5696480fb65b92af8cd8484e'
-  message.dynamic_template_data = {
-      'first_name': first_name,
-      'username': username,
-      'email': email,
-  }
-  if not os.environ.get('FLASK_ENV') == 'development':
-    try:
-        sg = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
-        sg.send(message)
-    except Exception as e:
-        print(e.body)
   return resp
 
 @app.route("/user/google_register", methods=["POST"])
@@ -224,58 +168,21 @@ def user_google_signup():
 
     # ID token is valid. Get the user's Google Account ID from the decoded token.
     email = idinfo.get('email')
+    user = User.query.filter_by(email=email).first()
+    if user:
+      return login(user)
     first_name = idinfo.get('given_name')
     last_name = idinfo.get('last_name')
     display_name = idinfo.get('name')
     profile_pic = idinfo.get('picture')
-    user = User(
-      first_name=first_name,
-      last_name=last_name,
-      display_name=display_name,
-      email=email,
-      profile_pic=profile_pic
+    resp = create_account(
+      db,
+      first_name,
+      last_name,
+      display_name,
+      email,
+      profile_pic,
     )
-    db.session.add(user)
-    db.session.commit()
-    auth_token = create_access_token(identity=user.id)
-    refresh_token = create_refresh_token(identity=user.id)
-    responseObject = {
-      'status': 'success',
-      'message': 'Successfully registered.',
-      'auth_token': auth_token
-    }
-    resp = make_response(responseObject)
-    set_access_cookies(resp, auth_token)
-    set_refresh_cookies(resp, refresh_token)
-    message = Mail(
-      from_email=('no-reply@zentacle.com', 'Zentacle'),
-      to_emails=email)
-
-    message.template_id = 'd-b683fb33f315435e8d2177def8e57d6f'
-    message.dynamic_template_data = {
-        'first_name': first_name,
-        'url': 'https://www.zentacle.com/setpassword?userid='+str(user.id)
-    }
-    try:
-        sg = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
-        sg.send(message)
-    except Exception as e:
-        print(e.body)
-    message = Mail(
-        from_email=('no-reply@zentacle.com', 'Zentacle'),
-        to_emails='mjmayank@gmail.com')
-
-    message.template_id = 'd-926fe53d5696480fb65b92af8cd8484e'
-    message.dynamic_template_data = {
-        'first_name': first_name,
-        'email': email,
-    }
-    if not os.environ.get('FLASK_ENV') == 'development':
-      try:
-          sg = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
-          sg.send(message)
-      except Exception as e:
-          print(e.body)
     return resp
   except ValueError:
     return { 'data': token }, 401
@@ -318,21 +225,7 @@ def user_login():
   if not user:
     return { 'msg': 'Wrong password or user does not exist' }, 400
   if bcrypt.checkpw(password.encode('utf-8'), user.password.encode('utf-8')):
-    auth_token = create_access_token(identity=user.id)
-    refresh_token = create_refresh_token(identity=user.id)
-    if auth_token:
-      responseObject = {
-        'data': {
-          'status': 'success',
-          'message': 'Successfully logged in.',
-          'auth_token': auth_token
-        },
-        'user': user.get_dict()
-      }
-      resp = make_response(responseObject)
-      set_access_cookies(resp, auth_token)
-      set_refresh_cookies(resp, refresh_token)
-      return resp
+    return login(user)
   else:
     return { 'msg': 'Wrong password or user does not exist' }, 400
 
