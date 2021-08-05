@@ -352,6 +352,7 @@ def add_spot():
     hero_img=hero_img,
     entry_map=entry_map,
     is_verified=is_verified,
+    submitter=user,
   )
   db.session.add(spot)
   db.session.commit()
