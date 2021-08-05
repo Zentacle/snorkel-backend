@@ -18,6 +18,8 @@ from sendgrid.helpers.mail import Mail
 import logging
 import boto3
 from botocore.exceptions import ClientError
+from google.oauth2 import id_token
+from google.auth.transport import requests
 
 app = Flask(__name__)
 app.secret_key = 'the random string'
@@ -195,6 +197,32 @@ def user_signup():
     except Exception as e:
         print(e.body)
   return resp
+
+@app.route("/user/google_register", methods=["POST"])
+def user_google_signup():
+  token = request.json.get('id_token')
+  print(request.json)
+  userid = None
+  try:
+    # Specify the CLIENT_ID of the app that accesses the backend:
+    idinfo = id_token.verify_oauth2_token(token, requests.Request(), os.environ.get('GOOGLE_CLIENT_ID'))
+
+    # Or, if multiple clients access the backend server:
+    # idinfo = id_token.verify_oauth2_token(token, requests.Request())
+    # if idinfo['aud'] not in [CLIENT_ID_1, CLIENT_ID_2, CLIENT_ID_3]:
+    #     raise ValueError('Could not verify audience.')
+
+    # If auth request is from a G Suite domain:
+    # if idinfo['hd'] != GSUITE_DOMAIN_NAME:
+    #     raise ValueError('Wrong hosted domain.')
+
+    # ID token is valid. Get the user's Google Account ID from the decoded token.
+    userid = idinfo['sub']
+  except ValueError:
+    return 'invalid token'
+    # Invalid token
+    pass
+  return { 'data': userid }
 
 @app.route("/user/register/password", methods=["POST"])
 def user_finish_signup():
