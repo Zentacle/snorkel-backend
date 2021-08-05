@@ -222,10 +222,10 @@ def user_google_signup():
     # ID token is valid. Get the user's Google Account ID from the decoded token.
     userid = idinfo['sub']
   except ValueError:
-    return 'invalid token'
+    return { 'data': token }, 401
     # Invalid token
     pass
-  return { 'data': userid }
+  return { 'data': userid, 'token': token }
 
 @app.route("/user/register/password", methods=["POST"])
 def user_finish_signup():
