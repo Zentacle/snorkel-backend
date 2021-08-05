@@ -200,8 +200,8 @@ def user_signup():
 
 @app.route("/user/google_register", methods=["POST"])
 def user_google_signup():
-  token = request.json.get('id_token')
-  print(request.json)
+  token = request.json.get('credential')
+  app.logger.info(request.json.get('credential'))
   userid = None
   try:
     # Specify the CLIENT_ID of the app that accesses the backend:
