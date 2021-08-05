@@ -35,7 +35,10 @@ app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(hours=1)
 app.config["JWT_REFRESH_TOKEN_EXPIRES"] = timedelta(days=30)
 app.config["JWT_TOKEN_LOCATION"] = ["cookies", "headers"]
 app.config["JWT_SESSION_COOKIE"] = False
-app.logger.addHandler(logging.StreamHandler(sys.stdout))
+if __name__ != '__main__':
+  gunicorn_logger = logging.getLogger('gunicorn.error')
+  app.logger.handlers = gunicorn_logger.handlers
+  app.logger.setLevel(gunicorn_logger.level)
 #app.config["JWT_COOKIE_SECURE"] = True # Uncomment when running in production
 
 
@@ -204,7 +207,7 @@ def user_signup():
 @app.route("/user/google_register", methods=["POST"])
 def user_google_signup():
   token = request.json.get('credential')
-  app.logger.info(request.json.get('credential'))
+  app.logger.error(request.json.get('credential'))
   userid = None
   try:
     # Specify the CLIENT_ID of the app that accesses the backend:
