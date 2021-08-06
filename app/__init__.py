@@ -327,24 +327,6 @@ def add_spot():
   if spot:
     return { 'msg': 'Spot already exists' }, 409
 
-  if not user or not user.admin:
-    message = Mail(
-        from_email=('no-reply@zentacle.com', 'Zentacle'),
-        to_emails='mjmayank@gmail.com')
-
-    message.template_id = 'd-df22c68e00c345108a3ac18ebf65bdaf'
-    message.dynamic_template_data = {
-        'beach_name': spot.name,
-        'user_display_name': user.first_name,
-        'description': description,
-        'location': location_city,
-    }
-    if not os.environ.get('FLASK_ENV') == 'development':
-      try:
-          sg = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
-          sg.send(message)
-      except Exception as e:
-          print(e.body)
   if place_id and not location_google:
     r = requests.get('https://maps.googleapis.com/maps/api/place/details/json', params = {
       'place_id': place_id,
@@ -368,6 +350,24 @@ def add_spot():
   )
   db.session.add(spot)
   db.session.commit()
+  if not user or not user.admin:
+    message = Mail(
+        from_email=('no-reply@zentacle.com', 'Zentacle'),
+        to_emails='mjmayank@gmail.com')
+
+    message.template_id = 'd-df22c68e00c345108a3ac18ebf65bdaf'
+    message.dynamic_template_data = {
+        'beach_name': spot.name,
+        'user_display_name': user.first_name,
+        'description': description,
+        'location': location_city,
+    }
+    if not os.environ.get('FLASK_ENV') == 'development':
+      try:
+          sg = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
+          sg.send(message)
+      except Exception as e:
+          print(e.body)
   spot.id #need this to get data loaded, not sure why
   return { 'data': spot.get_dict() }, 200
 
