@@ -92,6 +92,9 @@ class Spot(db.Model):
         data['url'] = '/Beach/'+str(self.id)+'/'+demicrosoft(self.name).lower()
         return data
 
+    def get_url(self):
+        return '/Beach/'+str(self.id)+'/'+demicrosoft(self.name).lower()
+
 class Review(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     rating = db.Column(db.Integer, nullable=False)

@@ -350,6 +350,7 @@ def add_spot():
   )
   db.session.add(spot)
   db.session.commit()
+  spot.id #need this to get data loaded, not sure why
   if not user or not user.admin:
     message = Mail(
         from_email=('no-reply@zentacle.com', 'Zentacle'),
@@ -368,7 +369,24 @@ def add_spot():
           sg.send(message)
       except Exception as e:
           print(e.body)
-  spot.id #need this to get data loaded, not sure why
+  if user:
+    message = Mail(
+        from_email=('no-reply@zentacle.com', 'Zentacle'),
+        to_emails=user.email,
+        reply_to='mjmayank@gmail.com')
+
+    message.template_id = 'd-2280f0af94dd4a93aea15c5ec95e1760'
+    message.dynamic_template_data = {
+        'beach_name': spot.name,
+        'first_name': user.first_name,
+        'url': spot.get_url(),
+    }
+    if not os.environ.get('FLASK_ENV') == 'development':
+      try:
+          sg = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
+          sg.send(message)
+      except Exception as e:
+          print(e.body)
   return { 'data': spot.get_dict() }, 200
 
 @app.route("/spots/patch", methods=["PATCH"])
