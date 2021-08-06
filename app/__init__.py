@@ -21,8 +21,9 @@ import logging
 import boto3
 from botocore.exceptions import ClientError
 from google.oauth2 import id_token
-from google.auth.transport import requests
+from google.auth.transport import requests as google_requests
 from app.helpers import create_account, login
+import requests
 
 app = Flask(__name__)
 app.secret_key = 'the random string'
@@ -155,7 +156,7 @@ def user_google_signup():
   userid = None
   try:
     # Specify the CLIENT_ID of the app that accesses the backend:
-    idinfo = id_token.verify_oauth2_token(token, requests.Request(), os.environ.get('GOOGLE_CLIENT_ID'))
+    idinfo = id_token.verify_oauth2_token(token, google_requests.Request(), os.environ.get('GOOGLE_CLIENT_ID'))
 
     # Or, if multiple clients access the backend server:
     # idinfo = id_token.verify_oauth2_token(token, requests.Request())
@@ -782,3 +783,15 @@ def recalc_spot_rating():
   beach_id = request.json.get('beach_id')
   summary = get_summary_reviews_helper(beach_id)
   return {}
+
+@app.route("/search/location")
+def search_location():
+  input = request.args.get('input')
+  params = {
+    'key': 'AIzaSyCBbvg4luClm601n7SrGa5CbCTmmsgHABo',
+    'input': input,
+    'inputtype': 'textquery',
+    'fields': 'name,formatted_address,place_id',
+  }
+  r = requests.get('https://maps.googleapis.com/maps/api/place/findplacefromtext/json', params=params)
+  return r.json()
