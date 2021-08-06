@@ -345,6 +345,15 @@ def add_spot():
           sg.send(message)
       except Exception as e:
           print(e.body)
+  if place_id and not location_google:
+    r = requests.get('https://maps.googleapis.com/maps/api/place/details/json', params = {
+      'place_id': place_id,
+      'fields': 'name,geometry,address_components,url',
+      'key': os.environ.get('GOOGLE_API_KEY')
+    })
+    response = r.json()
+    if response.get('status') == 'OK':
+      location_google = response.get('result').get('url')
 
   spot = Spot(
     name=name,
