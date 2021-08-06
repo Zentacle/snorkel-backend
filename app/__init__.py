@@ -793,5 +793,5 @@ def search_location():
     'inputtype': 'textquery',
     'fields': 'name,formatted_address,place_id',
   }
-  r = requests.get('https://maps.googleapis.com/maps/api/place/findplacefromtext/json', params=params)
+  r = requests.get('https://maps.googleapis.com/maps/api/place/textsearch/json', params=params)
   return r.json()
