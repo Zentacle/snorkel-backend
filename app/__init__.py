@@ -316,6 +316,7 @@ def add_spot():
   location_google = request.json.get('location_google')
   hero_img = request.json.get('hero_img')
   entry_map = request.json.get('entry_map')
+  place_id = request.json.get('place_id')
   user = get_current_user()
   is_verified = True if user and user.admin else False
 
@@ -354,6 +355,7 @@ def add_spot():
     entry_map=entry_map,
     is_verified=is_verified,
     submitter=user,
+    google_place_id=place_id,
   )
   db.session.add(spot)
   db.session.commit()
