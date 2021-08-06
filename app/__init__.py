@@ -788,9 +788,9 @@ def recalc_spot_rating():
 def search_location():
   input = request.args.get('input')
   params = {
-    'key': 'AIzaSyCBbvg4luClm601n7SrGa5CbCTmmsgHABo',
+    'key': os.environ.get('GOOGLE_API_KEY'),
     'input': input,
-    'inputtype': 'textquery',
+    'inputtype': 'textsearch',
     'fields': 'name,formatted_address,place_id',
   }
   r = requests.get('https://maps.googleapis.com/maps/api/place/textsearch/json', params=params)
