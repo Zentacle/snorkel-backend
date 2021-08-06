@@ -129,8 +129,8 @@ Auth data goes in a cookie
 """
 @app.route("/user/register", methods=["POST"])
 def user_signup():
-  first_name = request.json.get('first_name')
-  last_name = request.json.get('last_name')
+  first_name = request.json.get('first_name') or ''
+  last_name = request.json.get('last_name') or ''
   email = request.json.get('email')
   username = request.json.get('username')
   profile_pic = request.json.get('profile_pic')
