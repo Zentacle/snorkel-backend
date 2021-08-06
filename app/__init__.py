@@ -307,6 +307,9 @@ def search_spots():
     output.append(spot_data)
   return { 'data': output }
 
+
+
+
 @app.route("/spots/add", methods=["POST"])
 @jwt_required(optional=True)
 def add_spot():
@@ -678,13 +681,38 @@ def user_signup_fake():
   user.id
   return user.get_dict()
 
-@app.route("/images")
+@app.route("/imagesurls")
 def get_images():
     images = Image.query.all()
     output = []
     for image in images:
-      output.append(image.get_dict())
+      dictionary = image.get_dict()
+      dictionary['signedurl'] = create_presigned_url_local('reviews/' + dictionary['url'])
+      output.append(dictionary)
     return { 'data': output }
+           
+
+@app.route("/beachimages")
+def get_beach_images():
+    beach_id = request.args.get('beach_id')
+    output = []
+    images = Image.query.filter_by(beach_id=beach_id).all()
+    for image in images:
+      dictionary = image.get_dict()
+      dictionary['signedurl'] = create_presigned_url_local('reviews/' + dictionary['url'])
+      output.append(dictionary)
+    return {'data': output}
+
+@app.route("/reviewimages")
+def get_review_images():
+    review_id = request.args.get('review_id')
+    output = []
+    images = Image.query.filter_by(review_id=review_id).all()
+    for image in images:
+      dictionary = image.get_dict()
+      dictionary['signedurl'] = create_presigned_url_local('reviews/' + dictionary['url'])
+      output.append(dictionary)
+    return {'data': output}
 
 @app.route("/s3-upload")
 def create_presigned_post():
@@ -704,6 +732,54 @@ def create_presigned_post():
 
     # The response contains the presigned URL and required fields
     return response
+
+
+def create_presigned_url_local(filename, expiration=3600):
+    """Generate a presigned URL to share an S3 object
+
+    :param expiration: Time in seconds for the presigned URL to remain valid
+    :return: Presigned URL as string. If error, returns None.
+    """
+    bucket_name = "snorkel"
+    object_name = filename
+    # Generate a presigned URL for the S3 object
+    s3_client = boto3.client('s3',)
+    try:
+        response = s3_client.generate_presigned_url('get_object',
+                                                    Params={'Bucket': bucket_name,
+                                                            'Key': object_name},
+                                                    ExpiresIn=expiration)
+    except ClientError as e:
+        logging.error(e)
+        return None
+
+    # The response contains the presigned URL
+    return {'data': response}
+
+
+
+@app.route("/s3-download")
+def create_presigned_url(expiration=3600):
+    """Generate a presigned URL to share an S3 object
+
+    :param expiration: Time in seconds for the presigned URL to remain valid
+    :return: Presigned URL as string. If error, returns None.
+    """
+    bucket_name = "snorkel"
+    object_name = request.args.get('file')
+    # Generate a presigned URL for the S3 object
+    s3_client = boto3.client('s3',)
+    try:
+        response = s3_client.generate_presigned_url('get_object',
+                                                    Params={'Bucket': bucket_name,
+                                                            'Key': object_name},
+                                                    ExpiresIn=expiration)
+    except ClientError as e:
+        logging.error(e)
+        return None
+
+    # The response contains the presigned URL
+    return {'data': response}
 
 @app.route("/user/get")
 def get_user():
