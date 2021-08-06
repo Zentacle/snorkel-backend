@@ -79,6 +79,7 @@ class Spot(db.Model):
     last_review_viz = db.Column(db.Integer)
     is_verified = db.Column(db.Boolean, nullable=False, default=False)
     submitter_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    google_place_id = db.Column(db.String)
 
     reviews = db.relationship("Review", backref="spot")
     images = db.relationship("Image", backref="spot")
