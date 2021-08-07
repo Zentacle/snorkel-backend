@@ -729,6 +729,8 @@ def get_user():
     user = User.query \
       .options(joinedload('reviews')) \
       .filter_by(username=username).first()
+    if not user:
+      return { 'msg': 'User doesn\'t exist' }, 404
     user_data = user.get_dict()
     reviews_data = []
     for review in user.reviews:
