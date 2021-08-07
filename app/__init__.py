@@ -1,11 +1,10 @@
 from __future__ import print_function
-from flask import Flask, request, session, jsonify
+from flask import Flask, request, jsonify
 from flask.helpers import make_response
 from flask_cors import CORS
 import os
 import os.path
 import logging
-import sys
 
 from app.models import *
 from sqlalchemy.orm import joinedload
@@ -826,3 +825,13 @@ def search_location():
   }
   r = requests.get('https://maps.googleapis.com/maps/api/place/textsearch/json', params=params)
   return r.json()
+
+@app.route("/spots/nearby")
+def nearby_locations():
+  startlat = 20.653797
+  startlng = -156.441012
+  query = "SELECT latitude, longitude, (((69.1 * (latitude - %(startlat)f)) * (69.1 * (latitude - %(startlat)f))) + ((69.1 * (%(startlng)f - longitude) * cos(latitude / 57.3)) * (69.1 * (%(startlng)f - longitude) * cos(latitude / 57.3)))) AS distance FROM spot HAVING distance < 25 ORDER BY distance;" % {'startlat':startlat, 'startlng':startlng}
+  print(query)
+  results = db.engine.execute(query)
+  for result in results:
+    print(result)

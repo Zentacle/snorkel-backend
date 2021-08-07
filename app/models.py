@@ -80,10 +80,25 @@ class Spot(db.Model):
     is_verified = db.Column(db.Boolean, nullable=False, default=False)
     submitter_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     google_place_id = db.Column(db.String)
+    latitude = db.Column(db.Float)
+    longitude = db.Column(db.Float)
 
     reviews = db.relationship("Review", backref="spot")
     images = db.relationship("Image", backref="spot")
     submitter = db.relationship("User", uselist=False)
+
+    def get_basic_data(self):
+        data = {}
+        keys = [
+            'name',
+            'hero_img',
+            'rating',
+            'num_reviews',
+            'location_city',
+        ]
+        for key in keys:
+            data[key] = self.get(key)
+        return data
 
     def get_dict(self):
         data = self.__dict__
