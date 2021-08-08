@@ -839,7 +839,7 @@ def nearby_locations():
   # query = "SELECT id, name, hero_img, rating, num_reviews, location_city, %(startlng)s + %(startlat)s AS distance FROM spot WHERE latitude is NOT NULL AND longitude is NOT NULL ORDER BY distance LIMIT 10;" % {'startlat':startlat, 'startlng':startlng}
   results = db.engine.execute(query)
   data = []
-  for id, name, hero_img, rating, num_reviews, distance, location_city in results:
+  for id, name, hero_img, rating, num_reviews, location_city, distance in results:
     data.append({
       'id': id,
       'name': name,
