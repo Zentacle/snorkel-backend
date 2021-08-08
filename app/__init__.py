@@ -828,18 +828,25 @@ def search_location():
 
 @app.route("/spots/nearby")
 def nearby_locations():
-  startlat = request.args.get('latitude')
-  startlng = request.args.get('longitude')
-  query = "SELECT name, hero_img, rating, num_reviews, (((69.1 * (latitude - %(startlat)s)) * (69.1 * (latitude - %(startlat)s))) + ((69.1 * (%(startlng)s - longitude) * cos(latitude / 57.3)) * (69.1 * (%(startlng)s - longitude) * cos(latitude / 57.3)))) AS distance FROM spot WHERE latitude is NOT NULL AND longitude is NOT NULL ORDER BY distance LIMIT 10;" % {'startlat':startlat, 'startlng':startlng}
+  beach_id = request.args.get('beach_id')
+  spot = Spot.query.filter_by(id=beach_id).first_or_404()
+  startlat = spot.latitude
+  startlng = spot.longitude
+  if not startlat or not startlng:
+    return { 'msg': 'No lat/lng for this spot ' }, 400
+  query = "SELECT id, name, hero_img, rating, num_reviews, (((69.1 * (latitude - %(startlat)s)) * (69.1 * (latitude - %(startlat)s))) + ((69.1 * (%(startlng)s - longitude) * cos(latitude / 57.3)) * (69.1 * (%(startlng)s - longitude) * cos(latitude / 57.3)))) AS distance FROM spot WHERE latitude is NOT NULL AND longitude is NOT NULL ORDER BY distance LIMIT 10;" % {'startlat':startlat, 'startlng':startlng}
+  # query = "SELECT id, name, hero_img, rating, num_reviews, %(startlng)s + %(startlat)s AS distance FROM spot WHERE latitude is NOT NULL AND longitude is NOT NULL ORDER BY distance LIMIT 10;" % {'startlat':startlat, 'startlng':startlng}
   results = db.engine.execute(query)
   data = []
-  for name, hero_img, rating, num_reviews, distance in results:
+  for id, name, hero_img, rating, num_reviews, distance in results:
     data.append({
+      'id': id,
       'name': name,
       'hero_img': hero_img,
       'rating': rating,
       'num_reviews': num_reviews,
       'distance': distance,
+      'url': Spot.create_url(id, name),
     })
   return { 'data': data }
 
