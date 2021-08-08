@@ -834,11 +834,12 @@ def nearby_locations():
   startlng = spot.longitude
   if not startlat or not startlng:
     return { 'msg': 'No lat/lng for this spot ' }, 400
-  query = "SELECT id, name, hero_img, rating, num_reviews, (((69.1 * (latitude - %(startlat)s)) * (69.1 * (latitude - %(startlat)s))) + ((69.1 * (%(startlng)s - longitude) * cos(latitude / 57.3)) * (69.1 * (%(startlng)s - longitude) * cos(latitude / 57.3)))) AS distance FROM spot WHERE latitude is NOT NULL AND longitude is NOT NULL ORDER BY distance LIMIT 10;" % {'startlat':startlat, 'startlng':startlng}
-  # query = "SELECT id, name, hero_img, rating, num_reviews, %(startlng)s + %(startlat)s AS distance FROM spot WHERE latitude is NOT NULL AND longitude is NOT NULL ORDER BY distance LIMIT 10;" % {'startlat':startlat, 'startlng':startlng}
+  query = "SELECT id, name, hero_img, rating, num_reviews, location_city, SQRT(POW(69.1 * (latitude - %(startlat)s), 2) + POW(69.1 * (%(startlng)s - longitude) * COS(latitude / 57.3), 2)) AS distance FROM spot WHERE id != %(beach_id)s ORDER BY distance LIMIT 10;" % {'startlat':startlat, 'startlng':startlng, 'beach_id':beach_id}
+  # used for testing locally on sqlite since it doesn't support any of the math functions in sql
+  # query = "SELECT id, name, hero_img, rating, num_reviews, location_city, %(startlng)s + %(startlat)s AS distance FROM spot WHERE latitude is NOT NULL AND longitude is NOT NULL ORDER BY distance LIMIT 10;" % {'startlat':startlat, 'startlng':startlng}
   results = db.engine.execute(query)
   data = []
-  for id, name, hero_img, rating, num_reviews, distance in results:
+  for id, name, hero_img, rating, num_reviews, distance, location_city in results:
     data.append({
       'id': id,
       'name': name,
@@ -846,6 +847,7 @@ def nearby_locations():
       'rating': rating,
       'num_reviews': num_reviews,
       'distance': distance,
+      'location_city': location_city,
       'url': Spot.create_url(id, name),
     })
   return { 'data': data }
