@@ -828,10 +828,17 @@ def search_location():
 
 @app.route("/spots/nearby")
 def nearby_locations():
-  startlat = 20.653797
-  startlng = -156.441012
-  query = "SELECT latitude, longitude, (((69.1 * (latitude - %(startlat)f)) * (69.1 * (latitude - %(startlat)f))) + ((69.1 * (%(startlng)f - longitude) * cos(latitude / 57.3)) * (69.1 * (%(startlng)f - longitude) * cos(latitude / 57.3)))) AS distance FROM spot ORDER BY distance LIMIT 10;" % {'startlat':startlat, 'startlng':startlng}
-  print(query)
+  startlat = request.args.get('latitude')
+  startlng = request.args.get('longitude')
+  query = "SELECT name, hero_img, rating, num_reviews, (((69.1 * (latitude - %(startlat)f)) * (69.1 * (latitude - %(startlat)f))) + ((69.1 * (%(startlng)f - longitude) * cos(latitude / 57.3)) * (69.1 * (%(startlng)f - longitude) * cos(latitude / 57.3)))) AS distance FROM spot ORDER BY distance LIMIT 10;" % {'startlat':startlat, 'startlng':startlng}
   results = db.engine.execute(query)
-  for result in results:
-    print(result)
+  data = []
+  for name, hero_img, rating, num_reviews, distance in results:
+    data.append({
+      'name': name,
+      'hero_img': hero_img,
+      'rating': rating,
+      'num_reviews': num_reviews,
+      'distance': distance,
+    })
+  return data
