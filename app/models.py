@@ -5,7 +5,7 @@ import re
 db = SQLAlchemy()
 
 def demicrosoft(fn):
-    fn = re.sub('[()]', '', fn)
+    fn = re.sub("[^0-9a-zA-Z ]+", "", fn)
     for ch in [' ']:
         fn = fn.replace(ch,"_")
     return fn
@@ -109,6 +109,9 @@ class Spot(db.Model):
 
     def get_url(self):
         return Spot.create_url(self.id, self.name)
+
+    def get_beach_name_for_url(self):
+        return demicrosoft(self.name).lower()
 
     @classmethod
     def create_url(cls, id, name):

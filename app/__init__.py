@@ -288,6 +288,8 @@ def get_spots():
   output = []
   for spot in spots:
     spot_data = spot.get_dict()
+    if request.args.get('ssg'):
+      spot_data['beach_name_for_url'] = spot.get_beach_name_for_url()
     output.append(spot_data)
   return { 'data': output }
 
