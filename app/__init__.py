@@ -298,8 +298,9 @@ def search_spots():
   search_term = request.args.get('search_term')
   spots = Spot.query.filter(
     or_(
-      Spot.name.ilike('%' + search_term + '%'), \
-      Spot.location_city.ilike('%'+ search_term + '%')
+      Spot.name.ilike('%' + search_term + '%'),
+      Spot.location_city.ilike('%'+ search_term + '%'),
+      Spot.description.ilike('%'+ search_term + '%')
     )
   ).all()
   output = []
