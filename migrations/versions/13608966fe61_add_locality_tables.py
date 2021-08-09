@@ -26,7 +26,7 @@ def upgrade():
     op.create_table('area_two',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('name', sa.String(), nullable=True),
-    sa.Column('country', sa.Integer(), nullable=True),
+    sa.Column('country_id', sa.Integer(), nullable=True),
     sa.ForeignKeyConstraint(['country'], ['country.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
@@ -35,7 +35,7 @@ def upgrade():
     sa.Column('name', sa.String(), nullable=True),
     sa.Column('area_one_id', sa.Integer(), nullable=True),
     sa.Column('area_two_id', sa.Integer(), nullable=True),
-    sa.Column('country', sa.Integer(), nullable=True),
+    sa.Column('country_id', sa.Integer(), nullable=True),
     sa.ForeignKeyConstraint(['area_one_id'], ['area_one.id'], ),
     sa.ForeignKeyConstraint(['area_two_id'], ['area_two.id'], ),
     sa.ForeignKeyConstraint(['country'], ['country.id'], ),
@@ -45,7 +45,7 @@ def upgrade():
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('name', sa.String(), nullable=True),
     sa.Column('area_two_id', sa.Integer(), nullable=True),
-    sa.Column('country', sa.Integer(), nullable=True),
+    sa.Column('country_id', sa.Integer(), nullable=True),
     sa.ForeignKeyConstraint(['area_two_id'], ['area_two.id'], ),
     sa.ForeignKeyConstraint(['country'], ['country.id'], ),
     sa.PrimaryKeyConstraint('id')
