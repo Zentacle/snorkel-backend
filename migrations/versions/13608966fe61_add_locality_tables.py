@@ -27,7 +27,7 @@ def upgrade():
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('name', sa.String(), nullable=True),
     sa.Column('country_id', sa.Integer(), nullable=True),
-    sa.ForeignKeyConstraint(['country'], ['country.id'], ),
+    sa.ForeignKeyConstraint(['country_id'], ['country.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('area_one',
@@ -38,7 +38,7 @@ def upgrade():
     sa.Column('country_id', sa.Integer(), nullable=True),
     sa.ForeignKeyConstraint(['area_one_id'], ['area_one.id'], ),
     sa.ForeignKeyConstraint(['area_two_id'], ['area_two.id'], ),
-    sa.ForeignKeyConstraint(['country'], ['country.id'], ),
+    sa.ForeignKeyConstraint(['country_id'], ['country.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('locality',
@@ -47,7 +47,7 @@ def upgrade():
     sa.Column('area_two_id', sa.Integer(), nullable=True),
     sa.Column('country_id', sa.Integer(), nullable=True),
     sa.ForeignKeyConstraint(['area_two_id'], ['area_two.id'], ),
-    sa.ForeignKeyConstraint(['country'], ['country.id'], ),
+    sa.ForeignKeyConstraint(['country_id'], ['country.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
     op.add_column('spot', sa.Column('locality_id', sa.Integer(), nullable=True))
