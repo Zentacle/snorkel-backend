@@ -158,7 +158,7 @@ class Locality(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String)
     area_one_id = db.Column(db.Integer, db.ForeignKey('area_one.id'))
-    area_one_id = db.Column(db.Integer, db.ForeignKey('area_two.id'))
+    area_two_id = db.Column(db.Integer, db.ForeignKey('area_two.id'))
     country = db.Column(db.Integer, db.ForeignKey('country.id'))
 
     spots = db.relationship('Spot', backref='locality', lazy=True)
@@ -167,7 +167,7 @@ class Locality(db.Model):
 class AreaOne(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String)
-    area_one_id = db.Column(db.Integer, db.ForeignKey('area_two.id'))
+    area_two_id = db.Column(db.Integer, db.ForeignKey('area_two.id'))
     country = db.Column(db.Integer, db.ForeignKey('country.id'))
 
     localities = db.relationship('Locality', backref='area_one', lazy=True)
