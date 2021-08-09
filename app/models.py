@@ -82,6 +82,7 @@ class Spot(db.Model):
     google_place_id = db.Column(db.String)
     latitude = db.Column(db.Float)
     longitude = db.Column(db.Float)
+    locality_id = db.Column(db.Integer, db.ForeignKey('locality.id'), nullable=True)
 
     reviews = db.relationship("Review", backref="spot")
     images = db.relationship("Image", backref="spot")
@@ -151,3 +152,37 @@ class Image(db.Model):
             'url': self.url,
             'id': self.id
         }
+
+#City
+class Locality(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String)
+    area_one_id = db.Column(db.Integer, db.ForeignKey('area_one.id'))
+    area_one_id = db.Column(db.Integer, db.ForeignKey('area_two.id'))
+    country = db.Column(db.Integer, db.ForeignKey('country.id'))
+
+    spots = db.relationship('Spot', backref='locality', lazy=True)
+
+#County
+class AreaOne(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String)
+    area_one_id = db.Column(db.Integer, db.ForeignKey('area_two.id'))
+    country = db.Column(db.Integer, db.ForeignKey('country.id'))
+
+    localities = db.relationship('Locality', backref='area_one', lazy=True)
+
+#State
+class AreaTwo(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String)
+    country = db.Column(db.Integer, db.ForeignKey('country.id'))
+
+    area_ones = db.relationship('AreaOne', backref='area_two', lazy=True)
+
+#Country
+class Country(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String)
+
+    area_twos = db.relationship('AreaTwo', backref='country', lazy=True)
