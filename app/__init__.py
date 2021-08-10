@@ -405,6 +405,8 @@ def patch_spot():
       setattr(spot, key, updates.get(key))
       if key == 'google_place_id':
         place_id = updates.get(key)
+        if place_id == 'na':
+          continue
         r = requests.get('https://maps.googleapis.com/maps/api/place/details/json', params = {
           'place_id': place_id,
           'fields': 'name,geometry,url',
