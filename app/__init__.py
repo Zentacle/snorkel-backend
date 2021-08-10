@@ -908,30 +908,16 @@ def add_place_id():
   skipped = []
   for spot in spots:
     if spot.google_place_id:
-      continue
-    r = requests.get('https://maps.googleapis.com/maps/api/place/findplacefromtext/json', params = {
-        'fields': 'name,place_id',
-        'inputtype': 'textquery',
-        'key': os.environ.get('GOOGLE_API_KEY'),
-        'input': spot.name,
-      })
-    response = r.json()
-    if len(response.get('candidates')):
-      place_id = response.get('candidates')[0].get('place_id')
+      place_id = spot.google_place_id
       r = requests.get('https://maps.googleapis.com/maps/api/place/details/json', params = {
           'place_id': place_id,
           'fields': 'name,geometry,url',
           'key': os.environ.get('GOOGLE_API_KEY')
         })
       response = r.json()
-      latitude = None
-      longitude = None
       if response.get('status') == 'OK':
-        latitude = response.get('result').get('geometry').get('location').get('lat')
-        longitude = response.get('result').get('geometry').get('location').get('lng')
-        spot.google_place_id = place_id
-        spot.latitude = latitude
-        spot.longitude = longitude
+        url = response.get('result').get('url')
+        spot.location_google = url
         db.session.add(spot)
         db.session.commit()
         spot.id
