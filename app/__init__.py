@@ -403,6 +403,20 @@ def patch_spot():
   try:
     for key in updates.keys():
       setattr(spot, key, updates.get(key))
+      if key == 'google_place_id':
+        place_id = updates.get(key)
+        r = requests.get('https://maps.googleapis.com/maps/api/place/details/json', params = {
+          'place_id': place_id,
+          'fields': 'name,geometry,url',
+          'key': os.environ.get('GOOGLE_API_KEY')
+        })
+        response = r.json()
+        latitude = response.get('result').get('geometry').get('location').get('lat')
+        longitude = response.get('result').get('geometry').get('location').get('lng')
+        url = response.get('result').get('url')
+        spot.latitude = latitude
+        spot.longitude = longitude
+        spot.location_google = url
   except ValueError as e:
     return e, 500
   db.session.commit()
