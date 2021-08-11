@@ -999,7 +999,7 @@ def patch_loc():
 
 @app.route("/locality/<country>/<area_one>")
 def get_wildcard_locality(country, area_one):
-  locality = AreaOne.query.filter_by(and_(AreaOne.name==area_one, AreaOne.country.name==country)).first()
+  locality = AreaOne.query.filter_by(and_(AreaOne.short_name==area_one, AreaOne.country.short_name==country)).first()
   data = []
   for spot in locality.spots:
     data.append(spot.get_dict())
