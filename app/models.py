@@ -179,6 +179,7 @@ class AreaTwo(db.Model):
     country_id = db.Column(db.Integer, db.ForeignKey('country.id'))
 
     area_ones = db.relationship('AreaOne', backref='area_two', lazy=True)
+    localities = db.relationship('Locality', backref='area_two', lazy=True)
 
 #Country
 class Country(db.Model):
@@ -186,3 +187,5 @@ class Country(db.Model):
     name = db.Column(db.String)
 
     area_twos = db.relationship('AreaTwo', backref='country', lazy=True)
+    area_ones = db.relationship('AreaOne', backref='country', lazy=True)
+    localities = db.relationship('Locality', backref='country', lazy=True)
