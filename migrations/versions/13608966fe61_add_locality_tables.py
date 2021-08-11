@@ -23,30 +23,30 @@ def upgrade():
     sa.Column('name', sa.String(), nullable=True),
     sa.PrimaryKeyConstraint('id')
     )
-    op.create_table('area_two',
+    op.create_table('area_one',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('name', sa.String(), nullable=True),
     sa.Column('country_id', sa.Integer(), nullable=True),
     sa.ForeignKeyConstraint(['country_id'], ['country.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
-    op.create_table('area_one',
+    op.create_table('area_two',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('name', sa.String(), nullable=True),
-    sa.Column('area_two_id', sa.Integer(), nullable=True),
+    sa.Column('area_one_id', sa.Integer(), nullable=True),
     sa.Column('country_id', sa.Integer(), nullable=True),
-    sa.ForeignKeyConstraint(['area_two_id'], ['area_two.id'], ),
+    sa.ForeignKeyConstraint(['area_one_id'], ['area_one.id'], ),
     sa.ForeignKeyConstraint(['country_id'], ['country.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('locality',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('name', sa.String(), nullable=True),
-    sa.Column('area_one_id', sa.Integer(), nullable=True),
     sa.Column('area_two_id', sa.Integer(), nullable=True),
+    sa.Column('area_one_id', sa.Integer(), nullable=True),
     sa.Column('country_id', sa.Integer(), nullable=True),
-    sa.ForeignKeyConstraint(['area_one_id'], ['area_one.id'], ),
     sa.ForeignKeyConstraint(['area_two_id'], ['area_two.id'], ),
+    sa.ForeignKeyConstraint(['area_one_id'], ['area_one.id'], ),
     sa.ForeignKeyConstraint(['country_id'], ['country.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
@@ -60,7 +60,7 @@ def downgrade():
     op.drop_constraint('fk_spot_locality', 'spot', type_='foreignkey')
     op.drop_column('spot', 'locality_id')
     op.drop_table('locality')
-    op.drop_table('area_one')
     op.drop_table('area_two')
+    op.drop_table('area_one')
     op.drop_table('country')
     # ### end Alembic commands ###

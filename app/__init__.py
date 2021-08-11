@@ -921,8 +921,17 @@ def nearby_locations():
 
 @app.route("/spots/location")
 def get_location_spots():
-  location = request.args.get('location')
-  locality = Locality.query.filter_by(name=location).first()
+  type = request.args.get('type')
+  name = request.args.get('name')
+  locality = None
+  if type == 'locality':
+    locality = Locality.query.filter_by(name=name).first()
+  if type == 'area_one':
+    locality = AreaOne.query.filter_by(name=name).first()
+  if type == 'area_two':
+    locality = AreaTwo.query.filter_by(name=name).first()
+  if type == 'country':
+    locality = Country.query.filter_by(name=name).first()
   data = []
   for spot in locality.spots:
     data.append(spot.get_dict())
