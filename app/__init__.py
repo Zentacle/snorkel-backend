@@ -921,20 +921,59 @@ def nearby_locations():
 
 @app.route("/spots/add_place_id", methods=["POST"])
 def add_place_id():
-  spots = Spot.query.all()
+  spots = Spot.query.filter(Spot.is_verified.isnot(False)).all()
   skipped = []
   for spot in spots:
-    if spot.google_place_id:
+    if spot.google_place_id and spot.google_place_id != "na":
       place_id = spot.google_place_id
       r = requests.get('https://maps.googleapis.com/maps/api/place/details/json', params = {
           'place_id': place_id,
-          'fields': 'name,geometry,url',
+          'fields': 'address_components',
           'key': os.environ.get('GOOGLE_API_KEY')
         })
       response = r.json()
       if response.get('status') == 'OK':
-        url = response.get('result').get('url')
-        spot.location_google = url
+        address_components = response.get('result').get('address_components')
+        locality_name = None
+        area_1_name = None
+        area_2_name = None
+        country_name = None
+        for component in address_components:
+          if 'locality' in component.get('types'):
+            locality_name = component.get('long_name')
+          if 'administrative_area_level_1' in component.get('types'):
+            area_1_name = component.get('long_name')
+          if 'administrative_area_level_2' in component.get('types'):
+            area_2_name = component.get('long_name')
+          if 'country' in component.get('types'):
+            country_name = component.get('long_name')
+        country = Country.query.filter_by(name=country_name).first()
+        if not country:
+          country = Country(
+            name=country_name
+          )
+        area_2 = AreaTwo.query.filter_by(name=area_2_name).first()
+        if not area_2:
+          area_2 = AreaTwo(
+            name=area_2_name,
+            country=country,
+          )
+        area_1 = AreaOne.query.filter_by(name=area_1_name).first()
+        if not area_1:
+          area_1 = AreaOne(
+            name=area_1_name,
+            area_two=area_2,
+            country=country,
+          )
+        locality = Locality.query.filter_by(name=locality_name).first()
+        if not locality:
+          locality = Locality(
+            name=locality_name,
+            area_one=area_1,
+            area_two=area_2,
+            country=country,
+          )
+        spot.locality = locality
         db.session.add(spot)
         db.session.commit()
         spot.id
