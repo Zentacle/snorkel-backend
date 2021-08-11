@@ -153,7 +153,8 @@ class Image(db.Model):
     def get_dict(self):
         return {
             'url': self.url,
-            'id': self.id
+            'id': self.id,
+            'review_id': self.review_id
         }
 
 #City
