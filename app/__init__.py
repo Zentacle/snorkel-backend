@@ -919,6 +919,15 @@ def nearby_locations():
     })
   return { 'data': data }
 
+@app.route("/spots/location")
+def get_location_spots():
+  location = request.args.get('location')
+  locality = Locality.query.filter_by(name=location).first()
+  data = []
+  for spot in locality.spots:
+    data.append(spot.get_dict())
+  return { 'data': data }
+
 @app.route("/spots/add_place_id", methods=["POST"])
 def add_place_id():
   spots = Spot.query.filter(Spot.is_verified.isnot(False)).all()
@@ -974,6 +983,9 @@ def add_place_id():
             country=country,
           )
         spot.locality = locality
+        spot.area_one = area_1
+        spot.area_two = area_2
+        spot.country = country
         db.session.add(spot)
         db.session.commit()
         spot.id

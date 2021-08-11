@@ -83,6 +83,9 @@ class Spot(db.Model):
     latitude = db.Column(db.Float)
     longitude = db.Column(db.Float)
     locality_id = db.Column(db.Integer, db.ForeignKey('locality.id'), nullable=True)
+    area_one_id = db.Column(db.Integer, db.ForeignKey('area_one.id'), nullable=True)
+    area_two_id = db.Column(db.Integer, db.ForeignKey('area_two.id'), nullable=True)
+    country_id = db.Column(db.Integer, db.ForeignKey('country.id'), nullable=True)
 
     reviews = db.relationship("Review", backref="spot")
     images = db.relationship("Image", backref="spot")
