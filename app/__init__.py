@@ -970,17 +970,17 @@ def add_place_id():
           country = Country(
             name=country_name
           )
-        area_2 = AreaTwo.query.filter_by(name=area_2_name).first()
-        if not area_2:
-          area_2 = AreaTwo(
-            name=area_2_name,
-            country=country,
-          )
         area_1 = AreaOne.query.filter_by(name=area_1_name).first()
         if not area_1:
           area_1 = AreaOne(
             name=area_1_name,
-            area_two=area_2,
+            country=country,
+          )
+        area_2 = AreaTwo.query.filter_by(name=area_2_name).first()
+        if not area_2:
+          area_2 = AreaTwo(
+            name=area_2_name,
+            area_one=area_1,
             country=country,
           )
         locality = Locality.query.filter_by(name=locality_name).first()
