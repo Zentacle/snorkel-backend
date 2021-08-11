@@ -937,6 +937,30 @@ def get_location_spots():
     data.append(spot.get_dict())
   return { 'data': data }
 
+@app.route("/locality/locality")
+def get_localities():
+  localities = Locality.query.all()
+  data = []
+  for locality in localities:
+    data.append(locality.get_dict())
+  return { 'data': data }
+
+@app.route("/locality/area_two")
+def get_area_two():
+  localities = AreaTwo.query.all()
+  data = []
+  for locality in localities:
+    data.append(locality.get_dict())
+  return { 'data': data }
+
+@app.route("/locality/area_one")
+def get_area_one():
+  localities = AreaOne.query.all()
+  data = []
+  for locality in localities:
+    data.append(locality.get_dict())
+  return { 'data': data }
+
 @app.route("/spots/add_place_id", methods=["POST"])
 def add_place_id():
   spots = Spot.query.filter(Spot.is_verified.isnot(False)).all()

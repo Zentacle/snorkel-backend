@@ -166,6 +166,12 @@ class Locality(db.Model):
 
     spots = db.relationship('Spot', backref='locality', lazy=True)
 
+    def get_dict(self):
+        data = self.__dict__
+        if data.get('_sa_instance_state'):
+            data.pop('_sa_instance_state', None)
+        return data
+
 #County
 class AreaTwo(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -175,6 +181,12 @@ class AreaTwo(db.Model):
 
     localities = db.relationship('Locality', backref='area_two', lazy=True)
     spots = db.relationship('Spot', backref='area_two', lazy=True)
+
+    def get_dict(self):
+        data = self.__dict__
+        if data.get('_sa_instance_state'):
+            data.pop('_sa_instance_state', None)
+        return data
 
 #State
 class AreaOne(db.Model):
@@ -186,6 +198,12 @@ class AreaOne(db.Model):
     localities = db.relationship('Locality', backref='area_one', lazy=True)
     spots = db.relationship('Spot', backref='area_one', lazy=True)
 
+    def get_dict(self):
+        data = self.__dict__
+        if data.get('_sa_instance_state'):
+            data.pop('_sa_instance_state', None)
+        return data
+
 #Country
 class Country(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -195,3 +213,9 @@ class Country(db.Model):
     area_twos = db.relationship('AreaTwo', backref='country', lazy=True)
     localities = db.relationship('Locality', backref='country', lazy=True)
     spots = db.relationship('Spot', backref='country', lazy=True)
+
+    def get_dict(self):
+        data = self.__dict__
+        if data.get('_sa_instance_state'):
+            data.pop('_sa_instance_state', None)
+        return data
