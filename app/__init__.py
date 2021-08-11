@@ -961,6 +961,50 @@ def get_area_one():
     data.append(locality.get_dict())
   return { 'data': data }
 
+@app.route("/locality/country")
+def get_country():
+  localities = Country.query.all()
+  data = []
+  for locality in localities:
+    data.append(locality.get_dict())
+  return { 'data': data }
+
+@app.route("/loc/country/patch", methods=["PATCH"])
+def patch_country():
+  id = request.json.get('id')
+  user = Country.query.filter_by(id=id).first()
+  updates = request.json
+  updates.pop('id', None)
+  try:
+    for key in updates.keys():
+      setattr(user, key, updates.get(key))
+  except ValueError as e:
+    return e, 500
+  db.session.commit()
+  return user.get_dict(), 200
+
+@app.route("/loc/area_one/patch", methods=["PATCH"])
+def patch_loc():
+  id = request.json.get('id')
+  user = AreaOne.query.filter_by(id=id).first()
+  updates = request.json
+  updates.pop('id', None)
+  try:
+    for key in updates.keys():
+      setattr(user, key, updates.get(key))
+  except ValueError as e:
+    return e, 500
+  db.session.commit()
+  return user.get_dict(), 200
+
+@app.route("/locality/<country>/<area_one>")
+def get_wildcard_locality(country, area_one):
+  locality = AreaOne.query.filter_by(and_(AreaOne.name==area_one, AreaOne.country.name==country)).first()
+  data = []
+  for spot in locality.spots:
+    data.append(spot.get_dict())
+  return { 'data': data }
+
 @app.route("/spots/add_place_id", methods=["POST"])
 def add_place_id():
   spots = Spot.query.filter(Spot.is_verified.isnot(False)).all()
