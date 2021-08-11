@@ -174,6 +174,7 @@ class AreaOne(db.Model):
     country_id = db.Column(db.Integer, db.ForeignKey('country.id'))
 
     localities = db.relationship('Locality', backref='area_one', lazy=True)
+    spots = db.relationship('Spot', backref='area_one', lazy=True)
 
 #State
 class AreaTwo(db.Model):
@@ -183,6 +184,7 @@ class AreaTwo(db.Model):
 
     area_ones = db.relationship('AreaOne', backref='area_two', lazy=True)
     localities = db.relationship('Locality', backref='area_two', lazy=True)
+    spots = db.relationship('Spot', backref='area_two', lazy=True)
 
 #Country
 class Country(db.Model):
@@ -192,3 +194,4 @@ class Country(db.Model):
     area_twos = db.relationship('AreaTwo', backref='country', lazy=True)
     area_ones = db.relationship('AreaOne', backref='country', lazy=True)
     localities = db.relationship('Locality', backref='country', lazy=True)
+    spots = db.relationship('Spot', backref='country', lazy=True)
