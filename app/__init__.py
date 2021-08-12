@@ -282,7 +282,11 @@ def get_spots():
   else:
     query = query.filter(Spot.is_verified.isnot(False))
   if request.args.get('limit') != 'none':
-    query = query.filter_by(area_two_id=1)
+    area_two_name = request.args.get('area_two')
+    if area_two_name:
+      query = query.filter(Spot.area_two.has(short_name=area_two_name))
+    else:
+      query = query.filter_by(area_two_id=1)
   query = query.order_by(sort)
   if request.args.get('limit') != 'none':
     query = query.limit(15)
