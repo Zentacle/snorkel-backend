@@ -1058,9 +1058,10 @@ def add_place_id():
             name=area_1_name,
             country=country,
           )
-        area_2 = AreaTwo.query.filter_by(name=area_2_name).first()
+        area_2 = AreaTwo.query.filter_by(google_name=area_2_name).first()
         if not area_2:
           area_2 = AreaTwo(
+            google_name=area_2_name,
             name=area_2_name,
             area_one=area_1,
             country=country,
