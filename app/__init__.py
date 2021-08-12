@@ -331,7 +331,7 @@ def add_spot():
   if spot:
     return { 'msg': 'Spot already exists' }, 409
 
-  locality, area_2, area_2, country = None, None, None, None
+  locality, area_2, area_2, country, latitude, longitude = None, None, None, None, None, None
   if place_id and not location_google:
     r = requests.get('https://maps.googleapis.com/maps/api/place/details/json', params = {
       'place_id': place_id,
@@ -340,8 +340,11 @@ def add_spot():
     })
     response = r.json()
     if response.get('status') == 'OK':
-      location_google = response.get('result').get('url')
-      address_components = response.get('result').get('address_components')
+      result = response.get('result')
+      location_google = result.get('url')
+      latitude = result.get('geometry').get('location').get('lat')
+      longitude = result.get('geometry').get('location').get('lng')
+      address_components = result.get('address_components')
       locality, area_2, area_1, country = get_localities(address_components)
 
   spot = Spot(
@@ -354,6 +357,8 @@ def add_spot():
     is_verified=is_verified,
     submitter=user,
     google_place_id=place_id,
+    latitude=latitude,
+    longitude=longitude,
   )
   spot.locality = locality
   spot.area_one = area_1
