@@ -177,6 +177,7 @@ class Locality(db.Model):
 class AreaTwo(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String)
+    short_name = db.Column(db.String)
     area_one_id = db.Column(db.Integer, db.ForeignKey('area_one.id'))
     country_id = db.Column(db.Integer, db.ForeignKey('country.id'))
 

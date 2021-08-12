@@ -984,9 +984,23 @@ def patch_country():
   return user.get_dict(), 200
 
 @app.route("/loc/area_one/patch", methods=["PATCH"])
-def patch_loc():
+def patch_loc_one():
   id = request.json.get('id')
   user = AreaOne.query.filter_by(id=id).first()
+  updates = request.json
+  updates.pop('id', None)
+  try:
+    for key in updates.keys():
+      setattr(user, key, updates.get(key))
+  except ValueError as e:
+    return e, 500
+  db.session.commit()
+  return user.get_dict(), 200
+
+@app.route("/loc/area_two/patch", methods=["PATCH"])
+def patch_loc_two():
+  id = request.json.get('id')
+  user = AreaTwo.query.filter_by(id=id).first()
   updates = request.json
   updates.pop('id', None)
   try:
