@@ -21,7 +21,7 @@ import boto3
 from botocore.exceptions import ClientError
 from google.oauth2 import id_token
 from google.auth.transport import requests as google_requests
-from app.helpers import create_account, login
+from app.helpers import create_account, login, get_localities
 import requests
 
 app = Flask(__name__)
@@ -281,6 +281,7 @@ def get_spots():
     query = query.filter(Spot.is_verified.isnot(True))
   else:
     query = query.filter(Spot.is_verified.isnot(False))
+  query = query.filter_by(area_two_id=1)
   query = query.order_by(sort)
   if request.args.get('limit') != 'none':
     query = query.limit(15)
@@ -329,6 +330,7 @@ def add_spot():
   if spot:
     return { 'msg': 'Spot already exists' }, 409
 
+  locality, area_2, area_2, country = None, None, None, None
   if place_id and not location_google:
     r = requests.get('https://maps.googleapis.com/maps/api/place/details/json', params = {
       'place_id': place_id,
@@ -338,6 +340,8 @@ def add_spot():
     response = r.json()
     if response.get('status') == 'OK':
       location_google = response.get('result').get('url')
+      address_components = response.get('result').get('address_components')
+      locality, area_2, area_1, country = get_localities(address_components)
 
   spot = Spot(
     name=name,
@@ -350,6 +354,10 @@ def add_spot():
     submitter=user,
     google_place_id=place_id,
   )
+  spot.locality = locality
+  spot.area_one = area_1
+  spot.area_two = area_2
+  spot.country = country
   db.session.add(spot)
   db.session.commit()
   spot.id #need this to get data loaded, not sure why
@@ -374,9 +382,8 @@ def add_spot():
   if user:
     message = Mail(
         from_email=('no-reply@zentacle.com', 'Zentacle'),
-        to_emails=user.email,
-        reply_to='mjmayank@gmail.com')
-
+        to_emails=user.email)
+    message.reply_to = 'mjmayank@gmail.com'
     message.template_id = 'd-2280f0af94dd4a93aea15c5ec95e1760'
     message.dynamic_template_data = {
         'beach_name': spot.name,
@@ -938,7 +945,7 @@ def get_location_spots():
   return { 'data': data }
 
 @app.route("/locality/locality")
-def get_localities():
+def locality_get():
   localities = Locality.query.all()
   data = []
   for locality in localities:
@@ -1034,46 +1041,7 @@ def add_place_id():
       response = r.json()
       if response.get('status') == 'OK':
         address_components = response.get('result').get('address_components')
-        locality_name = None
-        area_1_name = None
-        area_2_name = None
-        country_name = None
-        for component in address_components:
-          if 'locality' in component.get('types'):
-            locality_name = component.get('long_name')
-          if 'administrative_area_level_1' in component.get('types'):
-            area_1_name = component.get('long_name')
-          if 'administrative_area_level_2' in component.get('types'):
-            area_2_name = component.get('long_name')
-          if 'country' in component.get('types'):
-            country_name = component.get('long_name')
-        country = Country.query.filter_by(name=country_name).first()
-        if not country:
-          country = Country(
-            name=country_name
-          )
-        area_1 = AreaOne.query.filter_by(name=area_1_name).first()
-        if not area_1:
-          area_1 = AreaOne(
-            name=area_1_name,
-            country=country,
-          )
-        area_2 = AreaTwo.query.filter_by(google_name=area_2_name).first()
-        if not area_2:
-          area_2 = AreaTwo(
-            google_name=area_2_name,
-            name=area_2_name,
-            area_one=area_1,
-            country=country,
-          )
-        locality = Locality.query.filter_by(name=locality_name).first()
-        if not locality:
-          locality = Locality(
-            name=locality_name,
-            area_one=area_1,
-            area_two=area_2,
-            country=country,
-          )
+        locality, area_2, area_1, country = get_localities(address_components)
         spot.locality = locality
         spot.area_one = area_1
         spot.area_two = area_2
