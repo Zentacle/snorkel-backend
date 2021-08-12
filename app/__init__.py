@@ -261,6 +261,7 @@ def refresh_token():
 
 @app.route("/spots/get")
 def get_spots():
+  area = None
   if request.args.get('beach_id'):
     beach_id = request.args.get('beach_id')
     spot = Spot.query.filter_by(id=beach_id).first()
@@ -285,6 +286,7 @@ def get_spots():
     area_two_name = request.args.get('area_two')
     if area_two_name:
       query = query.filter(Spot.area_two.has(short_name=area_two_name))
+      area = AreaTwo.query.filter_by(short_name=area_two_name).first()
     else:
       query = query.filter_by(area_two_id=1)
   query = query.order_by(sort)
@@ -297,7 +299,10 @@ def get_spots():
     if request.args.get('ssg'):
       spot_data['beach_name_for_url'] = spot.get_beach_name_for_url()
     output.append(spot_data)
-  return { 'data': output }
+  resp = { 'data': output }
+  if area:
+    resp['area'] = area.get_dict()
+  return resp
 
 @app.route("/spots/search")
 def search_spots():
