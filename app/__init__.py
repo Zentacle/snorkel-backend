@@ -25,7 +25,7 @@ from app.helpers import create_account, login
 import requests
 
 app = Flask(__name__)
-app.secret_key = 'the random string'
+app.secret_key = os.environ.get('FLASK_SECRET_KEY')
 SQLALCHEMY_DATABASE_URI = (os.environ.get('DATABASE_URL').replace("://", "ql://", 1)
   if not os.environ.get('FLASK_ENV') == 'development'
   else os.environ.get('DATABASE_URL'))
