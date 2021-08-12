@@ -281,7 +281,8 @@ def get_spots():
     query = query.filter(Spot.is_verified.isnot(True))
   else:
     query = query.filter(Spot.is_verified.isnot(False))
-  query = query.filter_by(area_two_id=1)
+  if request.args.get('limit') != 'none':
+    query = query.filter_by(area_two_id=1)
   query = query.order_by(sort)
   if request.args.get('limit') != 'none':
     query = query.limit(15)
