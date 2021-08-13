@@ -57,6 +57,7 @@ def create_account(
     message = Mail(
       from_email=('no-reply@zentacle.com', 'Zentacle'),
       to_emails=email)
+    message.reply_to = 'mjmayank@gmail.com'
 
     message.template_id = 'd-b683fb33f315435e8d2177def8e57d6f'
     message.dynamic_template_data = {
