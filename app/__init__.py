@@ -94,7 +94,13 @@ def delete():
 @app.route("/getall")
 def getAllData():
     users = None
-    if request.args.get('real'):
+    if request.args.get('top'):
+      users = db.session.query(User, db.func.count(User.reviews) \
+        .label('num_reviews')) \
+        .join(Review) \
+        .order_by(db.text('num_reviews DESC')) \
+        .limit(10)
+    elif request.args.get('real'):
       users = User.query.filter(
         and_(
           not_(User.email.contains('zentacle.com')),
@@ -104,7 +110,7 @@ def getAllData():
     else:
       users = User.query.all()
     output = []
-    for user in users:
+    for user, _ in users:
       output.append(user.get_dict())
     return { 'data': output }
 
