@@ -98,6 +98,7 @@ def getAllData():
       users = db.session.query(User, db.func.count(User.reviews) \
         .label('num_reviews')) \
         .join(Review) \
+        .group_by(User) \
         .order_by(db.text('num_reviews DESC')) \
         .limit(10)
     elif request.args.get('real'):
