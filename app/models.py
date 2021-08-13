@@ -82,6 +82,7 @@ class Spot(db.Model):
     google_place_id = db.Column(db.String)
     latitude = db.Column(db.Float)
     longitude = db.Column(db.Float)
+    difficulty = db.Column(db.String)
     locality_id = db.Column(db.Integer, db.ForeignKey('locality.id'), nullable=True)
     area_two_id = db.Column(db.Integer, db.ForeignKey('area_two.id'), nullable=True)
     area_one_id = db.Column(db.Integer, db.ForeignKey('area_one.id'), nullable=True)
