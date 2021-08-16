@@ -107,7 +107,9 @@ def get_emails():
   for user in users:
     data = {
       "email": user.email,
-      "first_name": user.first_name
+      "first_name": user.first_name,
+      "display_name": user.display_name,
+      "id": user.id,
     }
     output.append(data)
   return { 'data': output }
@@ -285,6 +287,7 @@ def patch_user():
   except ValueError as e:
     return e, 500
   db.session.commit()
+  user.id
   return user.get_dict(), 200
 
 @app.route("/user/me")
