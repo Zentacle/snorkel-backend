@@ -91,6 +91,27 @@ def delete():
   db.session.commit()
   return "Successfully deleted user: " + email
 
+@app.route("/getall/email")
+@jwt_required()
+def get_emails():
+  if not get_current_user().admin:
+    return "Not allowed", 401
+  users = User.query \
+    .filter(
+      and_(
+        not_(User.email.contains('zentacle.com')),
+        User.is_fake.is_not(True)
+      )
+    )
+  output = []
+  for user in users:
+    data = {
+      "email": user.email,
+      "first_name": user.first_name
+    }
+    output.append(data)
+  return { 'data': output }
+
 @app.route("/getall")
 def getAllData():
     users = None
