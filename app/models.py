@@ -190,6 +190,12 @@ class AreaTwo(db.Model):
         data = self.__dict__
         if data.get('_sa_instance_state'):
             data.pop('_sa_instance_state', None)
+        if data.get('area_one_id'):
+            data.pop('area_one_id', None)
+        if data.get('country_id'):
+            data.pop('country_id', None)
+        if data.get('id'):
+            data.pop('id', None)
         return data
 
 #State
@@ -207,6 +213,10 @@ class AreaOne(db.Model):
         data = self.__dict__
         if data.get('_sa_instance_state'):
             data.pop('_sa_instance_state', None)
+        if data.get('country_id'):
+            data.pop('country_id', None)
+        if data.get('id'):
+            data.pop('id', None)
         return data
 
 #Country
@@ -224,4 +234,6 @@ class Country(db.Model):
         data = self.__dict__
         if data.get('_sa_instance_state'):
             data.pop('_sa_instance_state', None)
+        if data.get('id'):
+            data.pop('id', None)
         return data

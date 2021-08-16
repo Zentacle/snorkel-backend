@@ -293,7 +293,11 @@ def get_spots():
     area_two_name = request.args.get('area_two')
     if area_two_name:
       query = query.filter(Spot.area_two.has(short_name=area_two_name))
-      area = AreaTwo.query.filter_by(short_name=area_two_name).first()
+      area = AreaTwo.query \
+        .options(joinedload('area_one')) \
+        .options(joinedload('country')) \
+        .filter_by(short_name=area_two_name) \
+        .first()
     else:
       query = query.filter_by(area_two_id=1)
   query = query.order_by(sort)
@@ -308,7 +312,12 @@ def get_spots():
     output.append(spot_data)
   resp = { 'data': output }
   if area:
-    resp['area'] = area.get_dict()
+    area_data = area.get_dict()
+    if area_data.get('area_one'):
+      area_data['area_one'] = area_data.get('area_one').get_dict()
+    if area_data.get('country'):
+      area_data['country'] = area_data.get('country').get_dict()
+    resp['area'] = area_data
   return resp
 
 @app.route("/spots/search")
@@ -976,10 +985,18 @@ def locality_get():
 
 @app.route("/locality/area_two")
 def get_area_two():
-  localities = AreaTwo.query.all()
+  localities = AreaTwo.query \
+    .options(joinedload('area_one')) \
+    .options(joinedload('country')) \
+    .all()
   data = []
   for locality in localities:
-    data.append(locality.get_dict())
+    locality_data = locality.get_dict()
+    if locality_data.get('area_one'):
+      locality_data['area_one'] = locality_data.get('area_one').get_dict()
+    if locality_data.get('country'):
+      locality_data['country'] = locality_data.get('country').get_dict()
+    data.append(locality_data)
   return { 'data': data }
 
 @app.route("/locality/area_one")
