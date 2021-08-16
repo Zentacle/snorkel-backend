@@ -196,6 +196,8 @@ class AreaTwo(db.Model):
             data.pop('country_id', None)
         if data.get('id'):
             data.pop('id', None)
+        if not data.get('short_name'):
+            data['short_name'] = demicrosoft(data.get('name')).lower()
         return data
 
 #State
@@ -217,6 +219,8 @@ class AreaOne(db.Model):
             data.pop('country_id', None)
         if data.get('id'):
             data.pop('id', None)
+        if not data.get('short_name'):
+            data['short_name'] = demicrosoft(data.get('name')).lower()
         return data
 
 #Country
@@ -236,4 +240,6 @@ class Country(db.Model):
             data.pop('_sa_instance_state', None)
         if data.get('id'):
             data.pop('id', None)
+        if not data.get('short_name'):
+            data['short_name'] = demicrosoft(data.get('name')).lower()
         return data
