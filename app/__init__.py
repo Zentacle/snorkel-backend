@@ -339,6 +339,8 @@ def get_spots():
     query = query.filter(Spot.is_verified.isnot(False))
   if request.args.get('limit') != 'none':
     area_two_name = request.args.get('area_two')
+    area_one_name = request.args.get('area_one')
+    country_name = request.args.get('country')
     if area_two_name:
       query = query.filter(Spot.area_two.has(short_name=area_two_name))
       area = AreaTwo.query \
@@ -346,6 +348,17 @@ def get_spots():
         .options(joinedload('country')) \
         .filter_by(short_name=area_two_name) \
         .first()
+    elif area_one_name:
+        query = query.filter(Spot.area_one.has(short_name=area_one_name))
+        area = AreaOne.query \
+          .options(joinedload('country')) \
+          .filter_by(short_name=area_one_name) \
+          .first()
+    elif country_name:
+        query = query.filter(Spot.country.has(short_name=area_one_name))
+        area = Country.query \
+          .filter_by(short_name=country_name) \
+          .first()
     else:
       query = query.filter_by(area_two_id=1)
   query = query.order_by(sort)
