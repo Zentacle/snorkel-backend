@@ -276,9 +276,12 @@ def user_login():
     return { 'msg': 'Wrong password or user does not exist' }, 400
 
 @app.route("/user/patch", methods=["PATCH"])
+@jwt_required()
 def patch_user():
+  user = get_current_user()
   user_id = request.json.get('id')
-  user = User.query.filter_by(id=user_id).first()
+  if user.admin and user_id:
+    user = User.query.filter_by(id=user_id).first()
   updates = request.json
   updates.pop('id', None)
   try:
