@@ -321,9 +321,12 @@ def get_spots():
       .filter_by(id=beach_id) \
       .first()
     spot_data = spot.get_dict()
-    spot_data['area_two'] = spot_data['area_two'].get_dict()
-    spot_data['area_one'] = spot_data['area_one'].get_dict()
-    spot_data['country'] = spot_data['country'].get_dict()
+    if spot_data['area_two']:
+      spot_data['area_two'] = spot_data['area_two'].get_dict()
+    if spot_data['area_one']:
+      spot_data['area_one'] = spot_data['area_one'].get_dict()
+    if spot_data['country']:
+      spot_data['country'] = spot_data['country'].get_dict()
     spot_data["ratings"] = get_summary_reviews_helper(beach_id)
     return { 'data': spot_data }
   sort = Spot.num_reviews.desc().nullslast()
