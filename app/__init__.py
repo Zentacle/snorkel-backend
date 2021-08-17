@@ -361,7 +361,7 @@ def get_spots():
           .filter_by(short_name=area_one_name) \
           .first()
     elif country_name:
-        query = query.filter(Spot.country.has(short_name=area_one_name))
+        query = query.filter(Spot.country.has(short_name=country_name))
         area = Country.query \
           .filter_by(short_name=country_name) \
           .first()
