@@ -178,8 +178,8 @@ class Locality(db.Model):
 class AreaTwo(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     google_name = db.Column(db.String)
-    name = db.Column(db.String)
-    short_name = db.Column(db.String)
+    name = db.Column(db.String, nullable=False)
+    short_name = db.Column(db.String, nullable=False)
     area_one_id = db.Column(db.Integer, db.ForeignKey('area_one.id'))
     country_id = db.Column(db.Integer, db.ForeignKey('country.id'))
 
@@ -203,8 +203,8 @@ class AreaTwo(db.Model):
 #State
 class AreaOne(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String)
-    short_name = db.Column(db.String)
+    name = db.Column(db.String, nullable=False)
+    short_name = db.Column(db.String, nullable=False)
     country_id = db.Column(db.Integer, db.ForeignKey('country.id'))
 
     area_twos = db.relationship('AreaTwo', backref='area_one', lazy=True)
@@ -226,8 +226,8 @@ class AreaOne(db.Model):
 #Country
 class Country(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String)
-    short_name = db.Column(db.String)
+    name = db.Column(db.String, nullable=False)
+    short_name = db.Column(db.String, nullable=False)
 
     area_ones = db.relationship('AreaOne', backref='country', lazy=True)
     area_twos = db.relationship('AreaTwo', backref='country', lazy=True)
