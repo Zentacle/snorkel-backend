@@ -1161,3 +1161,19 @@ def add_place_id():
     else:
       skipped.append({'name': spot.name})
   return { 'data': skipped }
+
+@app.route("/search/autocomplete")
+def search_autocomplete():
+  search_term = request.args.get('q')
+  spots = Spot.query.filter(
+    Spot.name.ilike('%' + search_term + '%')
+  ).limit(5).all()
+  output = []
+  for spot in spots:
+    spot_data = {
+      'label': spot.name,
+      'type': 'spot',
+      'url': spot.get_url(),
+    }
+    output.append(spot_data)
+  return { 'data': output }
