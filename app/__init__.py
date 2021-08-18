@@ -21,7 +21,8 @@ import boto3
 from botocore.exceptions import ClientError
 from google.oauth2 import id_token
 from google.auth.transport import requests as google_requests
-from app.helpers import create_account, login, get_localities
+from app.helpers import create_account, login
+from app.helpers.get_localities import get_localities
 import requests
 
 app = Flask(__name__)

@@ -1,6 +1,6 @@
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
-from app.helpers import demicrosoft
+from app.helpers.demicrosoft import demicrosoft
 
 db = SQLAlchemy()
 
