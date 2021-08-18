@@ -598,7 +598,7 @@ def add_review():
       'beach_name': spot.name,
       'first_name': user.first_name,
       'text': text,
-      'url': 'https://www.zentacle.com/'+str(beach_id),
+      'url': 'https://www.zentacle.com'+spot.get_url(),
   }
   if not os.environ.get('FLASK_ENV') == 'development':
     try:
