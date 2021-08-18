@@ -1087,44 +1087,47 @@ def get_country():
 @app.route("/loc/country/patch", methods=["PATCH"])
 def patch_country():
   id = request.json.get('id')
-  user = Country.query.filter_by(id=id).first_or_404()
+  loc = Country.query.filter_by(id=id).first_or_404()
   updates = request.json
   updates.pop('id', None)
   try:
     for key in updates.keys():
-      setattr(user, key, updates.get(key))
+      setattr(loc, key, updates.get(key))
   except ValueError as e:
     return e, 500
   db.session.commit()
-  return user.get_dict(), 200
+  loc.id
+  return loc.get_dict(), 200
 
 @app.route("/loc/area_one/patch", methods=["PATCH"])
 def patch_loc_one():
   id = request.json.get('id')
-  user = AreaOne.query.filter_by(id=id).first_or_404()
+  loc = AreaOne.query.filter_by(id=id).first_or_404()
   updates = request.json
   updates.pop('id', None)
   try:
     for key in updates.keys():
-      setattr(user, key, updates.get(key))
+      setattr(loc, key, updates.get(key))
   except ValueError as e:
     return e, 500
   db.session.commit()
-  return user.get_dict(), 200
+  loc.id
+  return loc.get_dict(), 200
 
 @app.route("/loc/area_two/patch", methods=["PATCH"])
 def patch_loc_two():
   id = request.json.get('id')
-  user = AreaTwo.query.filter_by(id=id).first_or_404()
+  loc = AreaTwo.query.filter_by(id=id).first_or_404()
   updates = request.json
   updates.pop('id', None)
   try:
     for key in updates.keys():
-      setattr(user, key, updates.get(key))
+      setattr(loc, key, updates.get(key))
   except ValueError as e:
     return e, 500
   db.session.commit()
-  return user.get_dict(), 200
+  loc.id
+  return loc.get_dict(), 200
 
 @app.route("/locality/<country>/<area_one>")
 def get_wildcard_locality(country, area_one):
