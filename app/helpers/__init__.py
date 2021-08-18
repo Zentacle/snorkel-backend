@@ -5,6 +5,13 @@ from sendgrid.helpers.mail import Mail
 from flask.helpers import make_response
 import os
 import bcrypt
+import re
+
+def demicrosoft(fn):
+    fn = re.sub("[^0-9a-zA-Z ]+", "", fn)
+    for ch in [' ']:
+        fn = fn.replace(ch,"-")
+    return fn
 
 def create_account(
   db,
@@ -113,20 +120,25 @@ def get_localities(address_components):
       locality_name = component.get('long_name')
     if 'administrative_area_level_1' in component.get('types'):
       area_1_name = component.get('long_name')
+      area_1_short_name = demicrosoft(component.get('short_name').lower())
     if 'administrative_area_level_2' in component.get('types'):
       area_2_name = component.get('long_name')
+      area_2_short_name = demicrosoft(component.get('short_name').lower())
     if 'country' in component.get('types'):
       country_name = component.get('long_name')
+      country_short_name = demicrosoft(component.get('short_name').lower())
   country = Country.query.filter_by(name=country_name).first()
   if not country:
     country = Country(
-      name=country_name
+      name=country_name,
+      short_name=country_short_name,
     )
   area_1 = AreaOne.query.filter_by(name=area_1_name).first()
   if not area_1:
     area_1 = AreaOne(
       name=area_1_name,
       country=country,
+      short_name=area_1_short_name,
     )
   area_2 = AreaTwo.query.filter_by(google_name=area_2_name).first()
   if not area_2:
@@ -135,6 +147,7 @@ def get_localities(address_components):
       name=area_2_name,
       area_one=area_1,
       country=country,
+      short_name=area_2_short_name,
     )
   locality = Locality.query.filter_by(name=locality_name).first()
   if not locality:

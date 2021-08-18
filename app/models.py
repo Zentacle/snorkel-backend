@@ -1,14 +1,8 @@
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
-import re
+from app.helpers import demicrosoft
 
 db = SQLAlchemy()
-
-def demicrosoft(fn):
-    fn = re.sub("[^0-9a-zA-Z ]+", "", fn)
-    for ch in [' ']:
-        fn = fn.replace(ch,"-")
-    return fn
 
 class ShoreDivingReview(db.Model):
     id = db.Column(db.Integer, primary_key=True)
