@@ -1087,7 +1087,7 @@ def get_country():
 @app.route("/loc/country/patch", methods=["PATCH"])
 def patch_country():
   id = request.json.get('id')
-  user = Country.query.filter_by(id=id).first()
+  user = Country.query.filter_by(id=id).first_or_404()
   updates = request.json
   updates.pop('id', None)
   try:
@@ -1101,7 +1101,7 @@ def patch_country():
 @app.route("/loc/area_one/patch", methods=["PATCH"])
 def patch_loc_one():
   id = request.json.get('id')
-  user = AreaOne.query.filter_by(id=id).first()
+  user = AreaOne.query.filter_by(id=id).first_or_404()
   updates = request.json
   updates.pop('id', None)
   try:
@@ -1115,7 +1115,7 @@ def patch_loc_one():
 @app.route("/loc/area_two/patch", methods=["PATCH"])
 def patch_loc_two():
   id = request.json.get('id')
-  user = AreaTwo.query.filter_by(id=id).first()
+  user = AreaTwo.query.filter_by(id=id).first_or_404()
   updates = request.json
   updates.pop('id', None)
   try:
@@ -1128,7 +1128,13 @@ def patch_loc_two():
 
 @app.route("/locality/<country>/<area_one>")
 def get_wildcard_locality(country, area_one):
-  locality = AreaOne.query.filter(and_(AreaOne.short_name==area_one, AreaOne.country.has(short_name=country))).first()
+  locality = AreaOne.query \
+    .filter(
+      and_(
+        AreaOne.short_name==area_one,
+        AreaOne.country.has(short_name=country)
+      )
+    ).first_or_404()
   data = []
   for spot in locality.spots:
     data.append(spot.get_dict())
