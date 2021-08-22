@@ -129,18 +129,18 @@ def getAllData():
         .order_by(db.text('num_reviews DESC')) \
         .limit(10)
     elif request.args.get('real'):
-      users = db.session.query(
-          User,
-          db.func.count(User.reviews).label('num_reviews')
-        ) \
-        .join(Review) \
-        .group_by(User) \
+      users = User.query \
         .filter(
           and_(
             not_(User.email.contains('zentacle.com')),
             User.is_fake.is_not(True)
           )
         )
+      output = []
+      for user in users:
+        data = user.get_dict()
+        output.append(data)
+      return { 'data': output, 'count': len(output) }
     else:
       users = db.session.query(
           User,
