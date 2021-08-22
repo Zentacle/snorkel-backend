@@ -133,7 +133,8 @@ def getAllData():
         .filter(
           and_(
             not_(User.email.contains('zentacle.com')),
-            User.is_fake.is_not(True)
+            User.is_fake.is_not(True),
+            User.email.is_not(None)
           )
         )
       output = []
