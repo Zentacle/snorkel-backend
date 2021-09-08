@@ -4,6 +4,18 @@ from app.helpers.demicrosoft import demicrosoft
 
 db = SQLAlchemy()
 
+class ShoreDivingData(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String)
+    name_url = db.Column(db.String)
+    destination = db.Column(db.String)
+    destination_url = db.Column(db.String)
+    region = db.Column(db.String)
+    region_url = db.Column(db.String)
+    spot_id = db.Column(db.Integer, db.ForeignKey('spot.id'), nullable=False)
+
+    spot = db.relationship("Spot", back_populates="shorediving_data", uselist=False)
+
 class ShoreDivingReview(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     shorediving_id = db.Column(db.String)
@@ -85,6 +97,7 @@ class Spot(db.Model):
     reviews = db.relationship("Review", backref="spot")
     images = db.relationship("Image", backref="spot")
     submitter = db.relationship("User", uselist=False)
+    shorediving_data = db.relationship("ShoreDivingData", back_populates="spot", uselist=False)
 
     def get_basic_data(self):
         data = {}

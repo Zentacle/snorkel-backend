@@ -406,6 +406,45 @@ def search_spots():
     output.append(spot_data)
   return { 'data': output }
 
+@app.route("/spots/add/script", methods=["POST"])
+def add_spot_script():
+  name = request.json.get('name')
+  description = request.json.get('description')
+  directions = request.json.get('directions')
+  id = request.json.get('id')
+  name_url = request.json.get('name_url')
+  destination = request.json.get('destination')
+  destination_url = request.json.get('destination_url')
+  region = request.json.get('region')
+  region_url = request.json.get('region_url')
+  location_city = destination + ', ' + region
+
+  print(location_city)
+
+  spot = Spot(
+    name=name,
+    location_city=location_city,
+    description=description + '\n\n' + directions,
+    is_verified=True,
+  )
+
+  sd_data = ShoreDivingData(
+    id=id,
+    name=name,
+    name_url=name_url,
+    destination=destination,
+    destination_url=destination_url,
+    region=region,
+    region_url=region_url,
+    spot=spot,
+  )
+
+  db.session.add(sd_data)
+  db.session.commit()
+  spot.id #need this to get data loaded, not sure why
+  return { 'data': spot }
+
+
 @app.route("/spots/add", methods=["POST"])
 @jwt_required(optional=True)
 def add_spot():
