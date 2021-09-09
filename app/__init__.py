@@ -767,6 +767,7 @@ def get_recs():
   spots = Spot.query \
     .filter(Spot.id.not_in(spots_been_to)) \
     .filter(Spot.is_verified.isnot(False)) \
+    .limit(25) \
     .all()
   data = []
   for spot in spots:
