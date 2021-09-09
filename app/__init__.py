@@ -442,7 +442,7 @@ def add_spot_script():
   db.session.add(sd_data)
   db.session.commit()
   spot.id #need this to get data loaded, not sure why
-  return { 'data': spot }
+  return { 'data': spot.get_dict() }
 
 
 @app.route("/spots/add", methods=["POST"])
