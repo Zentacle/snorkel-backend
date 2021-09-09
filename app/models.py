@@ -18,7 +18,7 @@ class ShoreDivingData(db.Model):
 
 class ShoreDivingReview(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    shorediving_id = db.Column(db.String)
+    shorediving_id = db.Column(db.String, unique=True)
     shorediving_url = db.Column(db.String)
     review_id = db.Column(db.Integer, db.ForeignKey('review.id'))
 
