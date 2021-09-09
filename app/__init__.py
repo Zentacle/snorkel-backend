@@ -372,7 +372,8 @@ def get_spots():
       query = query.filter_by(area_two_id=1)
   query = query.order_by(sort)
   if request.args.get('limit') != 'none':
-    query = query.limit(15)
+    limit = request.args.get('limit') if request.args.get('limit') else 15
+    query = query.limit(limit)
   spots = query.all()
   output = []
   for spot in spots:
