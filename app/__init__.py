@@ -557,16 +557,26 @@ def patch_spot():
           continue
         r = requests.get('https://maps.googleapis.com/maps/api/place/details/json', params = {
           'place_id': place_id,
-          'fields': 'name,geometry,url',
+          'fields': 'name,geometry,url,address_components',
           'key': os.environ.get('GOOGLE_API_KEY')
         })
         response = r.json()
-        latitude = response.get('result').get('geometry').get('location').get('lat')
-        longitude = response.get('result').get('geometry').get('location').get('lng')
-        url = response.get('result').get('url')
-        spot.latitude = latitude
-        spot.longitude = longitude
-        spot.location_google = url
+        if response.get('status') == 'OK':
+          latitude = response.get('result').get('geometry').get('location').get('lat')
+          longitude = response.get('result').get('geometry').get('location').get('lng')
+          url = response.get('result').get('url')
+          spot.latitude = latitude
+          spot.longitude = longitude
+          spot.location_google = url
+          address_components = response.get('result').get('address_components')
+          locality, area_2, area_1, country = get_localities(address_components)
+          spot.locality = locality
+          spot.area_one = area_1
+          spot.area_two = area_2
+          spot.country = country
+          db.session.add(spot)
+          db.session.commit()
+        spot.id
   except ValueError as e:
     return e, 500
   db.session.commit()
