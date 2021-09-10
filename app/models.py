@@ -58,6 +58,7 @@ class User(db.Model):
     password = db.Column(db.String)
     registered_on = db.Column(db.DateTime, nullable=False,
         default=datetime.utcnow)
+    hometown = db.Column(db.String)
     admin = db.Column(db.Boolean, nullable=False, default=False)
     is_fake=db.Column(db.Boolean, default=False)
 
