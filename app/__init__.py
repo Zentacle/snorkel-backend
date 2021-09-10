@@ -1241,3 +1241,15 @@ def search_autocomplete():
     }
     output.append(spot_data)
   return { 'data': output }
+
+@app.route("/spots/patch/shorediving", methods=["POST"])
+def add_shorediving_pic():
+  id = request.json.get('id')
+  pic_url = request.json.get('url')
+
+  shorediving = ShoreDivingData.query.filter_by(id=id).first()
+  if not shorediving.spot.hero_img:
+    shorediving.spot.hero_img = 'https://snorkel.s3.amazonaws.com/hero/' + pic_url
+  db.session.commit()
+  shorediving.spot.id
+  return { 'data': shorediving.spot.get_dict() }
