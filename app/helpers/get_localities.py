@@ -6,6 +6,9 @@ def get_localities(address_components):
   area_1_name = None
   area_2_name = None
   country_name = None
+  area_1_short_name = None
+  area_2_short_name = None
+  country_short_name = None
   for component in address_components:
     if 'locality' in component.get('types'):
       locality_name = component.get('long_name')
