@@ -3,6 +3,7 @@ from .demicrosoft import demicrosoft
 
 def get_localities(address_components):
   locality_name = None
+  locality_short_name = None
   area_1_name = None
   area_2_name = None
   country_name = None
@@ -12,6 +13,7 @@ def get_localities(address_components):
   for component in address_components:
     if 'locality' in component.get('types'):
       locality_name = component.get('long_name')
+      locality_short_name = component.get('short_name')
     if 'administrative_area_level_1' in component.get('types'):
       area_1_name = component.get('long_name')
       area_1_short_name = demicrosoft(component.get('short_name').lower())
@@ -35,7 +37,7 @@ def get_localities(address_components):
       short_name=area_1_short_name,
     )
   area_2 = AreaTwo.query.filter_by(google_name=area_2_name).first()
-  if not area_2:
+  if not area_2 and area_2_name:
     area_2 = AreaTwo(
       google_name=area_2_name,
       name=area_2_name,
@@ -43,6 +45,15 @@ def get_localities(address_components):
       country=country,
       short_name=area_2_short_name,
     )
+  else:
+    area_2 = AreaTwo(
+      google_name=locality_name,
+      name=locality_name,
+      short_name=locality_short_name,
+      area_one=area_1,
+      country=country,
+    )
+    return (None, area_2, area_1, country)
   locality = Locality.query.filter_by(name=locality_name).first()
   if not locality:
     locality = Locality(
