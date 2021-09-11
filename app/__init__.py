@@ -1017,7 +1017,7 @@ def add_shore_review():
   )
 
   shorediving_data = ShoreDivingReview(
-    shorediving_id=shorediving_beach_id,
+    shorediving_id=request.json.get('review_id'),
     entry=request.json.get('entry'),
     bottom=request.json.get('bottom'),
     reef=request.json.get('reef'),
@@ -1276,3 +1276,13 @@ def add_shorediving_pic():
   db.session.commit()
   shorediving.spot.id
   return { 'data': shorediving.spot.get_dict() }
+
+@app.route("/reviews/delete", methods=["POST"])
+def delete_shore_diving_ids():
+  id = request.json.get('id')
+  sd_review = ShoreDivingReview.query.filter_by(shorediving_id=id).first_or_404()
+  review = sd_review.review
+  db.session.delete(sd_review)
+  db.session.delete(review)
+  db.session.commit()
+  return 'ok'
