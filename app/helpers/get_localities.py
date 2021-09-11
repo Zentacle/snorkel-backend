@@ -29,7 +29,7 @@ def get_localities(address_components):
       short_name=country_short_name,
     )
   area_1 = AreaOne.query.filter_by(name=area_1_name).first()
-  if not area_1:
+  if not area_1 and area_1_name:
     area_1 = AreaOne(
       name=area_1_name,
       country=country,
