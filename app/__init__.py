@@ -969,70 +969,93 @@ def get_user():
 
 @app.route("/review/add/shorediving", methods=["POST"])
 def add_shore_review():
-  beach_id = request.json.get('beach_id')
-  reviews = request.json.get('data')
+  shorediving_beach_id = request.json.get('beach_id')
+  snorkel=request.json.get('snorkel')
+  beginner=request.json.get('beginner')
+  intermediate=request.json.get('intermediate')
+  advanced=request.json.get('advanced')
+  night=request.json.get('night')
 
-  for review_json in reviews:
-    username = review_json.get('username')
-    user = User.query.filter_by(username=username).first()
-    display_name = review_json.get('display_name')
-    first_name = review_json.get('first_name')
-    if not user:
-      user = User(
-        username=username,
-        display_name=display_name,
-        first_name=first_name,
-        email='noreply+'+username+'@zentacle.com',
-      )
-      db.session.add(user)
-      db.session.commit()
+  beach = ShoreDivingData.query.filter_by(id=shorediving_beach_id).first()
+  beach_id = beach.spot_id
 
-    visibility = review_json.get('visibility') if review_json.get('visibility') != '' else None
-    text = review_json.get('text')
-    rating = review_json.get('rating')
-    activity_type = review_json.get('activity_type')
-    date_posted = dateutil.parser.isoparse(review_json.get('date_dived'))
-    date_dived = dateutil.parser.isoparse(review_json.get('date_dived')) if review_json.get('date_dived') else datetime.utcnow()
-    if not rating:
-      return { 'msg': 'Please select a rating' }, 401
-    if not activity_type:
-      return { 'msg': 'Please select scuba or snorkel' }, 401
-
-    review = Review(
-      author_id=user.id,
-      beach_id=beach_id,
-      visibility=visibility,
-      text=text,
-      rating=rating,
-      activity_type=activity_type,
-      date_dived=date_dived,
-      date_posted=date_posted,
+  display_name = request.json.get('reviewer_name')
+  username = demicrosoft(display_name)
+  user = User.query.filter_by(username=username).first()
+  first_name = display_name.split(' ')[0]
+  email = request.json.get('reviewer_email')
+  if not user:
+    user = User(
+      username=username,
+      display_name=display_name,
+      first_name=first_name,
+      email=email if email else 'noreply+'+username+'@zentacle.com',
     )
-
-    shorediving_data = ShoreDivingReview(
-      shorediving_url=review_json.get('shorediving_url'),
-      shorediving_id=review_json.get('shorediving_id'),
-      review=review,
-    )
-
-    db.session.add(review)
-    db.session.add(shorediving_data)
-
-    spot = Spot.query.filter_by(id=beach_id).first()
-    if not spot:
-      return { 'msg': 'Couldn\'t find that spot' }, 404
-    if not spot.num_reviews:
-      spot.num_reviews = 1
-      spot.rating = rating
-    else:
-      new_rating = str(round(((float(spot.rating) * (spot.num_reviews*1.0)) + rating) / (spot.num_reviews + 1), 2))
-      spot.rating = new_rating
-      spot.num_reviews += 1
-    if visibility and (not spot.last_review_date or date_dived > spot.last_review_date):
-      spot.last_review_date = date_dived
-      spot.last_review_viz = visibility
+    db.session.add(user)
     db.session.commit()
-    review.id
+
+  visibility = request.json.get('visibility') if request.json.get('visibility') != '' else None
+  text = request.json.get('review_text')
+  rating = max([snorkel, beginner, intermediate, advanced, night])
+  activity_type = 'scuba'
+  date_posted = dateutil.parser.isoparse(request.json.get('date_dived'))
+  date_dived = dateutil.parser.isoparse(request.json.get('date_dived')) if request.json.get('date_dived') else datetime.utcnow()
+  if not rating:
+    return { 'msg': 'Please select a rating' }, 401
+  if not activity_type:
+    return { 'msg': 'Please select scuba or snorkel' }, 401
+
+  review = Review(
+    author_id=user.id,
+    beach_id=beach_id,
+    visibility=visibility,
+    text=text,
+    rating=rating,
+    activity_type=activity_type,
+    date_dived=date_dived,
+    date_posted=date_posted,
+  )
+
+  shorediving_data = ShoreDivingReview(
+    shorediving_id=shorediving_beach_id,
+    entry=request.json.get('entry'),
+    bottom=request.json.get('bottom'),
+    reef=request.json.get('reef'),
+    animal=request.json.get('animal'),
+    plant=request.json.get('plant'),
+    facilities=request.json.get('facilities'),
+    crowds=request.json.get('crowds'),
+    roads=request.json.get('roads'),
+    snorkel=request.json.get('snorkel'),
+    beginner=request.json.get('beginner'),
+    intermediate=request.json.get('intermediate'),
+    advanced=request.json.get('advanced'),
+    night=request.json.get('night'),
+    visibility=request.json.get('visibility'),
+    current=request.json.get('current'),
+    surf=request.json.get('surf'),
+    average=request.json.get('average'),
+    review=review,
+  )
+
+  db.session.add(review)
+  db.session.add(shorediving_data)
+
+  spot = Spot.query.filter_by(id=beach_id).first()
+  if not spot:
+    return { 'msg': 'Couldn\'t find that spot' }, 404
+  if not spot.num_reviews:
+    spot.num_reviews = 1
+    spot.rating = rating
+  else:
+    new_rating = str(round(((float(spot.rating) * (spot.num_reviews*1.0)) + rating) / (spot.num_reviews + 1), 2))
+    spot.rating = new_rating
+    spot.num_reviews += 1
+  if visibility and (not spot.last_review_date or date_dived > spot.last_review_date):
+    spot.last_review_date = date_dived
+    spot.last_review_viz = visibility
+  db.session.commit()
+  review.id
   return { 'msg': 'all done' }, 200
 
 @app.route("/spot/recalc", methods=["POST"])
