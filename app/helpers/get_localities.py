@@ -3,7 +3,6 @@ from .demicrosoft import demicrosoft
 
 def get_localities(address_components):
   locality_name = None
-  locality_short_name = None
   area_1_name = None
   area_2_name = None
   country_name = None
@@ -45,15 +44,6 @@ def get_localities(address_components):
       country=country,
       short_name=area_2_short_name,
     )
-  else:
-    area_2 = AreaTwo(
-      google_name=locality_name,
-      name=locality_name,
-      short_name=locality_short_name,
-      area_one=area_1,
-      country=country,
-    )
-    return (None, area_2, area_1, country)
   locality = Locality.query.filter_by(name=locality_name).first()
   if not locality:
     locality = Locality(

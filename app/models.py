@@ -199,7 +199,7 @@ class Locality(db.Model):
             data.pop('_sa_instance_state', None)
         return data
 
-#County
+#County - Doesn't always exist
 class AreaTwo(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     google_name = db.Column(db.String)
