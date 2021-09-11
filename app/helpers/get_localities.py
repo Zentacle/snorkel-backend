@@ -45,7 +45,7 @@ def get_localities(address_components):
       short_name=area_2_short_name,
     )
   locality = Locality.query.filter_by(name=locality_name).first()
-  if not locality:
+  if not locality and locality_name:
     locality = Locality(
       name=locality_name,
       area_one=area_1,
