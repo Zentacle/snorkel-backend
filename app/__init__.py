@@ -315,15 +315,36 @@ def refresh_token():
 @app.route("/spots/get")
 def get_spots():
   area = None
-  if request.args.get('beach_id'):
-    beach_id = request.args.get('beach_id')
-    spot = Spot.query \
-      .options(joinedload('area_two')) \
-      .options(joinedload('area_one')) \
-      .options(joinedload('country')) \
-      .filter_by(id=beach_id) \
-      .first()
-    spot_data = spot.get_dict()
+  spot = None
+  if request.args.get('beach_id') or request.args.get('region'):
+    if request.args.get('beach_id'):
+      beach_id = request.args.get('beach_id')
+      spot = Spot.query \
+        .options(joinedload('area_two')) \
+        .options(joinedload('area_one')) \
+        .options(joinedload('country')) \
+        .filter_by(id=beach_id) \
+        .first()
+    elif request.args.get('region'):
+      region = request.args.get('region')
+      destination = request.args.get('destination')
+      site = request.args.get('site')
+      sd_spot = ShoreDivingData.query \
+        .options(joinedload('spot')) \
+        .filter(and_(
+          ShoreDivingData.region_url==region,
+          ShoreDivingData.destination_url==destination,
+          ShoreDivingData.name_url==site,
+        )) \
+        .first()
+      spot = Spot.query \
+        .options(joinedload('area_two')) \
+        .options(joinedload('area_one')) \
+        .options(joinedload('country')) \
+        .filter_by(id=sd_spot.spot_id) \
+        .first()
+    spot_data = sd_spot.spot.get_dict()
+    beach_id = spot.id
     if spot_data['area_two']:
       spot_data['area_two'] = spot_data['area_two'].get_dict()
     if spot_data['area_one']:
