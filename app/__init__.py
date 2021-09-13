@@ -630,13 +630,14 @@ def add_review():
   spot = Spot.query.filter_by(id=beach_id).first()
   if not spot:
     return { 'msg': 'Couldn\'t find that spot' }, 404
-  if not spot.num_reviews:
-    spot.num_reviews = 1
-    spot.rating = rating
-  else:
-    new_rating = str(round(((float(spot.rating) * (spot.num_reviews*1.0)) + rating) / (spot.num_reviews + 1), 2))
-    spot.rating = new_rating
-    spot.num_reviews += 1
+  summary = get_summary_reviews_helper(beach_id)
+  num_reviews = 0.0
+  total = 0.0
+  for key in summary.keys():
+    num_reviews += summary[key]
+    total += summary[key] * int(key)
+  spot.num_reviews = num_reviews
+  spot.rating = total/num_reviews
   if visibility and (not spot.last_review_date or date_dived > spot.last_review_date):
     spot.last_review_date = date_dived
     spot.last_review_viz = visibility
@@ -1063,8 +1064,17 @@ def add_shore_review():
 @app.route("/spot/recalc", methods=["POST"])
 def recalc_spot_rating():
   beach_id = request.json.get('beach_id')
+  spot = Spot.query.filter_by(id=beach_id)
   summary = get_summary_reviews_helper(beach_id)
-  return {}
+  num_reviews = 0.0
+  total = 0.0
+  for key in summary.keys():
+    num_reviews += summary[key]
+    total += summary[key] * int(key)
+  spot.num_reviews = num_reviews
+  spot.rating = total/num_reviews
+  spot.id
+  return { 'data': spot.get_dict() }
 
 @app.route("/search/location")
 def search_location():
@@ -1125,7 +1135,11 @@ def get_location_spots():
 
 @app.route("/locality/locality")
 def locality_get():
-  localities = Locality.query.all()
+  localities = Locality.query \
+    .options(joinedload('area_two')) \
+    .options(joinedload('area_one')) \
+    .options(joinedload('country')) \
+    .all()
   data = []
   for locality in localities:
     data.append(locality.get_dict())
@@ -1144,15 +1158,22 @@ def get_area_two():
       locality_data['area_one'] = locality_data.get('area_one').get_dict()
     if locality_data.get('country'):
       locality_data['country'] = locality_data.get('country').get_dict()
+    locality_data['url'] = '/loc/' + locality_data['country']['short_name'] + '/' + locality_data['area_one']['short_name'] + '/' + locality_data['short_name']
     data.append(locality_data)
   return { 'data': data }
 
 @app.route("/locality/area_one")
 def get_area_one():
-  localities = AreaOne.query.all()
+  localities = AreaOne.query \
+    .options(joinedload('country')) \
+    .all()
   data = []
   for locality in localities:
-    data.append(locality.get_dict())
+    locality_data = locality.get_dict()
+    if locality_data.get('country'):
+      locality_data['country'] = locality_data.get('country').get_dict()
+    locality_data['url'] = '/loc/' + locality_data['country']['short_name'] + '/' + locality_data['short_name']
+    data.append(locality_data)
   return { 'data': data }
 
 @app.route("/locality/country")
@@ -1160,7 +1181,9 @@ def get_country():
   localities = Country.query.all()
   data = []
   for locality in localities:
-    data.append(locality.get_dict())
+    dict = locality.get_dict()
+    dict['url'] = '/loc/' + dict['short_name']
+    data.append(dict)
   return { 'data': data }
 
 @app.route("/loc/country/patch", methods=["PATCH"])
