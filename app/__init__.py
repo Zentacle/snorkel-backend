@@ -343,7 +343,7 @@ def get_spots():
         .options(joinedload('country')) \
         .filter_by(id=sd_spot.spot_id) \
         .first()
-    spot_data = sd_spot.spot.get_dict()
+    spot_data = spot.get_dict()
     beach_id = spot.id
     if spot_data['area_two']:
       spot_data['area_two'] = spot_data['area_two'].get_dict()
