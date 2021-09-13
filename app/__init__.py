@@ -368,8 +368,6 @@ def get_spots():
         area = Country.query \
           .filter_by(short_name=country_name) \
           .first()
-    else:
-      query = query.filter_by(area_two_id=1)
   query = query.order_by(sort)
   if request.args.get('limit') != 'none':
     limit = request.args.get('limit') if request.args.get('limit') else 15
@@ -1164,8 +1162,12 @@ def get_area_two():
 
 @app.route("/locality/area_one")
 def get_area_one():
-  localities = AreaOne.query \
-    .options(joinedload('country')) \
+  country_short_name = request.args.get('country')
+  country = Country.query.filter_by(short_name=country_short_name).first()
+  localities = AreaOne.query
+  if country:
+    localities = localities.filter_by(id=country.id)
+  localities = localities.options(joinedload('country')) \
     .all()
   data = []
   for locality in localities:
