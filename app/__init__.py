@@ -533,6 +533,7 @@ def add_spot():
         'user_display_name': user.first_name,
         'description': description,
         'location': location_city,
+        'url': spot.get_url(),
     }
     if not os.environ.get('FLASK_ENV') == 'development':
       try:
