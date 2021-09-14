@@ -1166,8 +1166,12 @@ def locality_get():
 
 @app.route("/locality/area_two")
 def get_area_two():
-  localities = AreaTwo.query \
-    .options(joinedload('area_one')) \
+  country_short_name = request.args.get('country')
+  country = Country.query.filter_by(short_name=country_short_name).first()
+  localities = AreaTwo.query
+  if country:
+    localities = localities.filter_by(country_id=country.id)
+  localities = localities.options(joinedload('area_one')) \
     .options(joinedload('country')) \
     .all()
   data = []
