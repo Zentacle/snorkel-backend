@@ -476,6 +476,8 @@ def add_spot():
   hero_img = request.json.get('hero_img')
   entry_map = request.json.get('entry_map')
   place_id = request.json.get('place_id')
+  max_depth = request.json.get('max_depth')
+  difficulty = request.json.get('difficulty')
   user = get_current_user()
   is_verified = True if user and user.admin else False
 
@@ -514,6 +516,8 @@ def add_spot():
     google_place_id=place_id,
     latitude=latitude,
     longitude=longitude,
+    max_depth=max_depth,
+    difficulty=difficulty,
   )
   spot.locality = locality
   spot.area_one = area_1
