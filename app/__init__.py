@@ -524,8 +524,8 @@ def add_spot():
   spot.id #need this to get data loaded, not sure why
   if not user or not user.admin:
     message = Mail(
-        from_email=('no-reply@zentacle.com', 'Zentacle'),
-        to_emails='mjmayank@gmail.com')
+        from_email=('hello@zentacle.com', 'Zentacle'),
+        to_emails='mayank@zentacle.com')
 
     message.template_id = 'd-df22c68e00c345108a3ac18ebf65bdaf'
     message.dynamic_template_data = {
@@ -542,9 +542,9 @@ def add_spot():
           print(e.body)
   if user:
     message = Mail(
-        from_email=('no-reply@zentacle.com', 'Zentacle'),
+        from_email=('hello@zentacle.com', 'Zentacle'),
         to_emails=user.email)
-    message.reply_to = 'mjmayank@gmail.com'
+    message.reply_to = 'mayank@zentacle.com'
     message.template_id = 'd-2280f0af94dd4a93aea15c5ec95e1760'
     message.dynamic_template_data = {
         'beach_name': spot.name,

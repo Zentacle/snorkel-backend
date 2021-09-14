@@ -55,9 +55,9 @@ def create_account(
   set_refresh_cookies(resp, refresh_token)
   if not password:
     message = Mail(
-      from_email=('no-reply@zentacle.com', 'Zentacle'),
+      from_email=('hello@zentacle.com', 'Zentacle'),
       to_emails=email)
-    message.reply_to = 'mjmayank@gmail.com'
+    message.reply_to = 'mayank@zentacle.com'
 
     message.template_id = 'd-b683fb33f315435e8d2177def8e57d6f'
     message.dynamic_template_data = {
@@ -70,8 +70,8 @@ def create_account(
     except Exception as e:
         print(e.body)
   message = Mail(
-      from_email=('no-reply@zentacle.com', 'Zentacle'),
-      to_emails='mjmayank@gmail.com')
+      from_email=('hello@zentacle.com', 'Zentacle'),
+      to_emails='mayank@zentacle.com')
 
   message.template_id = 'd-926fe53d5696480fb65b92af8cd8484e'
   message.dynamic_template_data = {
