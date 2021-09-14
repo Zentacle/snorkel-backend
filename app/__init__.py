@@ -567,6 +567,8 @@ def approve_spot():
     return { 'msg': "Only admins can do that" }, 401
   beach_id = request.json.get('id')
   spot = Spot.query.filter_by(id=beach_id).first()
+  if spot.is_verified:
+    return { 'data': spot.get_dict(), 'status': 'already verified' }
   spot.is_verified = True
   db.session.commit()
   spot.id
@@ -588,6 +590,8 @@ def approve_spot():
           sg.send(message)
       except Exception as e:
           print(e.body)
+  spot_data = spot.get_dict()
+  spot_data['user'] = {}
   return { 'data': spot.get_dict() }, 200
 
 @app.route("/spots/patch", methods=["PATCH"])
