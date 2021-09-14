@@ -560,6 +560,36 @@ def add_spot():
           print(e.body)
   return { 'data': spot.get_dict() }, 200
 
+@app.route("/spots/approve", methods=["POST"])
+@jwt_required()
+def approve_spot():
+  if not get_current_user().admin:
+    return { 'msg': "Only admins can do that" }, 401
+  beach_id = request.json.get('id')
+  spot = Spot.query.filter_by(id=beach_id).first()
+  spot.is_verified = True
+  db.session.commit()
+  spot.id
+  user = spot.submitter
+  if user:
+    message = Mail(
+        from_email=('hello@zentacle.com', 'Zentacle'),
+        to_emails=user.email)
+    message.reply_to = 'mayank@zentacle.com'
+    message.template_id = 'd-2280f0af94dd4a93aea15c5ec95e1760'
+    message.dynamic_template_data = {
+        'beach_name': spot.name,
+        'first_name': user.first_name,
+        'url': spot.get_url()+'/review',
+    }
+    if not os.environ.get('FLASK_ENV') == 'development':
+      try:
+          sg = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
+          sg.send(message)
+      except Exception as e:
+          print(e.body)
+  return { 'data': spot.get_dict() }, 200
+
 @app.route("/spots/patch", methods=["PATCH"])
 @jwt_required()
 def patch_spot():
