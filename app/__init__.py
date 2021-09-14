@@ -593,7 +593,7 @@ def approve_spot():
         print(e.body)
   spot_data = spot.get_dict()
   spot_data['user'] = {}
-  return { 'data': spot.get_dict() }, 200
+  return { 'data': spot_data }, 200
 
 @app.route("/spots/patch", methods=["PATCH"])
 @jwt_required()
