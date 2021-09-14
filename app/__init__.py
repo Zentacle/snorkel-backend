@@ -568,7 +568,9 @@ def approve_spot():
   beach_id = request.json.get('id')
   spot = Spot.query.filter_by(id=beach_id).first()
   if spot.is_verified:
-    return { 'data': spot.get_dict(), 'status': 'already verified' }
+    spot_data = spot.get_dict()
+    spot_data['user'] = {}
+    return { 'data': spot_data, 'status': 'already verified' }
   spot.is_verified = True
   db.session.commit()
   spot.id
@@ -578,18 +580,17 @@ def approve_spot():
         from_email=('hello@zentacle.com', 'Zentacle'),
         to_emails=user.email)
     message.reply_to = 'mayank@zentacle.com'
-    message.template_id = 'd-2280f0af94dd4a93aea15c5ec95e1760'
+    message.template_id = 'd-7b9577485616413c95f6d7e2829c52c6'
     message.dynamic_template_data = {
         'beach_name': spot.name,
         'first_name': user.first_name,
         'url': spot.get_url()+'/review',
     }
-    if not os.environ.get('FLASK_ENV') == 'development':
-      try:
-          sg = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
-          sg.send(message)
-      except Exception as e:
-          print(e.body)
+    try:
+        sg = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
+        sg.send(message)
+    except Exception as e:
+        print(e.body)
   spot_data = spot.get_dict()
   spot_data['user'] = {}
   return { 'data': spot.get_dict() }, 200
