@@ -1187,7 +1187,7 @@ def get_area_one():
   country = Country.query.filter_by(short_name=country_short_name).first()
   localities = AreaOne.query
   if country:
-    localities = localities.filter_by(id=country.id)
+    localities = localities.filter_by(country_id=country.id)
   localities = localities.options(joinedload('country')) \
     .all()
   data = []
