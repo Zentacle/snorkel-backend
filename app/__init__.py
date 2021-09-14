@@ -1168,9 +1168,13 @@ def locality_get():
 def get_area_two():
   country_short_name = request.args.get('country')
   country = Country.query.filter_by(short_name=country_short_name).first()
+  area_one_short_name = request.args.get('area_one')
+  area_one = AreaOne.query.filter_by(short_name=area_one_short_name).first()
   localities = AreaTwo.query
   if country:
     localities = localities.filter_by(country_id=country.id)
+  if area_one:
+    localities = localities.filter_by(area_one_id=area_one.id)
   localities = localities.options(joinedload('area_one')) \
     .options(joinedload('country')) \
     .all()
