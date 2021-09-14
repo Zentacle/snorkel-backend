@@ -662,8 +662,8 @@ def add_review():
     spot.last_review_viz = visibility
   db.session.commit()
   message = Mail(
-      from_email=('no-reply@zentacle.com', 'Zentacle'),
-      to_emails='mjmayank@gmail.com')
+      from_email=('hello@zentacle.com', 'Zentacle'),
+      to_emails='mayank@zentacle.com')
 
   message.template_id = 'd-3188c5ee843443bf91c5eecf3b66f26d'
   message.dynamic_template_data = {
