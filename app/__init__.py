@@ -537,7 +537,7 @@ def add_spot():
         'user_display_name': user.first_name,
         'description': description,
         'location': location_city,
-        'url': spot.get_url(),
+        'url': 'https://www.zentacle.com'+spot.get_url(),
     }
     if not os.environ.get('FLASK_ENV') == 'development':
       try:
@@ -554,7 +554,7 @@ def add_spot():
     message.dynamic_template_data = {
         'beach_name': spot.name,
         'first_name': user.first_name,
-        'url': spot.get_url(),
+        'url': 'https://www.zentacle.com'+spot.get_url(),
     }
     if not os.environ.get('FLASK_ENV') == 'development':
       try:
@@ -588,7 +588,7 @@ def approve_spot():
     message.dynamic_template_data = {
         'beach_name': spot.name,
         'first_name': user.first_name,
-        'url': spot.get_url()+'/review',
+        'url': 'https://www.zentacle.com'+spot.get_url()+'/review',
     }
     try:
         sg = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
