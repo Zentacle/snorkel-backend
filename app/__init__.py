@@ -574,7 +574,7 @@ def approve_spot():
   spot = Spot.query.filter_by(id=beach_id).first()
   if spot.is_verified:
     spot_data = spot.get_dict()
-    spot_data['user'] = {}
+    spot_data['submitter'] = {}
     return { 'data': spot_data, 'status': 'already verified' }
   spot.is_verified = True
   db.session.commit()
@@ -597,7 +597,7 @@ def approve_spot():
     except Exception as e:
         print(e.body)
   spot_data = spot.get_dict()
-  spot_data['user'] = {}
+  spot_data['submitter'] = {}
   return { 'data': spot_data }, 200
 
 @app.route("/spots/patch", methods=["PATCH"])
