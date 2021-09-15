@@ -254,7 +254,8 @@ def user_finish_signup():
   responseObject = {
     'status': 'success',
     'message': 'Successfully registered.',
-    'auth_token': auth_token
+    'auth_token': auth_token,
+    'username': user.username,
   }
   resp = make_response(responseObject)
   set_access_cookies(resp, auth_token)
