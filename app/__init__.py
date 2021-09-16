@@ -285,7 +285,7 @@ def patch_user():
   user = get_current_user()
   user_id = request.json.get('id')
   if user.admin and user_id:
-    user = User.query.filter_by(id=user_id).first()
+    user = User.query.filter_by(id=user_id).first_or_404()
   updates = request.json
   updates.pop('id', None)
   try:
@@ -325,7 +325,7 @@ def get_spots():
         .options(joinedload('area_one')) \
         .options(joinedload('country')) \
         .filter_by(id=beach_id) \
-        .first()
+        .first_or_404()
     elif request.args.get('region'):
       region = request.args.get('region')
       destination = request.args.get('destination')
@@ -337,7 +337,7 @@ def get_spots():
           ShoreDivingData.destination_url==destination,
           ShoreDivingData.name_url==site,
         )) \
-        .first()
+        .first_or_404()
       spot = Spot.query \
         .options(joinedload('area_two')) \
         .options(joinedload('area_one')) \
@@ -571,7 +571,7 @@ def approve_spot():
   if not get_current_user().admin:
     return { 'msg': "Only admins can do that" }, 401
   beach_id = request.json.get('id')
-  spot = Spot.query.filter_by(id=beach_id).first()
+  spot = Spot.query.filter_by(id=beach_id).first_or_404()
   if spot.is_verified:
     spot_data = spot.get_dict()
     spot_data['submitter'] = {}
@@ -606,7 +606,7 @@ def patch_spot():
   if not get_current_user().admin:
     return { 'msg': "Only admins can do that" }, 401
   beach_id = request.json.get('id')
-  spot = Spot.query.filter_by(id=beach_id).first()
+  spot = Spot.query.filter_by(id=beach_id).first_or_404()
   updates = request.json
   updates.pop('id', None)
   try:
@@ -790,7 +790,7 @@ def get_summary_reviews_helper(beach_id):
 @app.route("/review/patch", methods=["PATCH"])
 def patch_review():
   beach_id = request.json.get('id')
-  spot = Review.query.filter_by(id=beach_id).first()
+  spot = Review.query.filter_by(id=beach_id).first_or_404()
   updates = request.json
   updates.pop('id', None)
   try:
@@ -806,7 +806,7 @@ def patch_review():
 def delete_review():
   review_id = request.args.get('review_id')
 
-  review = Review.query.filter_by(id=review_id).first()
+  review = Review.query.filter_by(id=review_id).first_or_404()
   beach_id = review.beach_id
   rating = review.rating
   for image in review.images:
@@ -1181,13 +1181,13 @@ def get_location_spots():
   name = request.args.get('name')
   locality = None
   if type == 'locality':
-    locality = Locality.query.filter_by(name=name).first()
+    locality = Locality.query.filter_by(name=name).first_or_404()
   if type == 'area_one':
-    locality = AreaOne.query.filter_by(name=name).first()
+    locality = AreaOne.query.filter_by(name=name).first_or_404()
   if type == 'area_two':
-    locality = AreaTwo.query.filter_by(name=name).first()
+    locality = AreaTwo.query.filter_by(name=name).first_or_404()
   if type == 'country':
-    locality = Country.query.filter_by(name=name).first()
+    locality = Country.query.filter_by(name=name).first_or_404()
   data = []
   for spot in locality.spots:
     data.append(spot.get_dict())
@@ -1367,7 +1367,7 @@ def add_shorediving_pic():
   id = request.json.get('id')
   pic_url = request.json.get('url')
 
-  shorediving = ShoreDivingData.query.filter_by(id=id).first()
+  shorediving = ShoreDivingData.query.filter_by(id=id).first_or_404()
   if not shorediving.spot.hero_img:
     shorediving.spot.hero_img = 'https://'+os.environ.get('S3_BUCKET_NAME')+'.s3.amazonaws.com/hero/' + pic_url
   db.session.commit()

@@ -13,7 +13,6 @@ export FLASK_SECRET_KEY=''
 export S3_BUCKET_NAME='snorkel-dev'
 ```
 
-
 #Running the code
 ```
 #make sure to create a virtual environment
