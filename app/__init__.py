@@ -974,7 +974,7 @@ def create_presigned_url_local(filename, expiration=3600):
     :param expiration: Time in seconds for the presigned URL to remain valid
     :return: Presigned URL as string. If error, returns None.
     """
-    bucket_name = "snorkel"
+    bucket_name = os.environ.get('S3_BUCKET_NAME')
     object_name = filename
     # Generate a presigned URL for the S3 object
     s3_client = boto3.client('s3',)
@@ -1369,7 +1369,7 @@ def add_shorediving_pic():
 
   shorediving = ShoreDivingData.query.filter_by(id=id).first()
   if not shorediving.spot.hero_img:
-    shorediving.spot.hero_img = 'https://snorkel.s3.amazonaws.com/hero/' + pic_url
+    shorediving.spot.hero_img = 'https://'+os.environ.get('S3_BUCKET_NAME')+'.s3.amazonaws.com/hero/' + pic_url
   db.session.commit()
   shorediving.spot.id
   return { 'data': shorediving.spot.get_dict() }
