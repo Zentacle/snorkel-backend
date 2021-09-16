@@ -83,7 +83,7 @@ def home_view():
 @app.route("/db")
 def db_create():
   db.create_all()
-  return "<h1>Welcome to DiveBriefing</h1>"
+  return "<h1>Welcome to Zentacle</h1>"
 
 @app.route("/delete")
 def delete():
