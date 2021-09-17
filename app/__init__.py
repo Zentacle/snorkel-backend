@@ -1397,3 +1397,36 @@ def add_shorediving_to_existing():
   db.session.commit()
   sd_data.id
   return { 'data': sd_data.get_dict() }
+
+@app.route("/spots/add/backfill", methods=["POST"])
+def backfill_shorediving_to_existing():
+  name = request.json.get('name')
+  id = request.json.get('id')
+  name_url = request.json.get('name_url')
+  destination = request.json.get('destination')
+  destination_url = request.json.get('destination_url')
+  region = request.json.get('region')
+  region_url = request.json.get('region_url')
+
+  spot = Spot.query.filter_by(name=name).first_or_404()
+  if spot.area_two_id != 1:
+    return 'Couldnt find a spot in Maui with this name', 401
+
+  sd_spot = ShoreDivingData.query.filter_by(id=id).first()
+  if sd_spot:
+    return 'Already exists', 402
+
+  sd_data = ShoreDivingData(
+    id=id,
+    name=name,
+    name_url=name_url,
+    destination=destination,
+    destination_url=destination_url,
+    region=region,
+    region_url=region_url,
+    spot=spot,
+  )
+  db.session.add(sd_data)
+  db.session.commit()
+  sd_data.id
+  return { 'data': sd_data.get_dict() }
