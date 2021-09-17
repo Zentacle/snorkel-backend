@@ -1384,7 +1384,7 @@ def delete_shore_diving_ids():
   db.session.commit()
   return 'ok'
 
-@app.route("spots/add/shoredivingdata", methods=["POST"])
+@app.route("/spots/add/shoredivingdata", methods=["POST"])
 def add_shorediving_to_existing():
   beach_id = request.json.get('beach_id')
   sd_id = request.json.get('sd_id')
