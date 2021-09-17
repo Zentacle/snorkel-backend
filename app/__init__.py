@@ -1407,10 +1407,11 @@ def backfill_shorediving_to_existing():
   destination_url = request.json.get('destination_url')
   region = request.json.get('region')
   region_url = request.json.get('region_url')
+  area_two_id = request.json.get('area_two_id')
 
   spot = Spot.query.filter_by(name=name).first_or_404()
-  if spot.area_two_id != 1:
-    return 'Couldnt find a spot in Maui with this name', 401
+  if spot.area_two_id != area_two_id:
+    return 'Couldnt find a spot in the correct region with this name', 401
 
   sd_spot = ShoreDivingData.query.filter_by(id=id).first()
   if sd_spot:
