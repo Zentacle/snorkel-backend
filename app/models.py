@@ -16,6 +16,12 @@ class ShoreDivingData(db.Model):
 
     spot = db.relationship("Spot", back_populates="shorediving_data", uselist=False)
 
+    def get_dict(self):
+        return {
+            'name': self.name,
+            'id': self.id
+        }
+
 class ShoreDivingReview(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     shorediving_id = db.Column(db.String, unique=True)

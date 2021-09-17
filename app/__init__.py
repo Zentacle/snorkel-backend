@@ -1383,3 +1383,17 @@ def delete_shore_diving_ids():
   db.session.delete(review)
   db.session.commit()
   return 'ok'
+
+@app.route("spots/add/shoredivingdata", methods=["POST"])
+def add_shorediving_to_existing():
+  beach_id = request.json.get('beach_id')
+  sd_id = request.json.get('sd_id')
+  spot = Spot.query.filter_by(id=beach_id).first_or_404()
+  sd_data = ShoreDivingData(
+    id=sd_id,
+    spot=spot,
+  )
+  db.session.add(sd_data)
+  db.session.commit()
+  sd_data.id
+  return { 'data': sd_data.get_dict() }
