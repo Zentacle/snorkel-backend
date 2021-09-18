@@ -440,14 +440,34 @@ def add_spot_script():
   region = request.json.get('region')
   region_url = request.json.get('region_url')
   location_city = destination + ', ' + region
+  area_two_id = request.json.get('area_two_id')
+  area_one_id = request.json.get('area_one_id')
+  country_id = request.json.get('country_id')
 
-  print(location_city)
+  sd_data = ShoreDivingData.query.filter_by(id=id).first()
+  if sd_data:
+    if sd_data.name:
+      return 'Already exists', 404
+    else:
+      sd_data.name=name
+      sd_data.name_url=name_url
+      sd_data.destination=destination
+      sd_data.destination_url=destination_url
+      sd_data.region=region
+      sd_data.region_url=region_url
+      db.session.add(sd_data)
+      db.session.commit()
+      sd_data.id
+      return { 'data': sd_data.get_dict() }
 
   spot = Spot(
     name=name,
     location_city=location_city,
     description=description + '\n\n' + directions,
     is_verified=True,
+    country_id=country_id,
+    area_one_id=area_one_id,
+    area_two_id=area_two_id,
   )
 
   sd_data = ShoreDivingData(
