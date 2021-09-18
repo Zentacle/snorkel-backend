@@ -50,7 +50,8 @@ class ShoreDivingReview(db.Model):
     def get_dict(self):
         return {
             'shorediving_url': self.shorediving_url,
-            'id': self.id
+            'id': self.id,
+            'shorediving_id': self.shorediving_id,
         }
 
 class User(db.Model):

@@ -1110,8 +1110,10 @@ def add_shore_review():
       shorediving_data.current=request.json.get('current')
       shorediving_data.surf=request.json.get('surf')
       shorediving_data.average=request.json.get('average')
+      db.session.add(shorediving_data)
       db.session.commit()
       shorediving_data.id
+      shorediving_data.shorediving_url
       return { 'data', shorediving_data.get_dict() }
 
   review = Review(
