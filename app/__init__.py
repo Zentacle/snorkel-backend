@@ -1056,8 +1056,11 @@ def add_shore_review():
   intermediate=request.json.get('intermediate')
   advanced=request.json.get('advanced')
   night=request.json.get('night')
+  shorediving_id=request.json.get('review_id')
 
   beach = ShoreDivingData.query.filter_by(id=shorediving_beach_id).first()
+  if not beach:
+    return 'beach doesnt exist', 403
   beach_id = beach.spot_id
 
   display_name = request.json.get('reviewer_name')
@@ -1073,7 +1076,6 @@ def add_shore_review():
       email=email if email else 'noreply+'+username+'@zentacle.com',
     )
     db.session.add(user)
-    db.session.commit()
 
   visibility = request.json.get('visibility') if request.json.get('visibility') != '' else None
   text = request.json.get('review_text')
@@ -1086,8 +1088,34 @@ def add_shore_review():
   if not activity_type:
     return { 'msg': 'Please select scuba or snorkel' }, 401
 
+  shorediving_data = ShoreDivingReview.query.filter_by(shorediving_id=shorediving_id).first()
+  if shorediving_data:
+    if shorediving_data.entry:
+      return 'already exists', 401
+    else:
+      shorediving_data.entry=request.json.get('entry')
+      shorediving_data.bottom=request.json.get('bottom')
+      shorediving_data.reef=request.json.get('reef')
+      shorediving_data.animal=request.json.get('animal')
+      shorediving_data.plant=request.json.get('plant')
+      shorediving_data.facilities=request.json.get('facilities')
+      shorediving_data.crowds=request.json.get('crowds')
+      shorediving_data.roads=request.json.get('roads')
+      shorediving_data.snorkel=request.json.get('snorkel')
+      shorediving_data.beginner=request.json.get('beginner')
+      shorediving_data.intermediate=request.json.get('intermediate')
+      shorediving_data.advanced=request.json.get('advanced')
+      shorediving_data.night=request.json.get('night')
+      shorediving_data.visibility=request.json.get('visibility')
+      shorediving_data.current=request.json.get('current')
+      shorediving_data.surf=request.json.get('surf')
+      shorediving_data.average=request.json.get('average')
+      db.session.commit()
+      shorediving_data.id
+      return { 'data', shorediving_data.get_dict() }
+
   review = Review(
-    author_id=user.id,
+    user=user,
     beach_id=beach_id,
     visibility=visibility,
     text=text,
@@ -1098,7 +1126,7 @@ def add_shore_review():
   )
 
   shorediving_data = ShoreDivingReview(
-    shorediving_id=request.json.get('review_id'),
+    shorediving_id=shorediving_id,
     entry=request.json.get('entry'),
     bottom=request.json.get('bottom'),
     reef=request.json.get('reef'),
