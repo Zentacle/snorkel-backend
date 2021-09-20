@@ -8,7 +8,7 @@ import logging
 
 from app.models import *
 from sqlalchemy.orm import joinedload
-from sqlalchemy import or_, and_, not_
+from sqlalchemy import or_, and_, not_, func
 import bcrypt
 from flask_jwt_extended import *
 from datetime import timezone, timedelta
@@ -1046,7 +1046,7 @@ def get_user():
     username = request.args.get('username')
     user = User.query \
       .options(joinedload('reviews')) \
-      .filter_by(username=username).first()
+      .filter(func.lower(User.username)==username.lower()).first()
     if not user:
       return { 'msg': 'User doesn\'t exist' }, 404
     user_data = user.get_dict()
