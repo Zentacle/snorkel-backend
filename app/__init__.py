@@ -317,6 +317,7 @@ def refresh_token():
 def get_spots():
   area = None
   spot = None
+  sd_url = None
   if request.args.get('beach_id') or request.args.get('region'):
     if request.args.get('beach_id'):
       beach_id = request.args.get('beach_id')
@@ -338,6 +339,7 @@ def get_spots():
           ShoreDivingData.name_url==site,
         )) \
         .first_or_404()
+      sd_url = sd_spot.get_url()
       spot = Spot.query \
         .options(joinedload('area_two')) \
         .options(joinedload('area_one')) \
@@ -345,13 +347,15 @@ def get_spots():
         .filter_by(id=sd_spot.spot_id) \
         .first()
     spot_data = spot.get_dict()
-    beach_id = spot.id
+    if sd_url:
+      spot_data['sd_url'] = sd_url
     if spot_data['area_two']:
       spot_data['area_two'] = spot_data['area_two'].get_dict()
     if spot_data['area_one']:
       spot_data['area_one'] = spot_data['area_one'].get_dict()
     if spot_data['country']:
       spot_data['country'] = spot_data['country'].get_dict()
+    beach_id = spot.id
     spot_data["ratings"] = get_summary_reviews_helper(beach_id)
     return { 'data': spot_data }
   sort = Spot.num_reviews.desc().nullslast()

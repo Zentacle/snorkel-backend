@@ -19,8 +19,16 @@ class ShoreDivingData(db.Model):
     def get_dict(self):
         return {
             'name': self.name,
-            'id': self.id
+            'id': self.id,
+            'url': self.get_url(),
         }
+
+    def get_url(self):
+        return '/Earth/' + self.region_url + '/' + self.destination_url + '/' + self.name_url
+
+    @classmethod
+    def create_url(cls, shorediving_data):
+        return '/Earth/' + shorediving_data.region_url + '/' + shorediving_data.destination_url + '/' + shorediving_data.name_url
 
 class ShoreDivingReview(db.Model):
     id = db.Column(db.Integer, primary_key=True)
