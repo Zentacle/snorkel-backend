@@ -315,9 +315,10 @@ def refresh_token():
 
 @app.route("/spots/get")
 def get_spots():
+  is_shorediving = request.args.get('region')
   area = None
   spot = None
-  sd_url = None
+  sd_spot = None
   if request.args.get('beach_id') or request.args.get('region'):
     if request.args.get('beach_id'):
       beach_id = request.args.get('beach_id')
@@ -325,8 +326,11 @@ def get_spots():
         .options(joinedload('area_two')) \
         .options(joinedload('area_one')) \
         .options(joinedload('country')) \
+        .options(joinedload('shorediving_data')) \
         .filter_by(id=beach_id) \
         .first_or_404()
+      if spot.shorediving_data:
+        sd_spot = spot.shorediving_data.get_url()
     elif request.args.get('region'):
       region = request.args.get('region')
       destination = request.args.get('destination')
@@ -339,7 +343,6 @@ def get_spots():
           ShoreDivingData.name_url==site,
         )) \
         .first_or_404()
-      sd_url = sd_spot.get_url()
       spot = Spot.query \
         .options(joinedload('area_two')) \
         .options(joinedload('area_one')) \
@@ -347,14 +350,17 @@ def get_spots():
         .filter_by(id=sd_spot.spot_id) \
         .first()
     spot_data = spot.get_dict()
-    if sd_url:
-      spot_data['sd_url'] = sd_url
-    if spot_data['area_two']:
-      spot_data['area_two'] = spot_data['area_two'].get_dict()
-    if spot_data['area_one']:
-      spot_data['area_one'] = spot_data['area_one'].get_dict()
-    if spot_data['country']:
-      spot_data['country'] = spot_data['country'].get_dict()
+    if is_shorediving and sd_spot:
+      spot_data['sd_url'] = sd_spot.get_url()
+      spot_data['country'] = sd_spot.get_region_dict()
+      spot_data['area_one'] = sd_spot.get_destination_dict()
+    else:
+      if spot_data['area_two']:
+        spot_data['area_two'] = spot_data['area_two'].get_dict(spot.country, spot.area_one)
+      if spot_data['area_one']:
+        spot_data['area_one'] = spot_data['area_one'].get_dict(spot.country)
+      if spot_data['country']:
+        spot_data['country'] = spot_data['country'].get_dict()
     beach_id = spot.id
     spot_data["ratings"] = get_summary_reviews_helper(beach_id)
     return { 'data': spot_data }

@@ -26,6 +26,26 @@ class ShoreDivingData(db.Model):
     def get_url(self):
         return '/Earth/' + self.region_url + '/' + self.destination_url + '/' + self.name_url
 
+    def get_region_dict(self):
+        return {
+            'short_name': self.destination,
+            'name': self.destination_url,
+            'url': self.get_destination_url(),
+        }
+
+    def get_region_url(self):
+        return '/Earth/' + self.region_url
+
+    def get_destination_dict(self):
+        return {
+            'short_name': self.destination,
+            'name': self.destination_url,
+            'url': self.get_destination_url(),
+        }
+
+    def get_destination_url(self):
+        return '/Earth/' + self.region_url + '/' + self.destination_url
+
     @classmethod
     def create_url(cls, shorediving_data):
         return '/Earth/' + shorediving_data.region_url + '/' + shorediving_data.destination_url + '/' + shorediving_data.name_url
@@ -149,6 +169,8 @@ class Spot(db.Model):
         data = self.__dict__
         if data.get('_sa_instance_state'):
             data.pop('_sa_instance_state', None)
+        if data.get('shorediving_data'):
+            data.pop('shorediving_data', None)
         data['url'] = '/Beach/'+str(self.id)+'/'+demicrosoft(self.name).lower()
         return data
 
@@ -230,7 +252,7 @@ class AreaTwo(db.Model):
     localities = db.relationship('Locality', backref='area_two', lazy=True)
     spots = db.relationship('Spot', backref='area_two', lazy=True)
 
-    def get_dict(self):
+    def get_dict(self, country=None, area_one=None):
         data = self.__dict__
         if data.get('_sa_instance_state'):
             data.pop('_sa_instance_state', None)
@@ -238,9 +260,12 @@ class AreaTwo(db.Model):
             data.pop('area_one_id', None)
         if data.get('country_id'):
             data.pop('country_id', None)
-        if not data.get('short_name'):
-            data['short_name'] = demicrosoft(data.get('name')).lower()
+        if country and area_one:
+            data['url'] = self.get_url(country, area_one)
         return data
+
+    def get_url(self, country, area_one):
+        return '/loc/' + country.short_name + '/' + area_one.short_name + '/' + self.short_name
 
 #State
 class AreaOne(db.Model):
@@ -254,15 +279,18 @@ class AreaOne(db.Model):
     localities = db.relationship('Locality', backref='area_one', lazy=True)
     spots = db.relationship('Spot', backref='area_one', lazy=True)
 
-    def get_dict(self):
+    def get_dict(self, country=None):
         data = self.__dict__
         if data.get('_sa_instance_state'):
             data.pop('_sa_instance_state', None)
         if data.get('country_id'):
             data.pop('country_id', None)
-        if not data.get('short_name'):
-            data['short_name'] = demicrosoft(data.get('name')).lower()
+        if country:
+            data['url'] = self.get_url(country)
         return data
+
+    def get_url(self, country):
+        return '/loc/' + country.short_name + '/' + self.short_name
 
 #Country
 class Country(db.Model):
@@ -280,6 +308,8 @@ class Country(db.Model):
         data = self.__dict__
         if data.get('_sa_instance_state'):
             data.pop('_sa_instance_state', None)
-        if not data.get('short_name'):
-            data['short_name'] = demicrosoft(data.get('name')).lower()
+        data['url'] = self.get_url()
         return data
+
+    def get_url(self):
+        return '/loc/' + self.short_name
