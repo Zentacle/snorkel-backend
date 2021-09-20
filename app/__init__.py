@@ -1268,7 +1268,7 @@ def locality_get():
 
 @app.route("/locality/area_two")
 def get_area_two():
-  limit = request.arg.get('limit') if request.arg.get('limit') else 25
+  limit = request.args.get('limit') if request.args.get('limit') else 25
   country_short_name = request.args.get('country')
   country = Country.query.filter_by(short_name=country_short_name).first()
   area_one_short_name = request.args.get('area_one')
