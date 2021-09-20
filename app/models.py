@@ -182,12 +182,14 @@ class Image(db.Model):
     beach_id = db.Column(db.Integer, db.ForeignKey('spot.id'), nullable=True)
     review_id = db.Column(db.Integer, db.ForeignKey('review.id'), nullable=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+    caption = db.Column(db.String)
 
     def get_dict(self):
         return {
             'url': self.url,
             'id': self.id,
-            'review_id': self.review_id
+            'review_id': self.review_id,
+            'caption': self.caption,
         }
 
 #City
