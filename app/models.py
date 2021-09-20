@@ -28,9 +28,9 @@ class ShoreDivingData(db.Model):
 
     def get_region_dict(self):
         return {
-            'short_name': self.destination,
-            'name': self.destination_url,
-            'url': self.get_destination_url(),
+            'short_name': self.region,
+            'name': self.region_url,
+            'url': self.get_region_url(),
         }
 
     def get_region_url(self):
