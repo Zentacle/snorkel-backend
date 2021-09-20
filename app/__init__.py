@@ -354,13 +354,14 @@ def get_spots():
       spot_data['sd_url'] = sd_spot.get_url()
       spot_data['country'] = sd_spot.get_region_dict()
       spot_data['area_one'] = sd_spot.get_destination_dict()
+      spot_data['area_two'] = None
     else:
       if spot_data['area_two']:
-        spot_data['area_two'] = spot_data['area_two'].get_dict(spot.country, spot.area_one)
+        spot_data['area_two'] = spot.area_two.get_dict(spot.country, spot.area_one)
       if spot_data['area_one']:
-        spot_data['area_one'] = spot_data['area_one'].get_dict(spot.country)
+        spot_data['area_one'] = spot.area_one.get_dict(spot.country)
       if spot_data['country']:
-        spot_data['country'] = spot_data['country'].get_dict()
+        spot_data['country'] = spot.country.get_dict()
     beach_id = spot.id
     spot_data["ratings"] = get_summary_reviews_helper(beach_id)
     return { 'data': spot_data }
@@ -1267,6 +1268,7 @@ def locality_get():
 
 @app.route("/locality/area_two")
 def get_area_two():
+  limit = request.arg.get('limit') if request.arg.get('limit') else 25
   country_short_name = request.args.get('country')
   country = Country.query.filter_by(short_name=country_short_name).first()
   area_one_short_name = request.args.get('area_one')
@@ -1278,6 +1280,7 @@ def get_area_two():
     localities = localities.filter_by(area_one_id=area_one.id)
   localities = localities.options(joinedload('area_one')) \
     .options(joinedload('country')) \
+    .limit(limit) \
     .all()
   data = []
   for locality in localities:
