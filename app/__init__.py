@@ -1033,7 +1033,7 @@ def create_presigned_url_local(filename, expiration=3600):
 
 @app.route("/s3-upload")
 def create_presigned_post():
-    bucket_name = 'snorkel'
+    bucket_name = os.environ.get('S3_BUCKET_NAME')
     object_name = request.args.get('file')
     expiration=3600
 
@@ -1042,7 +1042,13 @@ def create_presigned_post():
     try:
         response = s3_client.generate_presigned_post(Bucket=bucket_name,
                                                      Key=object_name,
-                                                     ExpiresIn=expiration)
+                                                     ExpiresIn=expiration,
+                                                     Fields={
+                                                       'acl': 'public-read',
+                                                     },
+                                                     Conditions=[{
+                                                       'acl': 'public-read',
+                                                     }])
     except ClientError as e:
         logging.error(e)
         return None
