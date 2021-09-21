@@ -330,7 +330,7 @@ def get_spots():
         .filter_by(id=beach_id) \
         .first_or_404()
       if spot.shorediving_data:
-        sd_spot = spot.shorediving_data.get_url()
+        sd_spot = spot.shorediving_data
     elif request.args.get('region'):
       region = request.args.get('region')
       destination = request.args.get('destination')
@@ -405,12 +405,15 @@ def get_spots():
   if request.args.get('limit') != 'none':
     limit = request.args.get('limit') if request.args.get('limit') else 15
     query = query.limit(limit)
+  query = query.options(joinedload('shorediving_data'))
   spots = query.all()
   output = []
   for spot in spots:
     spot_data = spot.get_dict()
     if request.args.get('ssg'):
       spot_data['beach_name_for_url'] = spot.get_beach_name_for_url()
+    if spot.shorediving_data:
+      spot_data['sd_url'] = spot.shorediving_data.get_url()
     output.append(spot_data)
   resp = { 'data': output }
   if area:
