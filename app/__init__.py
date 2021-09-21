@@ -7,7 +7,7 @@ import os.path
 import logging
 
 from app.models import *
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import joinedload, lazyload
 from sqlalchemy import or_, and_, not_, func
 import bcrypt
 from flask_jwt_extended import *
@@ -42,7 +42,12 @@ if __name__ != '__main__':
   gunicorn_logger = logging.getLogger('gunicorn.error')
   app.logger.handlers = gunicorn_logger.handlers
   app.logger.setLevel(gunicorn_logger.level)
-#app.config["JWT_COOKIE_SECURE"] = True # Uncomment when running in production
+  # logging.basicConfig()
+  # logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
+app.config["JWT_COOKIE_SECURE"] = (True
+  if not os.environ.get('FLASK_ENV') == 'development'
+  else False
+)
 
 
 cors = CORS(app)
@@ -405,7 +410,7 @@ def get_spots():
   if request.args.get('limit') != 'none':
     limit = request.args.get('limit') if request.args.get('limit') else 15
     query = query.limit(limit)
-  query = query.options(joinedload('shorediving_data'))
+  query = query.options(joinedload(Spot.shorediving_data))
   spots = query.all()
   output = []
   for spot in spots:

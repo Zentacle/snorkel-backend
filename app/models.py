@@ -166,7 +166,7 @@ class Spot(db.Model):
         return data
 
     def get_dict(self):
-        data = self.__dict__
+        data = self.__dict__.copy()
         if data.get('_sa_instance_state'):
             data.pop('_sa_instance_state', None)
         if data.get('shorediving_data'):
