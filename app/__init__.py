@@ -1448,6 +1448,8 @@ def add_shorediving_pic():
   shorediving = ShoreDivingData.query.filter_by(id=id).first_or_404()
   if not shorediving.spot.hero_img:
     shorediving.spot.hero_img = 'https://'+os.environ.get('S3_BUCKET_NAME')+'.s3.amazonaws.com/' + pic_url
+  else:
+    return 'Already has one', 401
   db.session.commit()
   shorediving.spot.id
   return { 'data': shorediving.spot.get_dict() }
