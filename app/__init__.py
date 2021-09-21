@@ -677,26 +677,32 @@ def patch_spot():
   return spot_data, 200
 
 @app.route("/review/add", methods=["POST"])
-@jwt_required()
+@jwt_required(optional=True)
 def add_review():
   user_id = get_jwt_identity()
+  user = None
   if user_id:
     user = get_current_user()
   if not user:
     email = request.json.get('email')
-    user = User.query.filter_by(email=email).first()
+    user = User.query.filter_by(email=email).first_or_404()
 
   beach_id = request.json.get('beach_id')
+  sd_id = request.json.get('sd_id')
   visibility = request.json.get('visibility') if request.json.get('visibility') != '' else None
   text = request.json.get('text')
   rating = request.json.get('rating')
   activity_type = request.json.get('activity_type')
-  imageURLs = request.json.get('images') or []
+  images = request.json.get('images') or []
   date_dived = dateutil.parser.isoparse(request.json.get('date_dived')) if request.json.get('date_dived') else datetime.utcnow()
   if not rating:
     return { 'msg': 'Please select a rating' }, 401
   if not activity_type:
     return { 'msg': 'Please select scuba or snorkel' }, 401
+
+  if sd_id and not beach_id:
+    sd_data = ShoreDivingData.query.filter_by(id=sd_id).first_or_404()
+    beach_id = sd_data.spot_id
 
   review = Review(
     author_id=user.id,
@@ -708,9 +714,10 @@ def add_review():
     date_dived=date_dived,
   )
 
-  for imageURL in imageURLs:
+  for image in images:
     image = Image(
-      url=imageURL,
+      url=image['url'],
+      caption=image['caption'],
       beach_id=beach_id,
       user_id=user.id,
     )
