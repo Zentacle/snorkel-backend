@@ -1279,14 +1279,37 @@ def get_location_spots():
 
 @app.route("/locality/locality")
 def locality_get():
-  localities = Locality.query \
-    .options(joinedload('area_two')) \
+  limit = request.args.get('limit') if request.args.get('limit') else 15
+  country_short_name = request.args.get('country')
+  area_one_short_name = request.args.get('area_one')
+  area_two_short_name = request.args.get('area_two')
+  localities = Locality.query
+  if country_short_name:
+    localities = localities.filter(Locality.country.has(short_name=country_short_name))
+  if area_one_short_name:
+    localities = localities.filter(Locality.area_one.has(short_name=area_one_short_name))
+  if area_two_short_name:
+    localities = localities.filter(Locality.area_two.has(short_name=area_two_short_name))
+  localities = localities.options(joinedload('area_two')) \
     .options(joinedload('area_one')) \
     .options(joinedload('country')) \
+    .limit(limit) \
     .all()
   data = []
   for locality in localities:
-    data.append(locality.get_dict())
+    locality_data = locality.get_dict()
+    if locality_data.get('area_two'):
+      locality_data['area_two'] = locality_data.get('area_two').get_dict()
+    if locality_data.get('area_one'):
+      locality_data['area_one'] = locality_data.get('area_one').get_dict()
+    if locality_data.get('country'):
+      locality_data['country'] = locality_data.get('country').get_dict()
+    # locality_data['url'] = '/loc/' + locality_data['country']['short_name'] + \
+    #   '/' + locality_data['area_one']['short_name'] + \
+    #   '/' + locality_data['area_two']['short_name'] + \
+    #   '/' + locality.get_short_name()
+    locality_data['url'] = '/'
+    data.append(locality_data)
   return { 'data': data }
 
 @app.route("/locality/area_two")

@@ -226,6 +226,7 @@ class Image(db.Model):
 class Locality(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String, nullable=False)
+    short_name = db.Column(db.String)
     area_two_id = db.Column(db.Integer, db.ForeignKey('area_two.id'))
     area_one_id = db.Column(db.Integer, db.ForeignKey('area_one.id'))
     country_id = db.Column(db.Integer, db.ForeignKey('country.id'))
@@ -234,10 +235,13 @@ class Locality(db.Model):
     spots = db.relationship('Spot', backref='locality', lazy=True)
 
     def get_dict(self):
-        data = self.__dict__
+        data = self.__dict__.copy()
         if data.get('_sa_instance_state'):
             data.pop('_sa_instance_state', None)
         return data
+
+    def get_short_name(self):
+        return self.short_name if self.short_name else demicrosoft(self.name)
 
 #County - Doesn't always exist
 class AreaTwo(db.Model):
