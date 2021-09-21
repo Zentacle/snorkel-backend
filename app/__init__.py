@@ -795,9 +795,12 @@ def get_reviews():
     except Exception:
       pass
     image_data = []
+    signedUrls = []
     for image in review.images:
       image_data.append(image.get_dict())
+      signedUrls.append(create_presigned_url_local('reviews/' + image.url))
     data['images'] = image_data
+    data['signedUrls'] = signedUrls
     output.append(data)
   return { 'data': output, 'next_offset': offset + len(output) }
 
