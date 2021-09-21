@@ -677,7 +677,7 @@ def patch_spot():
   return spot_data, 200
 
 @app.route("/review/add", methods=["POST"])
-@jwt_required(optional=True)
+@jwt_required()
 def add_review():
   user_id = get_jwt_identity()
   user = None
@@ -716,8 +716,7 @@ def add_review():
 
   for image in images:
     image = Image(
-      url=image['url'],
-      caption=image['caption'],
+      url=image,
       beach_id=beach_id,
       user_id=user.id,
     )
