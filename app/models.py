@@ -201,7 +201,7 @@ class Review(db.Model):
     shorediving_data = db.relationship("ShoreDivingReview", back_populates="review", uselist=False)
 
     def get_dict(self):
-        data = self.__dict__
+        data = self.__dict__.copy()
         if data.get('_sa_instance_state'):
             data.pop('_sa_instance_state', None)
         return data
