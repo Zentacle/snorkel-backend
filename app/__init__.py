@@ -784,6 +784,13 @@ Response
 """
 @app.route("/review/get")
 def get_reviews():
+  sd_id = request.args.get('sd_review_id')
+  if sd_id:
+    review = Review.query.filter(Review.shorediving_data.has(shorediving_id=sd_id)).first()
+    if review:
+      data = review.get_dict()
+      data['user'] = review.user.get_dict()
+      return { 'data': [data] }
   beach_id = request.args.get('beach_id')
   limit = request.args.get('limit')
   offset = int(request.args.get('offset')) if request.args.get('offset') else 0
