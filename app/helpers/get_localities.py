@@ -12,7 +12,7 @@ def get_localities(address_components):
   for component in address_components:
     if 'locality' in component.get('types'):
       locality_name = component.get('long_name')
-      locality_short_name = component.get('short_name')
+      locality_short_name = demicrosoft(component.get('short_name').lower())
     if 'administrative_area_level_1' in component.get('types'):
       area_1_name = component.get('long_name')
       area_1_short_name = demicrosoft(component.get('short_name').lower())
@@ -48,6 +48,7 @@ def get_localities(address_components):
   if not locality and locality_name:
     locality = Locality(
       name=locality_name,
+      short_name=locality_short_name,
       area_one=area_1,
       area_two=area_2,
       country=country,
