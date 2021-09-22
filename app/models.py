@@ -238,6 +238,8 @@ class Locality(db.Model):
         data = self.__dict__.copy()
         if data.get('_sa_instance_state'):
             data.pop('_sa_instance_state', None)
+        if not self.short_name:
+            data['short_name'] = self.get_short_name()
         return data
 
     def get_short_name(self):
@@ -284,7 +286,7 @@ class AreaOne(db.Model):
     spots = db.relationship('Spot', backref='area_one', lazy=True)
 
     def get_dict(self, country=None):
-        data = self.__dict__
+        data = self.__dict__.copy()
         if data.get('_sa_instance_state'):
             data.pop('_sa_instance_state', None)
         if data.get('country_id'):
