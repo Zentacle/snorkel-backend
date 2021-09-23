@@ -381,12 +381,12 @@ def get_spots():
     area_one_name = request.args.get('area_one')
     country_name = request.args.get('country')
     if locality_name:
-      query = query.filter(Spot.locality.has(func.lower(Locality.name)==area_two_name.lower()))
+      query = query.filter(Spot.locality.has(func.lower(Locality.name)==locality_name.lower()))
       area = Locality.query \
         .options(joinedload('area_two')) \
         .options(joinedload('area_one')) \
         .options(joinedload('country')) \
-        .filter(func.lower(Locality.name)==area_two_name.lower()) \
+        .filter(func.lower(Locality.name)==locality_name.lower()) \
         .first_or_404()
     elif area_two_name:
       query = query.filter(Spot.area_two.has(short_name=area_two_name))
