@@ -1350,11 +1350,6 @@ def locality_get():
       locality_data['area_one'] = locality_data.get('area_one').get_simple_dict()
     if locality_data.get('country'):
       locality_data['country'] = locality_data.get('country').get_dict()
-    # locality_data['url'] = '/loc/' + locality_data['country']['short_name'] + \
-    #   '/' + locality_data['area_one']['short_name'] + \
-    #   '/' + locality_data['area_two']['short_name'] + \
-    #   '/' + locality.get_short_name()
-    locality_data['url'] = '/'
     data.append(locality_data)
   return { 'data': data }
 
@@ -1380,7 +1375,6 @@ def get_area_two():
       locality_data['area_one'] = locality.area_one.get_simple_dict()
     if locality.country:
       locality_data['country'] = locality.country.get_dict()
-    locality_data['url'] = '/loc/' + locality_data['country']['short_name'] + '/' + locality_data['area_one']['short_name'] + '/' + locality_data['short_name']
     data.append(locality_data)
     print(data)
   return { 'data': data }
@@ -1399,7 +1393,6 @@ def get_area_one():
     locality_data = locality.get_dict()
     if locality_data.get('country'):
       locality_data['country'] = locality_data.get('country').get_dict()
-    locality_data['url'] = '/loc/' + locality_data['country']['short_name'] + '/' + locality_data['short_name']
     data.append(locality_data)
   return { 'data': data }
 
@@ -1409,7 +1402,6 @@ def get_country():
   data = []
   for locality in localities:
     dict = locality.get_dict()
-    dict['url'] = '/loc/' + dict['short_name']
     data.append(dict)
   return { 'data': data }
 

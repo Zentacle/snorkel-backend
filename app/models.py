@@ -234,16 +234,23 @@ class Locality(db.Model):
 
     spots = db.relationship('Spot', backref='locality', lazy=True)
 
-    def get_dict(self):
+    def get_dict(self, country=None, area_one=None, area_two=None):
         data = self.__dict__.copy()
         if data.get('_sa_instance_state'):
             data.pop('_sa_instance_state', None)
         if not self.short_name:
             data['short_name'] = self.get_short_name()
+        if country and area_one and area_two:
+            data['url'] = self.get_url(country, area_one, area_two)
+        elif self.country and self.area_one and self.area_two:
+            data['url'] = self.get_url(self.country, self.area_one, self.area_two)
         return data
 
     def get_short_name(self):
-        return self.short_name.lower() if self.short_name else demicrosoft(self.name)
+        return self.short_name.lower() if self.short_name else demicrosoft(self.name).lower()
+
+    def get_url(self, country, area_one, area_two):
+        return '/loc/' + country.short_name + '/' + area_one.short_name + '/' + area_two.short_name + '/' + self.get_short_name()
 
 #County - Doesn't always exist
 class AreaTwo(db.Model):
