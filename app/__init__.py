@@ -1335,7 +1335,8 @@ def locality_get():
     localities = localities.filter(Locality.area_one.has(short_name=area_one_short_name))
   if area_two_short_name:
     localities = localities.filter(Locality.area_two.has(short_name=area_two_short_name))
-  localities = localities.options(joinedload('area_two')) \
+  localities = localities \
+    .options(joinedload('area_two')) \
     .options(joinedload('area_one')) \
     .options(joinedload('country')) \
     .limit(limit) \
@@ -1344,9 +1345,9 @@ def locality_get():
   for locality in localities:
     locality_data = locality.get_dict()
     if locality_data.get('area_two'):
-      locality_data['area_two'] = locality_data.get('area_two').get_dict()
+      locality_data['area_two'] = locality_data.get('area_two').get_simple_dict()
     if locality_data.get('area_one'):
-      locality_data['area_one'] = locality_data.get('area_one').get_dict()
+      locality_data['area_one'] = locality_data.get('area_one').get_simple_dict()
     if locality_data.get('country'):
       locality_data['country'] = locality_data.get('country').get_dict()
     # locality_data['url'] = '/loc/' + locality_data['country']['short_name'] + \
@@ -1361,27 +1362,27 @@ def locality_get():
 def get_area_two():
   limit = request.args.get('limit') if request.args.get('limit') else 25
   country_short_name = request.args.get('country')
-  country = Country.query.filter_by(short_name=country_short_name).first()
   area_one_short_name = request.args.get('area_one')
-  area_one = AreaOne.query.filter_by(short_name=area_one_short_name).first()
   localities = AreaTwo.query
-  if country:
-    localities = localities.filter_by(country_id=country.id)
-  if area_one:
-    localities = localities.filter_by(area_one_id=area_one.id)
-  localities = localities.options(joinedload('area_one')) \
+  if country_short_name:
+    localities = localities.filter(AreaTwo.country.has(short_name=country_short_name))
+  if area_one_short_name:
+    localities = localities.filter(AreaTwo.area_one.has(short_name=area_one_short_name))
+  localities = localities \
+    .options(joinedload('area_one')) \
     .options(joinedload('country')) \
     .limit(limit) \
     .all()
   data = []
   for locality in localities:
     locality_data = locality.get_dict()
-    if locality_data.get('area_one'):
-      locality_data['area_one'] = locality_data.get('area_one').get_dict()
-    if locality_data.get('country'):
-      locality_data['country'] = locality_data.get('country').get_dict()
+    if locality.area_one:
+      locality_data['area_one'] = locality.area_one.get_simple_dict()
+    if locality.country:
+      locality_data['country'] = locality.country.get_dict()
     locality_data['url'] = '/loc/' + locality_data['country']['short_name'] + '/' + locality_data['area_one']['short_name'] + '/' + locality_data['short_name']
     data.append(locality_data)
+    print(data)
   return { 'data': data }
 
 @app.route("/locality/area_one")

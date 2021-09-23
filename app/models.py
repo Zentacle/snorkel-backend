@@ -243,7 +243,7 @@ class Locality(db.Model):
         return data
 
     def get_short_name(self):
-        return self.short_name if self.short_name else demicrosoft(self.name)
+        return self.short_name.lower() if self.short_name else demicrosoft(self.name)
 
 #County - Doesn't always exist
 class AreaTwo(db.Model):
@@ -257,6 +257,14 @@ class AreaTwo(db.Model):
 
     localities = db.relationship('Locality', backref='area_two', lazy=True)
     spots = db.relationship('Spot', backref='area_two', lazy=True)
+
+    def get_simple_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'short_name': self.short_name,
+            'description': self.description,
+        }
 
     def get_dict(self, country=None, area_one=None):
         data = self.__dict__.copy()
@@ -286,6 +294,14 @@ class AreaOne(db.Model):
     area_twos = db.relationship('AreaTwo', backref='area_one', lazy=True)
     localities = db.relationship('Locality', backref='area_one', lazy=True)
     spots = db.relationship('Spot', backref='area_one', lazy=True)
+
+    def get_simple_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'short_name': self.short_name,
+            'description': self.description,
+        }
 
     def get_dict(self, country=None):
         data = self.__dict__.copy()
