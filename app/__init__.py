@@ -871,7 +871,7 @@ def delete_spot():
     Review.query.filter_by(id=review.id).delete()
 
   if beach.shorediving_data:
-    ShoreDivingReview.query.filter_by(id=beach.shorediving_data.id).delete()
+    ShoreDivingData.query.filter_by(id=beach.shorediving_data.id).delete()
 
   Spot.query.filter_by(id=id).delete()
   db.session.commit()
