@@ -857,6 +857,24 @@ def patch_review():
   spot_data = spot.get_dict()
   return spot_data, 200
 
+@app.route("/spots/delete")
+def delete_spot():
+  id = request.args.get('id')
+
+  beach = Spot.query \
+    .filter_by(id=id) \
+    .options(joinedload(Spot.images)) \
+    .first_or_404()
+  for image in beach.images:
+    image.delete()
+
+  if beach.shorediving_data:
+    ShoreDivingReview.query.filter_by(id=beach.shorediving_data.id).delete()
+
+  beach.delete()
+  db.session.commit()
+  return {}
+
 @app.route("/review/delete")
 def delete_review():
   review_id = request.args.get('review_id')
