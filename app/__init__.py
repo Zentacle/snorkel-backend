@@ -370,15 +370,6 @@ def get_spots():
     beach_id = spot.id
     spot_data["ratings"] = get_summary_reviews_helper(beach_id)
     return { 'data': spot_data }
-  sort = Spot.num_reviews.desc().nullslast()
-  sort_param = request.args.get('sort')
-  if sort_param:
-    if sort_param == 'latest':
-      sort = Spot.last_review_date.desc().nullslast()
-    if sort_param == 'most_reviewed':
-      sort = Spot.num_reviews.desc().nullslast()
-    if sort_param == 'top':
-      sort = Spot.rating.desc().nullslast()
   query = Spot.query
   if request.args.get('unverified'):
     query = query.filter(Spot.is_verified.isnot(True))
@@ -406,7 +397,15 @@ def get_spots():
         area = Country.query \
           .filter_by(short_name=country_name) \
           .first()
-  query = query.order_by(sort)
+  sort_param = request.args.get('sort')
+  if sort_param == 'latest':
+    query = query.order_by(Spot.last_review_date.desc().nullslast())
+  elif sort_param == 'most_reviewed':
+    query = query.order_by(Spot.num_reviews.desc().nullslast(), Spot.rating.desc())
+  elif sort_param == 'top':
+    query = query.order_by(Spot.rating.desc().nullslast(), Spot.num_reviews.desc())
+  else:
+    query = query.order_by(Spot.num_reviews.desc().nullslast())
   if request.args.get('limit') != 'none':
     limit = request.args.get('limit') if request.args.get('limit') else 15
     query = query.limit(limit)
