@@ -268,6 +268,8 @@ class AreaTwo(db.Model):
             data.pop('country_id', None)
         if country and area_one:
             data['url'] = self.get_url(country, area_one)
+        elif self.country and self.area_one:
+            data['url'] = self.get_url(self.country, self.area_one)
         return data
 
     def get_url(self, country, area_one):
@@ -293,6 +295,8 @@ class AreaOne(db.Model):
             data.pop('country_id', None)
         if country:
             data['url'] = self.get_url(country)
+        elif self.country:
+            data['url'] = self.get_url(self.country)
         return data
 
     def get_url(self, country):

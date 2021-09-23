@@ -1250,21 +1250,24 @@ def nearby_locations():
   query = "SELECT id, name, hero_img, rating, num_reviews, location_city, difficulty, SQRT(POW(69.1 * (latitude - %(startlat)s), 2) + POW(69.1 * (%(startlng)s - longitude) * COS(latitude / 57.3), 2)) AS distance FROM spot WHERE id != %(beach_id)s AND is_verified=true ORDER BY distance LIMIT 10;" % {'startlat':startlat, 'startlng':startlng, 'beach_id':beach_id}
   # used for testing locally on sqlite since it doesn't support any of the math functions in sql
   # query = "SELECT id, name, hero_img, rating, num_reviews, location_city, difficulty, %(startlng)s + %(startlat)s AS distance FROM spot WHERE latitude is NOT NULL AND longitude is NOT NULL ORDER BY distance LIMIT 10;" % {'startlat':startlat, 'startlng':startlng}
-  results = db.engine.execute(query)
-  data = []
-  for id, name, hero_img, rating, num_reviews, location_city, difficulty, distance in results:
-    data.append({
-      'id': id,
-      'name': name,
-      'hero_img': hero_img,
-      'rating': rating,
-      'num_reviews': num_reviews,
-      'distance': distance,
-      'location_city': location_city,
-      'difficulty': difficulty,
-      'url': Spot.create_url(id, name),
-    })
-  return { 'data': data }
+  try:
+    results = db.engine.execute(query)
+    data = []
+    for id, name, hero_img, rating, num_reviews, location_city, difficulty, distance in results:
+      data.append({
+        'id': id,
+        'name': name,
+        'hero_img': hero_img,
+        'rating': rating,
+        'num_reviews': num_reviews,
+        'distance': distance,
+        'location_city': location_city,
+        'difficulty': difficulty,
+        'url': Spot.create_url(id, name),
+      })
+    return { 'data': data }
+  except Exception as e:
+    return { 'msg': 'Cant process this query' }, 500
 
 @app.route("/spots/location")
 def get_location_spots():
