@@ -320,6 +320,9 @@ def refresh_token():
 
 @app.route("/spots/get")
 def get_spots():
+  if request.headers.get('User-Agent') == 'node-fetch/1.0 (+https://github.com/bitinn/node-fetch)':
+    return 403
+
   is_shorediving = request.args.get('region')
   area = None
   spot = None
