@@ -866,12 +866,14 @@ def delete_spot():
     .options(joinedload(Spot.images)) \
     .first_or_404()
   for image in beach.images:
-    image.delete()
+    Image.query.filter_by(id=image.id).delete()
+  for review in beach.reviews:
+    Review.query.filter_by(id=review.id).delete()
 
   if beach.shorediving_data:
     ShoreDivingReview.query.filter_by(id=beach.shorediving_data.id).delete()
 
-  beach.delete()
+  Spot.query.filter_by(id=id).delete()
   db.session.commit()
   return {}
 
@@ -887,7 +889,7 @@ def delete_review():
   beach_id = review.beach_id
   for image in review.images:
     if not keep_images:
-      image.delete()
+      Image.query.filter_by(id=image.id).delete()
     else:
       image.review_id = None
 
