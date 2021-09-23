@@ -259,7 +259,7 @@ class AreaTwo(db.Model):
     spots = db.relationship('Spot', backref='area_two', lazy=True)
 
     def get_dict(self, country=None, area_one=None):
-        data = self.__dict__
+        data = self.__dict__.copy()
         if data.get('_sa_instance_state'):
             data.pop('_sa_instance_state', None)
         if data.get('area_one_id'):
@@ -315,7 +315,7 @@ class Country(db.Model):
     spots = db.relationship('Spot', backref='country', lazy=True)
 
     def get_dict(self):
-        data = self.__dict__
+        data = self.__dict__.copy()
         if data.get('_sa_instance_state'):
             data.pop('_sa_instance_state', None)
         data['url'] = self.get_url()
