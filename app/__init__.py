@@ -860,25 +860,36 @@ def patch_review():
 @app.route("/review/delete")
 def delete_review():
   review_id = request.args.get('review_id')
+  keep_images = request.args.get('keep_images')
 
-  review = Review.query.filter_by(id=review_id).first_or_404()
+  review = Review.query \
+    .filter_by(id=review_id) \
+    .options(joinedload(Review.images)) \
+    .first_or_404()
   beach_id = review.beach_id
-  rating = review.rating
   for image in review.images:
-    Image.query.filter_by(id=image.id).delete()
+    if not keep_images:
+      image.delete()
+    else:
+      image.review_id = None
 
   if review.shorediving_data:
     ShoreDivingReview.query.filter_by(id=review.shorediving_data.id).delete()
 
-  spot = Spot.query.filter_by(id=beach_id).first()
-  if spot.num_reviews == 1:
-    spot.num_reviews = 0
-    spot.rating = None
-  else:
-    new_rating = str(round(((float(spot.rating) * (spot.num_reviews*1.0)) - rating) / (spot.num_reviews - 1), 2))
-    spot.rating = new_rating
-    spot.num_reviews -= 1
   Review.query.filter_by(id=review_id).delete()
+  db.session.commit()
+  spot = Spot.query.filter_by(id=beach_id).first()
+  summary = get_summary_reviews_helper(beach_id)
+  num_reviews = 0.0
+  total = 0.0
+  for key in summary.keys():
+    num_reviews += summary[key]
+    total += summary[key] * int(key)
+  spot.num_reviews = num_reviews
+  if num_reviews:
+    spot.rating = total/num_reviews
+  else:
+    spot.rating = None
   db.session.commit()
   return {}
 
@@ -1212,10 +1223,10 @@ def add_shore_review():
   review.id
   return { 'msg': 'all done' }, 200
 
-@app.route("/spot/recalc", methods=["POST"])
+@app.route("/spot/recalc", methods=["GET"])
 def recalc_spot_rating():
-  beach_id = request.json.get('beach_id')
-  spot = Spot.query.filter_by(id=beach_id)
+  beach_id = request.args.get('beach_id')
+  spot = Spot.query.filter_by(id=beach_id).first()
   summary = get_summary_reviews_helper(beach_id)
   num_reviews = 0.0
   total = 0.0
@@ -1223,7 +1234,11 @@ def recalc_spot_rating():
     num_reviews += summary[key]
     total += summary[key] * int(key)
   spot.num_reviews = num_reviews
-  spot.rating = total/num_reviews
+  if num_reviews:
+    spot.rating = total/num_reviews
+  else:
+    spot.rating = None
+  db.session.commit()
   spot.id
   return { 'data': spot.get_dict() }
 
