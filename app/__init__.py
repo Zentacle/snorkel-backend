@@ -321,7 +321,7 @@ def refresh_token():
 @app.route("/spots/get")
 def get_spots():
   if request.headers.get('User-Agent') == 'node-fetch/1.0 (+https://github.com/bitinn/node-fetch)':
-    return 403
+    return 'Try again later', 403
 
   is_shorediving = request.args.get('region')
   area = None
@@ -1107,6 +1107,8 @@ def create_presigned_post():
 
 @app.route("/user/get")
 def get_user():
+    if request.headers.get('User-Agent') == 'node-fetch/1.0 (+https://github.com/bitinn/node-fetch)':
+      return 'Try again later', 403
     username = request.args.get('username')
     user = User.query \
       .options(joinedload('reviews')) \
