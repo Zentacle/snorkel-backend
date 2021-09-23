@@ -376,27 +376,36 @@ def get_spots():
   else:
     query = query.filter(Spot.is_verified.isnot(False))
   if request.args.get('limit') != 'none':
+    locality_name = request.args.get('locality')
     area_two_name = request.args.get('area_two')
     area_one_name = request.args.get('area_one')
     country_name = request.args.get('country')
-    if area_two_name:
+    if locality_name:
+      query = query.filter(Spot.locality.has(func.lower(Locality.name)==area_two_name.lower()))
+      area = Locality.query \
+        .options(joinedload('area_two')) \
+        .options(joinedload('area_one')) \
+        .options(joinedload('country')) \
+        .filter(func.lower(Locality.name)==area_two_name.lower()) \
+        .first_or_404()
+    elif area_two_name:
       query = query.filter(Spot.area_two.has(short_name=area_two_name))
       area = AreaTwo.query \
         .options(joinedload('area_one')) \
         .options(joinedload('country')) \
         .filter_by(short_name=area_two_name) \
-        .first()
+        .first_or_404()
     elif area_one_name:
         query = query.filter(Spot.area_one.has(short_name=area_one_name))
         area = AreaOne.query \
           .options(joinedload('country')) \
           .filter_by(short_name=area_one_name) \
-          .first()
+          .first_or_404()
     elif country_name:
         query = query.filter(Spot.country.has(short_name=country_name))
         area = Country.query \
           .filter_by(short_name=country_name) \
-          .first()
+          .first_or_404()
   sort_param = request.args.get('sort')
   if sort_param == 'latest':
     query = query.order_by(Spot.last_review_date.desc().nullslast())
