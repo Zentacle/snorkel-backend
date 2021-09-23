@@ -924,6 +924,7 @@ def get_recs():
   spots = Spot.query \
     .filter(Spot.id.not_in(spots_been_to)) \
     .filter(Spot.is_verified.isnot(False)) \
+    .order_by(Spot.num_reviews.desc().nullslast(), Spot.rating.desc()) \
     .limit(25) \
     .all()
   data = []
