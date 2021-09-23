@@ -1591,3 +1591,15 @@ def backfill_shorediving_to_existing():
   db.session.commit()
   sd_data.id
   return { 'data': sd_data.get_dict() }
+
+@app.route('/generate-short-names', methods=['GET'])
+def backfill_short_names():
+  localities = Locality.query.all()
+  already_had = []
+  for locality in localities:
+    if not locality.short_name:
+      locality.short_name = demicrosoft(locality.name).lower()
+    else:
+      already_had.append(locality.get_dict())
+  db.session.commit()
+  return { 'msg': already_had }
