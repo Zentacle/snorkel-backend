@@ -431,6 +431,8 @@ def get_spots():
   resp = { 'data': output }
   if area:
     area_data = area.get_dict()
+    if area_data.get('area_two'):
+      area_data['area_two'] = area_data.get('area_two').get_dict(area.country, area.area_one)
     if area_data.get('area_one'):
       area_data['area_one'] = area_data.get('area_one').get_dict(area.country)
     if area_data.get('country'):
