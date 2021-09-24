@@ -184,6 +184,15 @@ class Spot(db.Model):
     def create_url(cls, id, name):
         return '/Beach/'+str(id)+'/'+demicrosoft(name).lower()
 
+    def get_confidence_score(self):
+        import math
+        z = 1.645 # 90% confidence interval (could 1.960 for 95%)
+        std_dev = 0.50 # roughly calculated based on existing review data
+        if self.num_reviews:
+            return float(self.rating) - z * (std_dev/math.sqrt(self.num_reviews))
+        else:
+            return 0
+
 class Review(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     rating = db.Column(db.Integer, nullable=False)

@@ -419,6 +419,8 @@ def get_spots():
     query = query.limit(limit)
   query = query.options(joinedload(Spot.shorediving_data))
   spots = query.all()
+  if sort_param == 'top':
+    spots.sort(key=lambda spot: spot.get_confidence_score())
   output = []
   for spot in spots:
     spot_data = spot.get_dict()
