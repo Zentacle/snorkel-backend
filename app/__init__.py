@@ -887,7 +887,7 @@ def delete_spot():
   db.session.commit()
   return {}
 
-@app.route("/review/delete")
+@app.route("/review/delete", methods=["POST"])
 def delete_review():
   review_id = request.args.get('review_id')
   keep_images = request.args.get('keep_images')
@@ -1387,7 +1387,6 @@ def get_area_two():
     if locality.country:
       locality_data['country'] = locality.country.get_dict()
     data.append(locality_data)
-    print(data)
   return { 'data': data }
 
 @app.route("/locality/area_one")
