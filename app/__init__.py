@@ -1601,3 +1601,16 @@ def backfill_short_names():
       already_had.append(locality.get_dict())
   db.session.commit()
   return { 'msg': already_had }
+
+@app.route('/set-country')
+def set_country():
+  country_id = request.args.get('country_id')
+  region_url = request.args.get('region_url')
+  spots = Spot.query.filter(Spot.shorediving_data.has(region_url=region_url)).all()
+  data = []
+  for spot in spots:
+    if not spot.country_id:
+      spot.country_id = country_id
+      data.append(spot)
+  db.session.commit()
+  return { 'data': len(data) }
