@@ -1605,12 +1605,24 @@ def backfill_short_names():
 @app.route('/set-country')
 def set_country():
   country_id = request.args.get('country_id')
+  area_one_id = request.args.get('area_one_id')
+  area_two_id = request.args.get('area_two_id')
   region_url = request.args.get('region_url')
-  spots = Spot.query.filter(Spot.shorediving_data.has(region_url=region_url)).all()
+  destination_url = request.args.get('destination_url')
+  if region_url:
+    spots = Spot.query.filter(Spot.shorediving_data.has(region_url=region_url)).all()
+  elif destination_url:
+    spots = Spot.query.filter(Spot.shorediving_data.has(destination_url=destination_url)).all()
+  else:
+    return 'No destination or region', 401
   data = []
   for spot in spots:
-    if not spot.country_id:
+    if not spot.country_id and country_id:
       spot.country_id = country_id
-      data.append(spot)
+    if not spot.area_one_id and area_one_id:
+      spot.area_one_id = area_one_id
+    if not spot.area_two_id and area_two_id:
+      spot.area_two_id = area_two_id
+    data.append(spot.get_dict())
   db.session.commit()
-  return { 'data': len(data) }
+  return { 'data': data }
