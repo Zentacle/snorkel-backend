@@ -1409,11 +1409,14 @@ def get_area_one():
 
 @app.route("/locality/country")
 def get_country():
-  localities = Country.query.all()
+  sq = db.session.query(Spot.country_id, func.count(Spot.id).label('count')).group_by(Spot.country_id).subquery()
+  localities = db.session.query(Country, sq.c.count).join(sq, sq.c.country_id == Country.id).all()
   data = []
-  for locality in localities:
+  for (locality, count) in localities:
     dict = locality.get_dict()
+    dict['num_spots'] = count
     data.append(dict)
+  data.sort(reverse=True, key=lambda country:country['num_spots'])
   return { 'data': data }
 
 @app.route("/loc/country/patch", methods=["PATCH"])
