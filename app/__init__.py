@@ -586,7 +586,7 @@ def add_spot():
     message.template_id = 'd-df22c68e00c345108a3ac18ebf65bdaf'
     message.dynamic_template_data = {
         'beach_name': spot.name,
-        'user_display_name': user.first_name,
+        'user_display_name': 'Logged out user',
         'description': description,
         'location': location_city,
         'url': 'https://www.zentacle.com'+spot.get_url(),
