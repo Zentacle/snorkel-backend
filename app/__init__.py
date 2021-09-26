@@ -296,7 +296,10 @@ def patch_user():
   updates.pop('id', None)
   try:
     for key in updates.keys():
-      setattr(user, key, updates.get(key))
+      if key == 'username':
+        setattr(user, key, updates.get(key).lower())
+      else:
+        setattr(user, key, updates.get(key))
   except ValueError as e:
     return e, 500
   db.session.commit()

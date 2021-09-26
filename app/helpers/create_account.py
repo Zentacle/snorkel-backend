@@ -3,6 +3,7 @@ from flask_jwt_extended import *
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
 from flask.helpers import make_response
+from sqlalchemy import func
 import os
 import bcrypt
 
@@ -29,7 +30,8 @@ def create_account(
   if user:
     return { 'msg': 'An account with this email already exists' }, 400
   if username:
-    user = User.query.filter_by(username=username).first()
+    username = username.lower()
+    user = User.query.filter(func.lower(username)==username).first()
     if user:
       return { 'msg': 'An account with this username already exists' }, 400
   user = User(
