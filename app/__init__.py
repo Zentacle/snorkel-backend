@@ -1663,11 +1663,22 @@ def update_usernames():
   )
 
   output = []
+  failed = []
   for user in users:
     if '-' in user.username:
-      user.username = user.username.replace('-', '_')
-      output.append(user.get_dict())
-  db.session.commit()
+      old_username = user.username
+      new_username = user.username.replace('-', '_')
+      user.username = user.new_username
+      output.append({
+        "id": user.id,
+        "old_username": old_username,
+        "new_username": new_username,
+      })
+      try:
+        db.session.commit()
+      except Exception as e:
+        failed.append(user.get_dict())
   return {
     'data': output,
+    'failed': failed,
   }
