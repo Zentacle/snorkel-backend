@@ -1657,8 +1657,8 @@ def set_country():
 def update_usernames():
   users = User.query.filter(
     and_(
-      User.registered_on > '2021-09-18 02:01:16.976854',
-      User.registered_on < '2021-09-18 03:32:22.182739'
+      User.registered_on > '2021-09-11 09:45:43.152087',
+      User.registered_on < '2021-09-11 20:26:26.295655'
     )
   )
 
