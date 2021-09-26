@@ -1652,3 +1652,22 @@ def set_country():
     data.append(spot.get_dict())
   db.session.commit()
   return { 'data': data }
+
+@app.route('/update-usernames')
+def update_usernames():
+  users = User.query.filter(
+    and_(
+      User.registered_on > '2021-09-18 02:01:16.976854',
+      User.registered_on < '2021-09-18 03:32:22.182739'
+    )
+  )
+
+  output = []
+  for user in users:
+    if '-' in user.username:
+      user.username = user.username.replace('-', '_')
+      output.append(user.get_dict())
+  db.session.commit()
+  return {
+    'data': output,
+  }
