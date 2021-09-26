@@ -1293,7 +1293,15 @@ def nearby_locations():
   startlat = spot.latitude
   startlng = spot.longitude
   if not startlat or not startlng:
-    return { 'msg': 'No lat/lng for this spot ' }, 400
+    spots = Spot.query.filter(Spot.shorediving_data.has(destination_url=spot.shorediving_data.destination_url)).all()
+    output=[]
+    for spot in spots:
+      spot_data = spot.get_dict()
+      output.append(spot_data)
+    if len(output):
+      return { 'data': output }
+    else:
+      return { 'msg': 'No lat/lng for this spot ' }, 400
   query = "SELECT id, name, hero_img, rating, num_reviews, location_city, difficulty, SQRT(POW(69.1 * (latitude - %(startlat)s), 2) + POW(69.1 * (%(startlng)s - longitude) * COS(latitude / 57.3), 2)) AS distance FROM spot WHERE id != %(beach_id)s AND is_verified=true ORDER BY distance LIMIT 10;" % {'startlat':startlat, 'startlng':startlng, 'beach_id':beach_id}
   # used for testing locally on sqlite since it doesn't support any of the math functions in sql
   # query = "SELECT id, name, hero_img, rating, num_reviews, location_city, difficulty, %(startlng)s + %(startlat)s AS distance FROM spot WHERE latitude is NOT NULL AND longitude is NOT NULL ORDER BY distance LIMIT 10;" % {'startlat':startlat, 'startlng':startlng}
