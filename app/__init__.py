@@ -1630,9 +1630,9 @@ def backfill_short_names():
 
 @app.route('/set-country')
 def set_country():
-  country_id = request.args.get('country_id')
-  area_one_id = request.args.get('area_one_id')
-  area_two_id = request.args.get('area_two_id')
+  country_id = int(request.args.get('country_id'))
+  area_one_id = int(request.args.get('area_one_id'))
+  area_two_id = int(request.args.get('area_two_id'))
   region_url = request.args.get('region_url')
   destination_url = request.args.get('destination_url')
   if region_url:
