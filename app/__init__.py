@@ -1668,7 +1668,7 @@ def update_usernames():
     if '-' in user.username:
       old_username = user.username
       new_username = user.username.replace('-', '_')
-      user.username = user.new_username
+      user.username = new_username
       output.append({
         "id": user.id,
         "old_username": old_username,
