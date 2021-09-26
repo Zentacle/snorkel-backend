@@ -25,6 +25,7 @@ from app.helpers.create_account import create_account
 from app.helpers.login import login
 from app.helpers.get_localities import get_localities
 import requests
+from sqlalchemy.exc import OperationalError
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('FLASK_SECRET_KEY')
@@ -1289,11 +1290,18 @@ def search_location():
 @app.route("/spots/nearby")
 def nearby_locations():
   beach_id = request.args.get('beach_id')
-  spot = Spot.query.filter_by(id=beach_id).first_or_404()
+  spot = Spot.query \
+    .options(joinedload(Spot.shorediving_data)) \
+    .filter_by(id=beach_id) \
+    .first_or_404()
   startlat = spot.latitude
   startlng = spot.longitude
   if not startlat or not startlng:
-    spots = Spot.query.filter(Spot.shorediving_data.has(destination_url=spot.shorediving_data.destination_url)).all()
+    spots = []
+    if spot.shorediving_data:
+      spots = Spot.query.filter(Spot.shorediving_data.has(destination_url=spot.shorediving_data.destination_url)).limit(10).all()
+    else:
+      spots = Spot.query.filter(Spot.has(country_id=spot.country_id)).limit(10).all()
     output=[]
     for spot in spots:
       spot_data = spot.get_dict()
@@ -1301,7 +1309,7 @@ def nearby_locations():
     if len(output):
       return { 'data': output }
     else:
-      return { 'msg': 'No lat/lng for this spot ' }, 400
+      return { 'msg': 'No lat/lng, country_id, or sd_data for this spot ' }, 400
   query = "SELECT id, name, hero_img, rating, num_reviews, location_city, difficulty, SQRT(POW(69.1 * (latitude - %(startlat)s), 2) + POW(69.1 * (%(startlng)s - longitude) * COS(latitude / 57.3), 2)) AS distance FROM spot WHERE id != %(beach_id)s AND is_verified=true ORDER BY distance LIMIT 10;" % {'startlat':startlat, 'startlng':startlng, 'beach_id':beach_id}
   # used for testing locally on sqlite since it doesn't support any of the math functions in sql
   # query = "SELECT id, name, hero_img, rating, num_reviews, location_city, difficulty, %(startlng)s + %(startlat)s AS distance FROM spot WHERE latitude is NOT NULL AND longitude is NOT NULL ORDER BY distance LIMIT 10;" % {'startlat':startlat, 'startlng':startlng}
@@ -1321,8 +1329,13 @@ def nearby_locations():
         'url': Spot.create_url(id, name),
       })
     return { 'data': data }
+  except OperationalError as e:
+    if "no such function: SQRT" in str(e):
+      return { 'data': [] }
+    else:
+      return { 'msg': e }, 500
   except Exception as e:
-    return { 'msg': 'Cant process this query' }, 500
+    return { 'msg': e }, 500
 
 @app.route("/spots/location")
 def get_location_spots():
