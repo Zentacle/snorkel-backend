@@ -413,10 +413,20 @@ def get_spots():
       .filter_by(short_name=area_two_name) \
       .first_or_404()
   elif area_one_name:
-      query = query.filter(Spot.area_one.has(short_name=area_one_name))
+      query = query.filter(
+        and_(
+          Spot.area_one.has(short_name=area_one_name),
+          Spot.area_one.has(short_name=country_name),
+        )
+      )
       area = AreaOne.query \
         .options(joinedload('country')) \
-        .filter_by(short_name=area_one_name) \
+        .filter(
+          and_(
+            AreaOne.short_name==area_one_name,
+            AreaOne.country.has(short_name=country_name),
+          )
+        ) \
         .first_or_404()
   elif country_name:
       query = query.filter(Spot.country.has(short_name=country_name))
