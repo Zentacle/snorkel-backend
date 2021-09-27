@@ -109,7 +109,8 @@ class User(db.Model):
         if data.get('_sa_instance_state'):
             data.pop('_sa_instance_state', None)
         data.pop('password', None)
-        data['username'] = self.username.lower()
+        if self.username:
+            data['username'] = self.username.lower()
         try:
             data.pop('email')
         except KeyError:
