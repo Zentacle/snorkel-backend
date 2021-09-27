@@ -324,11 +324,11 @@ def refresh_token():
 
 @app.route("/spots/get")
 def get_spots():
-  is_shorediving = request.args.get('region')
+  is_shorediving = False
   area = None
   spot = None
   sd_spot = None
-  if request.args.get('beach_id') or request.args.get('region') or request.args.get('fsite'):
+  if request.args.get('beach_id') or request.args.get('region') or request.args.get('sd_id'):
     if request.args.get('beach_id'):
       beach_id = request.args.get('beach_id')
       spot = Spot.query \
@@ -341,6 +341,7 @@ def get_spots():
       if spot.shorediving_data:
         sd_spot = spot.shorediving_data
     elif request.args.get('region'):
+      is_shorediving = True
       region = request.args.get('region')
       destination = request.args.get('destination')
       site = request.args.get('site')
@@ -358,8 +359,9 @@ def get_spots():
         .options(joinedload('country')) \
         .filter_by(id=sd_spot.spot_id) \
         .first()
-    elif request.args.get('fsite'):
-      fsite = request.args.get('fsite')
+    elif request.args.get('sd_id'):
+      is_shorediving = True
+      fsite = request.args.get('sd_id')
       sd_spot = ShoreDivingData.query \
         .options(joinedload('spot')) \
         .filter_by(id=fsite) \
