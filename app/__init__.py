@@ -416,7 +416,7 @@ def get_spots():
       query = query.filter(
         and_(
           Spot.area_one.has(short_name=area_one_name),
-          Spot.area_one.has(short_name=country_name),
+          Spot.country.has(short_name=country_name),
         )
       )
       area = AreaOne.query \
