@@ -328,7 +328,7 @@ def get_spots():
   area = None
   spot = None
   sd_spot = None
-  if request.args.get('beach_id') or request.args.get('region'):
+  if request.args.get('beach_id') or request.args.get('region') or request.args.get('fsite'):
     if request.args.get('beach_id'):
       beach_id = request.args.get('beach_id')
       spot = Spot.query \
@@ -351,6 +351,18 @@ def get_spots():
           ShoreDivingData.destination_url==destination,
           ShoreDivingData.name_url==site,
         )) \
+        .first_or_404()
+      spot = Spot.query \
+        .options(joinedload('area_two')) \
+        .options(joinedload('area_one')) \
+        .options(joinedload('country')) \
+        .filter_by(id=sd_spot.spot_id) \
+        .first()
+    elif request.args.get('fsite'):
+      fsite = request.args.get('fsite')
+      sd_spot = ShoreDivingData.query \
+        .options(joinedload('spot')) \
+        .filter_by(id=fsite) \
         .first_or_404()
       spot = Spot.query \
         .options(joinedload('area_two')) \
