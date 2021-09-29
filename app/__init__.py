@@ -581,6 +581,8 @@ def add_spot():
   place_id = request.json.get('place_id')
   max_depth = request.json.get('max_depth')
   difficulty = request.json.get('difficulty')
+  latitude = request.json.get('latitude')
+  longitude = request.json.get('longitude')
   user = get_current_user()
   is_verified = True if user and user.admin else False
 
@@ -601,9 +603,12 @@ def add_spot():
     response = r.json()
     if response.get('status') == 'OK':
       result = response.get('result')
-      location_google = result.get('url')
-      latitude = result.get('geometry').get('location').get('lat')
-      longitude = result.get('geometry').get('location').get('lng')
+      if latitude and longitude:
+        location_google = 'http://maps.google.com/maps?q={latitude},{longitude}'.format(latitude=latitude, longitude=longitude)
+      else:
+        location_google = result.get('url')
+        latitude = result.get('geometry').get('location').get('lat')
+        longitude = result.get('geometry').get('location').get('lng')
       address_components = result.get('address_components')
       locality, area_2, area_1, country = get_localities(address_components)
 
