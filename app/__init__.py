@@ -730,12 +730,17 @@ def patch_spot():
         })
         response = r.json()
         if response.get('status') == 'OK':
-          latitude = response.get('result').get('geometry').get('location').get('lat')
-          longitude = response.get('result').get('geometry').get('location').get('lng')
-          url = response.get('result').get('url')
-          spot.latitude = latitude
-          spot.longitude = longitude
-          spot.location_google = url
+          if updates['latitude'] and updates['longitude']:
+            latitude = updates['latitude']
+            longitude = updates['longitude']
+            spot.location_google = 'http://maps.google.com/maps?q={latitude},{longitude}'.format(latitude=latitude, longitude=longitude)
+          else:
+            latitude = response.get('result').get('geometry').get('location').get('lat')
+            longitude = response.get('result').get('geometry').get('location').get('lng')
+            url = response.get('result').get('url')
+            spot.latitude = latitude
+            spot.longitude = longitude
+            spot.location_google = url
           address_components = response.get('result').get('address_components')
           locality, area_2, area_1, country = get_localities(address_components)
           spot.locality = locality
