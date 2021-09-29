@@ -730,9 +730,9 @@ def patch_spot():
         })
         response = r.json()
         if response.get('status') == 'OK':
-          if updates['latitude'] and updates['longitude']:
-            latitude = updates['latitude']
-            longitude = updates['longitude']
+          if updates.get('latitude') and updates.get('longitude'):
+            latitude = updates.get('latitude')
+            longitude = updates.get('longitude')
             spot.location_google = 'http://maps.google.com/maps?q={latitude},{longitude}'.format(latitude=latitude, longitude=longitude)
           else:
             latitude = response.get('result').get('geometry').get('location').get('lat')
