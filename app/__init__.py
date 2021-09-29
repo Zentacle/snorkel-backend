@@ -730,11 +730,7 @@ def patch_spot():
         })
         response = r.json()
         if response.get('status') == 'OK':
-          if updates.get('latitude') and updates.get('longitude'):
-            latitude = updates.get('latitude')
-            longitude = updates.get('longitude')
-            spot.location_google = 'http://maps.google.com/maps?q={latitude},{longitude}'.format(latitude=latitude, longitude=longitude)
-          else:
+          if not updates.get('latitude') or not updates.get('longitude'):
             latitude = response.get('result').get('geometry').get('location').get('lat')
             longitude = response.get('result').get('geometry').get('location').get('lng')
             url = response.get('result').get('url')
@@ -750,6 +746,10 @@ def patch_spot():
           db.session.add(spot)
           db.session.commit()
         spot.id
+    if updates.get('latitude') and updates.get('longitude'):
+      latitude = updates.get('latitude')
+      longitude = updates.get('longitude')
+      spot.location_google = 'http://maps.google.com/maps?q={latitude},{longitude}'.format(latitude=latitude, longitude=longitude)
   except ValueError as e:
     return e, 500
   db.session.commit()
