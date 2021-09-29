@@ -34,7 +34,7 @@ class ShoreDivingData(db.Model):
         }
 
     def get_region_url(self):
-        return '/Earth/' + self.region_url
+        return '/Earth/' + self.region_url + '/index.htm'
 
     def get_destination_dict(self):
         return {
@@ -44,7 +44,7 @@ class ShoreDivingData(db.Model):
         }
 
     def get_destination_url(self):
-        return '/Earth/' + self.region_url + '/' + self.destination_url
+        return '/Earth/' + self.region_url + '/' + self.destination_url + '/index.htm'
 
     @classmethod
     def create_url(cls, shorediving_data):
