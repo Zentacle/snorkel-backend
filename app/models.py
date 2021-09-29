@@ -236,7 +236,7 @@ class Image(db.Model):
 #City
 class Locality(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    google_name = db.Column(db.String, nullable=False)
+    google_name = db.Column(db.String)
     name = db.Column(db.String, nullable=False)
     short_name = db.Column(db.String, nullable=False)
     area_two_id = db.Column(db.Integer, db.ForeignKey('area_two.id'))
