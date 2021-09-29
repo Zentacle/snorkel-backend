@@ -1697,6 +1697,7 @@ def set_country():
   area_one_short_name = request.args.get('area_one_short_name')
   area_two_id = request.args.get('area_two_id')
   area_two_short_name = request.args.get('area_two_short_name')
+  locality_id = request.args.get('locality_id')
   region_url = request.args.get('region_url')
   destination_url = request.args.get('destination_url')
   if region_url:
@@ -1722,6 +1723,8 @@ def set_country():
       spot.area_one_id = int(area_one_id)
     if not spot.area_two_id and area_two_id:
       spot.area_two_id = int(area_two_id)
+    if not spot.locality_id and locality_id:
+      spot.locality_id = int(locality_id)
     data.append(spot.get_dict())
   db.session.commit()
   return { 'data': data }
