@@ -29,7 +29,7 @@ from sqlalchemy.exc import OperationalError
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('FLASK_SECRET_KEY')
-SQLALCHEMY_DATABASE_URI = (os.environ.get('DATABASE_URL').replace("://", "ql://", 1)
+SQLALCHEMY_DATABASE_URI = (os.environ.get('DATABASE_URL')
   if not os.environ.get('FLASK_ENV') == 'development'
   else os.environ.get('DATABASE_URL'))
 app.config["SQLALCHEMY_DATABASE_URI"] = SQLALCHEMY_DATABASE_URI
