@@ -16,9 +16,18 @@ export S3_BUCKET_NAME='snorkel-dev'
 #Running the code
 ```
 #make sure to create a virtual environment
+
+#Mac/Linux
 virtualenv env
 source env/bin/activate
 source environment.env
+
+#Windows
+assign environment variable to windows' system properties environment variables
+don't need environment.env file
+venv\Scripts\activate
+
+#run
 pip install -r requirements.txt
 flask run
 ```

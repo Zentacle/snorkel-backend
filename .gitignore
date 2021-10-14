@@ -27,6 +27,8 @@ chrome-user-data
 *.sql
 environment.env
 env
+.venv
+venv/
 packages/react-devtools-core/dist
 packages/react-devtools-extensions/chrome/build
 packages/react-devtools-extensions/chrome/*.crx

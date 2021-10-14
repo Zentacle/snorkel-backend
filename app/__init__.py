@@ -804,7 +804,7 @@ def add_review():
     review.images.append(image)
 
   db.session.add(review)
-
+  
   spot = Spot.query.filter_by(id=beach_id).first()
   if not spot:
     return { 'msg': 'Couldn\'t find that spot' }, 404
