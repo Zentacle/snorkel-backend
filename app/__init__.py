@@ -29,7 +29,7 @@ from sqlalchemy.exc import OperationalError
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('FLASK_SECRET_KEY')
-SQLALCHEMY_DATABASE_URI = (os.environ.get('DATABASE_URL')
+SQLALCHEMY_DATABASE_URI = (os.environ.get('DATABASE_URL').replace("://", "ql://", 1)
   if not os.environ.get('FLASK_ENV') == 'development'
   else os.environ.get('DATABASE_URL'))
 app.config["SQLALCHEMY_DATABASE_URI"] = SQLALCHEMY_DATABASE_URI
@@ -804,7 +804,7 @@ def add_review():
     review.images.append(image)
 
   db.session.add(review)
-
+  
   spot = Spot.query.filter_by(id=beach_id).first()
   if not spot:
     return { 'msg': 'Couldn\'t find that spot' }, 404
