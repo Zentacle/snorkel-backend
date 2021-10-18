@@ -1763,8 +1763,8 @@ def update_usernames():
 
 @app.route("/spot/setStationId", methods=["POST"])
 def add_station_id():
-  spot_id = request.body.get('spotId')
-  station_id = request.body.get('stationId')
+  spot_id = request.json.get('spotId')
+  station_id = request.json.get('stationId')
   spot = Spot.query.filter_by(id=spot_id).first_or_404()
   spot.noaa_station_id = station_id
   db.session.commit()
