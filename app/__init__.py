@@ -1444,7 +1444,7 @@ def locality_get():
     if locality_data.get('area_one'):
       locality_data['area_one'] = locality_data.get('area_one').get_simple_dict()
     if locality_data.get('country'):
-      locality_data['country'] = locality_data.get('country').get_dict()
+      locality_data['country'] = locality_data.get('country').get_simple_dict()
     data.append(locality_data)
   return { 'data': data }
 
@@ -1470,7 +1470,7 @@ def get_area_two():
     if locality.area_one:
       locality_data['area_one'] = locality.area_one.get_simple_dict()
     if locality.country:
-      locality_data['country'] = locality.country.get_dict()
+      locality_data['country'] = locality.country.get_simple_dict()
     data.append(locality_data)
   return { 'data': data }
 
@@ -1487,7 +1487,7 @@ def get_area_one():
   for locality in localities:
     locality_data = locality.get_dict()
     if locality_data.get('country'):
-      locality_data['country'] = locality_data.get('country').get_dict()
+      locality_data['country'] = locality_data.get('country').get_simple_dict()
     data.append(locality_data)
   return { 'data': data }
 

@@ -282,7 +282,6 @@ class AreaTwo(db.Model):
             'id': self.id,
             'name': self.name,
             'short_name': self.short_name,
-            'description': self.description,
         }
 
     def get_dict(self, country=None, area_one=None):
@@ -319,7 +318,6 @@ class AreaOne(db.Model):
             'id': self.id,
             'name': self.name,
             'short_name': self.short_name,
-            'description': self.description,
         }
 
     def get_dict(self, country=None):
@@ -348,6 +346,13 @@ class Country(db.Model):
     area_twos = db.relationship('AreaTwo', backref='country', lazy=True)
     localities = db.relationship('Locality', backref='country', lazy=True)
     spots = db.relationship('Spot', backref='country', lazy=True)
+
+    def get_simple_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'short_name': self.short_name,
+        }
 
     def get_dict(self):
         data = self.__dict__.copy()
