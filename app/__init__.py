@@ -1761,7 +1761,7 @@ def update_usernames():
     'failed': failed,
   }
 
-@app.route("/spots/setStationId", methods=["POST"])
+@app.route("/spot/setStationId", methods=["POST"])
 def add_station_id():
   spot_id = request.body.get('spotId')
   station_id = request.body.get('stationId')
