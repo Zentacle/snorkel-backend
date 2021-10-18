@@ -1459,9 +1459,10 @@ def get_area_two():
     localities = localities.filter(AreaTwo.area_one.has(short_name=area_one_short_name))
   localities = localities \
     .options(joinedload('area_one')) \
-    .options(joinedload('country')) \
-    .limit(limit) \
-    .all()
+    .options(joinedload('country'))
+  if limit != 'none':
+    localities = localities.limit(limit)
+  localities = localities.all()
   data = []
   for locality in localities:
     locality_data = locality.get_dict()
