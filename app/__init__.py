@@ -1760,3 +1760,13 @@ def update_usernames():
     'data': output,
     'failed': failed,
   }
+
+@app.route("/spots/setStationId", methods=["POST"])
+def add_station_id():
+  spot_id = request.body.get('spotId')
+  station_id = request.body.get('stationId')
+  spot = Spot.query.filter_by(id=spot_id).first_or_404()
+  spot.noaa_station_id = station_id
+  db.session.commit()
+  spot.id
+  return { 'data': spot.get_dict() }
