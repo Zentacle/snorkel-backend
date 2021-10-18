@@ -1432,9 +1432,10 @@ def locality_get():
   localities = localities \
     .options(joinedload('area_two')) \
     .options(joinedload('area_one')) \
-    .options(joinedload('country')) \
-    .limit(limit) \
-    .all()
+    .options(joinedload('country'))
+  if limit != 'none':
+    localities = localities.limit(limit)
+  localities = localities.all()
   data = []
   for locality in localities:
     locality_data = locality.get_dict()
