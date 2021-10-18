@@ -148,6 +148,7 @@ class Spot(db.Model):
     area_two_id = db.Column(db.Integer, db.ForeignKey('area_two.id'), nullable=True)
     area_one_id = db.Column(db.Integer, db.ForeignKey('area_one.id'), nullable=True)
     country_id = db.Column(db.Integer, db.ForeignKey('country.id'), nullable=True)
+    noaa_station_id = db.Column(db.String)
 
     reviews = db.relationship("Review", backref="spot")
     images = db.relationship("Image", backref="spot")
