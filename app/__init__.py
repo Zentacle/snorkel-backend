@@ -332,6 +332,7 @@ def get_spots():
     if request.args.get('beach_id'):
       beach_id = request.args.get('beach_id')
       spot = Spot.query \
+        .options(joinedload('locality')) \
         .options(joinedload('area_two')) \
         .options(joinedload('area_one')) \
         .options(joinedload('country')) \
@@ -354,6 +355,7 @@ def get_spots():
         )) \
         .first_or_404()
       spot = Spot.query \
+        .options(joinedload('locality')) \
         .options(joinedload('area_two')) \
         .options(joinedload('area_one')) \
         .options(joinedload('country')) \
@@ -367,6 +369,7 @@ def get_spots():
         .filter_by(id=fsite) \
         .first_or_404()
       spot = Spot.query \
+        .options(joinedload('locality')) \
         .options(joinedload('area_two')) \
         .options(joinedload('area_one')) \
         .options(joinedload('country')) \
@@ -379,6 +382,8 @@ def get_spots():
       spot_data['area_one'] = sd_spot.get_destination_dict()
       spot_data['area_two'] = None
     else:
+      if spot_data['locality']:
+        spot_data['locality'] = spot.locality.get_dict(spot.country, spot.area_one, spot.area_two)
       if spot_data['area_two']:
         spot_data['area_two'] = spot.area_two.get_dict(spot.country, spot.area_one)
       if spot_data['area_one']:
