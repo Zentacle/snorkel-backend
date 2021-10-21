@@ -381,6 +381,7 @@ def get_spots():
       spot_data['country'] = sd_spot.get_region_dict()
       spot_data['area_one'] = sd_spot.get_destination_dict()
       spot_data['area_two'] = None
+      spot_data['locality'] = None
     else:
       if spot_data['locality']:
         spot_data['locality'] = spot.locality.get_dict(spot.country, spot.area_one, spot.area_two)
