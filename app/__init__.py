@@ -762,6 +762,18 @@ def patch_spot():
   spot_data = spot.get_dict()
   return spot_data, 200
 
+
+
+
+
+
+
+
+
+
+
+
+
 @app.route("/review/add", methods=["POST"])
 @jwt_required()
 def add_review():
@@ -780,6 +792,7 @@ def add_review():
   rating = request.json.get('rating')
   activity_type = request.json.get('activity_type')
   images = request.json.get('images') or []
+  buddies = request.json.get('buddy_array')
   date_dived = dateutil.parser.isoparse(request.json.get('date_dived')) if request.json.get('date_dived') else datetime.utcnow()
   if not rating:
     return { 'msg': 'Please select a rating' }, 401
@@ -789,6 +802,38 @@ def add_review():
   if sd_id and not beach_id:
     sd_data = ShoreDivingData.query.filter_by(id=sd_id).first_or_404()
     beach_id = sd_data.spot_id
+
+  spot = Spot.query.filter_by(id=beach_id).first()
+  if not spot:
+    return { 'msg': 'Couldn\'t find that spot' }, 404
+
+  if len(buddies) > 0:
+    if activity_type == 'snorkel':
+      activity = 'Snorkeled'
+    else:
+      activity = 'Dived'
+    text += (f" I {activity} with {len(buddies)} other buddies.")
+    
+    buddy_message = Mail(
+      from_email=('hello@zentacle.com', 'Zentacle'),
+      to_emails=buddies)
+    # get message template ID from Mayank
+    buddy_message.template_id = 'd-8869844be6034dd09f0d7cc27e27aa8c'
+    buddy_message.dynamic_template_data = {
+      'display_name': user.username ,
+      'spot_name': spot.name,
+      'spot_url': 'https://www.zentacle.com'+spot.get_url(),
+    }
+    if os.environ.get('FLASK_ENV') == 'development':
+      print("this is indeed DEVELOPMENT")
+      #testing, change back to 'NOT' development later
+      try:
+          print('inside Test statement')
+          sg = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
+          sg.send(buddy_message)
+          print('email success')
+      except Exception as e:
+          print(e.body)
 
   review = Review(
     author_id=user.id,
@@ -809,10 +854,6 @@ def add_review():
     review.images.append(image)
 
   db.session.add(review)
-  
-  spot = Spot.query.filter_by(id=beach_id).first()
-  if not spot:
-    return { 'msg': 'Couldn\'t find that spot' }, 404
   summary = get_summary_reviews_helper(beach_id)
   num_reviews = 0.0
   total = 0.0
@@ -844,6 +885,19 @@ def add_review():
         print(e.body)
   review.id
   return { 'data': review.get_dict() }, 200
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 """
 Request
