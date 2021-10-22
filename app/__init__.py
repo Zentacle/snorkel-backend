@@ -918,7 +918,7 @@ def get_reviews():
     signedUrls = []
     for image in review.images:
       image_data.append(image.get_dict())
-      signedUrls.append(create_presigned_url_local('reviews/' + image.url))
+      signedUrls.append('reviews/' + image.url)
     data['images'] = image_data
     data['signedUrls'] = signedUrls
     output.append(data)
@@ -1146,7 +1146,7 @@ def get_beach_images():
     images = Image.query.filter_by(beach_id=beach_id).all()
     for image in images:
       dictionary = image.get_dict()
-      dictionary['signedurl'] = create_presigned_url_local('reviews/' + dictionary['url'])
+      dictionary['signedurl'] = 'reviews/' + dictionary['url']
       output.append(dictionary)
     return {'data': output}
 
