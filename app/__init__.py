@@ -762,18 +762,6 @@ def patch_spot():
   spot_data = spot.get_dict()
   return spot_data, 200
 
-
-
-
-
-
-
-
-
-
-
-
-
 @app.route("/review/add", methods=["POST"])
 @jwt_required()
 def add_review():
@@ -809,29 +797,28 @@ def add_review():
 
   if len(buddies) > 0:
     if activity_type == 'snorkel':
-      activity = 'Snorkeled'
+      activity = 'snorkeled'
     else:
-      activity = 'Dived'
-    text += (f" I {activity} with {len(buddies)} other buddies.")
+      activity = 'dived'
+    if len(buddies) == 1:
+      text += (f" I {activity} with {len(buddies)} other buddy.")
+    else:  
+      text += (f" I {activity} with {len(buddies)} other buddies.")
     
     buddy_message = Mail(
       from_email=('hello@zentacle.com', 'Zentacle'),
       to_emails=buddies)
-    # get message template ID from Mayank
+
     buddy_message.template_id = 'd-8869844be6034dd09f0d7cc27e27aa8c'
     buddy_message.dynamic_template_data = {
       'display_name': user.username ,
       'spot_name': spot.name,
       'spot_url': 'https://www.zentacle.com'+spot.get_url(),
     }
-    if os.environ.get('FLASK_ENV') == 'development':
-      print("this is indeed DEVELOPMENT")
-      #testing, change back to 'NOT' development later
+    if not os.environ.get('FLASK_ENV') == 'development':
       try:
-          print('inside Test statement')
           sg = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
           sg.send(buddy_message)
-          print('email success')
       except Exception as e:
           print(e.body)
 
@@ -885,19 +872,6 @@ def add_review():
         print(e.body)
   review.id
   return { 'data': review.get_dict() }, 200
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 """
 Request
