@@ -808,18 +808,16 @@ def add_review():
     buddy_message = Mail(
       from_email=('hello@zentacle.com', 'Zentacle'),
       to_emails=buddies)
-
     buddy_message.template_id = 'd-8869844be6034dd09f0d7cc27e27aa8c'
     buddy_message.dynamic_template_data = {
-      'display_name': user.username ,
+      'display_name': user.display_name ,
       'spot_name': spot.name,
       'spot_url': 'https://www.zentacle.com'+spot.get_url(),
     }
-    if not os.environ.get('FLASK_ENV') == 'development':
-      try:
+    try:
           sg = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
           sg.send(buddy_message)
-      except Exception as e:
+    except Exception as e:
           print(e.body)
 
   review = Review(
