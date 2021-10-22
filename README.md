@@ -20,7 +20,6 @@ export S3_BUCKET_NAME='snorkel-dev'
 #Mac/Linux
 virtualenv env
 source env/bin/activate
-venv\Scripts\activate
 source environment.env
 
 #Windows
