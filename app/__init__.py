@@ -918,7 +918,7 @@ def get_reviews():
     signedUrls = []
     for image in review.images:
       image_data.append(image.get_dict())
-      signedUrls.append('reviews/' + image.url)
+      signedUrls.append(create_unsigned_url(image.url, 'reviews', os.environ.get('S3_BUCKET_NAME')))
     data['images'] = image_data
     data['signedUrls'] = signedUrls
     output.append(data)
@@ -1146,7 +1146,7 @@ def get_beach_images():
     images = Image.query.filter_by(beach_id=beach_id).all()
     for image in images:
       dictionary = image.get_dict()
-      dictionary['signedurl'] = 'reviews/' + dictionary['url']
+      dictionary['signedurl'] = create_unsigned_url(dictionary['url'], 'reviews', os.environ.get('S3_BUCKET_NAME'))
       output.append(dictionary)
     return {'data': output}
 
@@ -1160,6 +1160,9 @@ def get_review_images():
       dictionary['signedurl'] = create_presigned_url_local('reviews/' + dictionary['url'])
       output.append(dictionary)
     return {'data': output}
+
+def create_unsigned_url(filename, folder, bucket):
+  return f'https://{bucket}.s3.amazonaws.com/{folder}/{filename}'
 
 def create_presigned_url_local(filename, expiration=3600):
     """Generate a presigned URL to share an S3 object
