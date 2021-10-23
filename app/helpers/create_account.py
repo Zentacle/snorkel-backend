@@ -71,6 +71,21 @@ def create_account(
         sg.send(message)
     except Exception as e:
         print(e.body)
+  else:
+    message = Mail(
+      from_email=('hello@zentacle.com', 'Zentacle'),
+      to_emails=email)
+    message.reply_to = 'mayank@zentacle.com'
+
+    message.template_id = 'd-9aeec0123b324082b53095ce06987e27'
+    message.dynamic_template_data = {
+        'first_name': first_name
+    }
+    try:
+        sg = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
+        sg.send(message)
+    except Exception as e:
+        print(e.body)
   message = Mail(
       from_email=('hello@zentacle.com', 'Zentacle'),
       to_emails='mayank@zentacle.com')
