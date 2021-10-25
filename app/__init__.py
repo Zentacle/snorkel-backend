@@ -5,7 +5,6 @@ from flask_cors import CORS
 import os
 import os.path
 import logging
-import re
 
 from app.models import *
 from sqlalchemy.orm import joinedload, lazyload
@@ -25,6 +24,7 @@ from google.auth.transport import requests as google_requests
 from app.helpers.create_account import create_account
 from app.helpers.login import login
 from app.helpers.get_localities import get_localities
+from app.helpers.validate_email_format import validate_email_format
 import requests
 from sqlalchemy.exc import OperationalError
 
@@ -799,10 +799,9 @@ def add_review():
 
   if len(buddies) > 0:
     #verify basic email format         
-    regex = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
     unique_buddies = []
     for email in buddies:
-      if not (re.fullmatch(regex, email)):
+      if not validate_email_format(email):
         return { 'msg': 'Please correct buddy email format' }, 401
       if not email.lower() in unique_buddies:
           unique_buddies.append(email.lower())

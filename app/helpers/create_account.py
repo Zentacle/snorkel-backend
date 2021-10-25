@@ -4,6 +4,7 @@ from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
 from flask.helpers import make_response
 from sqlalchemy import func
+from app.helpers.validate_email_format import validate_email_format
 import os
 import bcrypt
 
@@ -21,6 +22,8 @@ def create_account(
     if unencrypted_password \
     else None
 
+  if not validate_email_format(email):
+    return { 'msg': 'Please enter a valid email' }, 401
   if not email:
     return { 'msg': 'Please enter an email' }, 400
   if not first_name:
