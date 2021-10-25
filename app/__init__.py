@@ -5,6 +5,7 @@ from flask_cors import CORS
 import os
 import os.path
 import logging
+import re
 
 from app.models import *
 from sqlalchemy.orm import joinedload, lazyload
@@ -797,18 +798,27 @@ def add_review():
     return { 'msg': 'Couldn\'t find that spot' }, 404
 
   if len(buddies) > 0:
+    #verify basic email format         
+    regex = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
+    unique_buddies = []
+    for email in buddies:
+      if not (re.fullmatch(regex, email)):
+        return { 'msg': 'Please correct buddy email format' }, 401
+      if not email.lower() in unique_buddies:
+          unique_buddies.append(email.lower())
+
     if activity_type == 'snorkel':
       activity = 'snorkeled'
     else:
       activity = 'dived'
-    if len(buddies) == 1:
-      text += (f" I {activity} with {len(buddies)} other buddy.")
+    if len(unique_buddies) == 1:
+      text += (f" I {activity} with {len(unique_buddies)} other buddy.")
     else:  
-      text += (f" I {activity} with {len(buddies)} other buddies.")
+      text += (f" I {activity} with {len(unique_buddies)} other buddies.")
     
     buddy_message = Mail(
       from_email=('hello@zentacle.com', 'Zentacle'),
-      to_emails=buddies)
+      to_emails=unique_buddies)
     buddy_message.template_id = 'd-8869844be6034dd09f0d7cc27e27aa8c'
     buddy_message.dynamic_template_data = {
       'display_name': user.display_name ,
