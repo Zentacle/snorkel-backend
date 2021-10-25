@@ -24,6 +24,7 @@ from google.auth.transport import requests as google_requests
 from app.helpers.create_account import create_account
 from app.helpers.login import login
 from app.helpers.get_localities import get_localities
+from app.helpers.validate_email_format import validate_email_format
 import requests
 from sqlalchemy.exc import OperationalError
 
@@ -797,18 +798,26 @@ def add_review():
     return { 'msg': 'Couldn\'t find that spot' }, 404
 
   if len(buddies) > 0:
+    #verify basic email format         
+    unique_buddies = []
+    for email in buddies:
+      if not validate_email_format(email):
+        return { 'msg': 'Please correct buddy email format' }, 401
+      if not email.lower() in unique_buddies:
+          unique_buddies.append(email.lower())
+
     if activity_type == 'snorkel':
       activity = 'snorkeled'
     else:
       activity = 'dived'
-    if len(buddies) == 1:
-      text += (f" I {activity} with {len(buddies)} other buddy.")
+    if len(unique_buddies) == 1:
+      text += (f" I {activity} with {len(unique_buddies)} other buddy.")
     else:  
-      text += (f" I {activity} with {len(buddies)} other buddies.")
+      text += (f" I {activity} with {len(unique_buddies)} other buddies.")
     
     buddy_message = Mail(
       from_email=('hello@zentacle.com', 'Zentacle'),
-      to_emails=buddies)
+      to_emails=unique_buddies)
     buddy_message.template_id = 'd-8869844be6034dd09f0d7cc27e27aa8c'
     buddy_message.dynamic_template_data = {
       'display_name': user.display_name ,
