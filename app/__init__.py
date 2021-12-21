@@ -27,6 +27,7 @@ from app.helpers.get_localities import get_localities
 from app.helpers.validate_email_format import validate_email_format
 import requests
 from sqlalchemy.exc import OperationalError
+from app.scripts.openapi import spec
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('FLASK_SECRET_KEY')
@@ -50,7 +51,6 @@ app.config["JWT_COOKIE_SECURE"] = (True
   if not os.environ.get('FLASK_ENV') == 'development'
   else False
 )
-
 
 cors = CORS(app)
 jwt = JWTManager(app)
@@ -184,6 +184,24 @@ Auth data goes in a cookie
 """
 @app.route("/user/register", methods=["POST"])
 def user_signup():
+  """ Register
+  ---
+  post:
+      summary: Register new user endpoint.
+      description: Register a new user
+      parameter:
+          - first_name: string
+            last_name: string
+            email: string
+            username: string
+            profile_pic: URL
+            password: string
+      responses:
+          200:
+              data: UserSchema
+          400:
+              msg: User couldn't be created.
+  """
   first_name = request.json.get('first_name') or ''
   last_name = request.json.get('last_name') or ''
   email = request.json.get('email')
@@ -206,6 +224,19 @@ def user_signup():
 
 @app.route("/user/google_register", methods=["POST"])
 def user_google_signup():
+  """ Google Register
+  ---
+  post:
+      summary: Register new user with Google auth endpoint.
+      description: Register a new user with Google auth
+      parameter:
+          - credential: string
+      responses:
+          200:
+              data: UserSchema
+          400:
+              msg: User couldn't be created.
+  """
   token = request.json.get('credential')
   app.logger.error(request.json.get('credential'))
   userid = None
@@ -1436,7 +1467,22 @@ def nearby_locations():
     return { 'data': data }
   except OperationalError as e:
     if "no such function: SQRT" in str(e):
-      return { 'data': [] }
+      query = "SELECT id, name, hero_img, rating, num_reviews, location_city, difficulty, %(startlng)s + %(startlat)s AS distance FROM spot WHERE latitude is NOT NULL AND longitude is NOT NULL ORDER BY distance LIMIT 10;" % {'startlat':startlat, 'startlng':startlng}
+      results = db.engine.execute(query)
+      data = []
+      for id, name, hero_img, rating, num_reviews, location_city, difficulty, distance in results:
+        data.append({
+          'id': id,
+          'name': name,
+          'hero_img': hero_img,
+          'rating': rating,
+          'num_reviews': num_reviews,
+          'distance': distance,
+          'location_city': location_city,
+          'difficulty': difficulty,
+          'url': Spot.create_url(id, name),
+        })
+      return { 'data': data }
     else:
       return { 'msg': e }, 500
   except Exception as e:
@@ -1814,3 +1860,12 @@ def add_station_id():
   db.session.commit()
   spot.id
   return { 'data': spot.get_dict() }
+
+with app.test_request_context():
+    spec.path(view=user_signup)
+    spec.path(view=user_google_signup)
+    # ...
+
+@app.route("/spec")
+def get_apispec():
+    return jsonify(spec.to_dict())
