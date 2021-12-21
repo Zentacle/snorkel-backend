@@ -260,7 +260,7 @@ def user_google_signup():
   post:
       summary: Register new user with Google auth endpoint.
       description: Register a new user with Google auth
-      parameter:
+      parameters:
           - name: credential
             in: body
             description: google oauth token credential returned from Google login button
@@ -321,6 +321,38 @@ def user_google_signup():
 
 @app.route("/user/register/password", methods=["POST"])
 def user_finish_signup():
+  """ Add account password
+  ---
+  post:
+      summary: Add password for a newly registered user. Can't be used to change password.
+      description: Add password for a newly registered user. Can't be used to change password.
+      parameters:
+          - name: user_id
+            in: body
+            description: User ID (not username)
+            type: string
+            required: true
+          - name: password
+            in: body
+            description: password
+            type: string
+            required: true
+      responses:
+          200:
+              description: Returns User object
+              content:
+                application/json:
+                  schema: UserSchema
+          400:
+              content:
+                application/json:
+                  schema:
+                    Error:
+                      properties:
+                        msg:
+                          type: string
+              description: User couldn't be created.
+  """
   user_id = request.json.get('user_id')
   user = User.query.filter_by(id=user_id).first()
   if user.password:
@@ -348,6 +380,38 @@ Authorization: Bearer <token>
 """
 @app.route("/user/login", methods=["POST"])
 def user_login():
+  """ Login
+  ---
+  post:
+      summary: login with username/email and password
+      description: login with username/email and password
+      parameters:
+          - name: email
+            in: body
+            description: username or password
+            type: string
+            required: true
+          - name: password
+            in: body
+            description: password
+            type: string
+            required: true
+      responses:
+          200:
+              description: Returns User object
+              content:
+                application/json:
+                  schema: UserSchema
+          400:
+              content:
+                application/json:
+                  schema:
+                    Error:
+                      properties:
+                        msg:
+                          type: string
+              description: Wrong password.
+  """
   email = request.json.get('email')
   password = request.json.get('password')
   
@@ -398,6 +462,53 @@ def refresh_token():
 
 @app.route("/spots/get")
 def get_spots():
+  """ Get Dive Sites/Beaches
+  ---
+  post:
+      summary: Get dive sites
+      description: Get dive sites
+      parameters:
+          - name: beach_id
+            in: body
+            description: Beach ID
+            type: string
+            required: false
+          - name: locality
+            in: body
+            description: locality (eg. Kihei)
+            type: string
+            required: false
+          - name: area_two
+            in: body
+            description: area_two (eg. Maui)
+            type: string
+            required: false
+          - name: area_one
+            in: body
+            description: area_one (eg. Hawaii)
+            type: string
+            required: false
+          - name: country
+            in: body
+            description: country (eg. USA)
+            type: string
+            required: false
+      responses:
+          200:
+              description: Returns singular beach object or list of beach objects
+              content:
+                application/json:
+                  schema: BeachSchema
+          400:
+              content:
+                application/json:
+                  schema:
+                    Error:
+                      properties:
+                        msg:
+                          type: string
+              description: Wrong password.
+  """
   is_shorediving = False
   area = None
   spot = None
@@ -1906,6 +2017,9 @@ def add_station_id():
 with app.test_request_context():
     spec.path(view=user_signup)
     spec.path(view=user_google_signup)
+    spec.path(view=user_finish_signup)
+    spec.path(view=user_login)
+    spec.path(view=get_spots)
     # ...
 
 @app.route("/spec")

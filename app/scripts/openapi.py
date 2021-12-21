@@ -25,5 +25,5 @@ class UserSchema(Schema):
     last_name = fields.Str()
     profile_pic = fields.Str()
 
-# spec.definition('User', schema=UserSchema)
-# ...
+class BeachSchema(Schema):
+    display_name = fields.Str()
