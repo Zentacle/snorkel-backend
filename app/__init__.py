@@ -189,13 +189,37 @@ def user_signup():
   post:
       summary: Register new user endpoint.
       description: Register a new user
-      parameter:
-          - first_name: string
-            last_name: string
-            email: string
-            username: string
-            profile_pic: URL
-            password: string
+      parameters:
+          - name: first_name
+            in: body
+            description: First Name
+            type: string
+            required: true
+          - name: last_name
+            in: body
+            description: Last Name
+            type: string
+            required: true
+          - name: email
+            in: body
+            description: Email address
+            type: string
+            required: true
+          - name: username
+            in: body
+            description: Username
+            type: string
+            required: false
+          - name: profile_pic
+            in: body
+            description: Profile Pic
+            type: string
+            required: false
+          - name: password
+            in: body
+            description: Password
+            type: string
+            required: false
       responses:
           200:
               data: UserSchema
