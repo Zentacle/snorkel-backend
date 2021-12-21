@@ -18,7 +18,12 @@ spec = APISpec(
 
 # Reference your schemas definitions
 class UserSchema(Schema):
-    name = fields.Str()
+    display_name = fields.Str()
+    username = fields.Str()
+    email = fields.Str()
+    first_name = fields.Str()
+    last_name = fields.Str()
+    profile_pic = fields.Str()
 
 # spec.definition('User', schema=UserSchema)
 # ...

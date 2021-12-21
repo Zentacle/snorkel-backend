@@ -222,9 +222,16 @@ def user_signup():
             required: false
       responses:
           200:
-              data: UserSchema
+              description: Returns User object
+              content:
+                application/json:
+                  schema: UserSchema
           400:
-              msg: User couldn't be created.
+              content:
+                application/json:
+                  schema:
+                    msg: string
+              description: User couldn't be created.
   """
   first_name = request.json.get('first_name') or ''
   last_name = request.json.get('last_name') or ''
@@ -254,12 +261,23 @@ def user_google_signup():
       summary: Register new user with Google auth endpoint.
       description: Register a new user with Google auth
       parameter:
-          - credential: string
+          - name: credential
+            in: body
+            description: google oauth token credential returned from Google login button
+            type: string
+            required: true
       responses:
           200:
-              data: UserSchema
+              description: Returns User object
+              content:
+                application/json:
+                  schema: UserSchema
           400:
-              msg: User couldn't be created.
+              content:
+                application/json:
+                  schema:
+                    msg: string
+              description: User couldn't be created.
   """
   token = request.json.get('credential')
   app.logger.error(request.json.get('credential'))
