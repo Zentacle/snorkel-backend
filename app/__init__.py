@@ -447,6 +447,27 @@ def patch_user():
 @app.route("/user/me")
 @jwt_required(refresh=True)
 def get_me():
+    """ Fetch Current User
+    ---
+    get:
+        summary: fetch current user
+        description: fetch current user. Store auth token in header as Authorization: `Bearer ${token}`
+        responses:
+            200:
+                description: Returns User object
+                content:
+                  application/json:
+                    schema: UserSchema
+            400:
+                content:
+                  application/json:
+                    schema:
+                      Error:
+                        properties:
+                          msg:
+                            type: string
+                description: Not logged in.
+    """
     user = get_current_user()
     resp = make_response(user.get_dict())
     auth_token = create_access_token(identity=user.id)
@@ -456,6 +477,27 @@ def get_me():
 @app.route("/refresh")
 @jwt_required(refresh=True)
 def refresh_token():
+  """ Refresh auth token
+  ---
+  get:
+      summary: Refresh auth token
+      description: Refresh auth token
+      responses:
+          200:
+              description: Returns User object
+              content:
+                application/json:
+                  schema: UserSchema
+          400:
+              content:
+                application/json:
+                  schema:
+                    Error:
+                      properties:
+                        msg:
+                          type: string
+              description: Not logged in.
+  """
   user_id = get_jwt_identity()
   auth_token = create_access_token(identity=user_id)
   return jsonify(auth_token=auth_token)
@@ -464,7 +506,7 @@ def refresh_token():
 def get_spots():
   """ Get Dive Sites/Beaches
   ---
-  post:
+  get:
       summary: Get dive sites
       description: Get dive sites
       parameters:
@@ -491,6 +533,16 @@ def get_spots():
           - name: country
             in: body
             description: country (eg. USA)
+            type: string
+            required: false
+          - name: sort
+            in: body
+            description: sort (latest, most_reviewed, top). defaults to top
+            type: string
+            required: false
+          - name: limit
+            in: body
+            description: limit on number of results returned (default 15)
             type: string
             required: false
       responses:
@@ -686,6 +738,24 @@ def get_spots():
 
 @app.route("/spots/search")
 def search_spots():
+  """ Search Spots
+  ---
+  get:
+      summary: Search
+      description: search
+      parameters:
+          - name: search_term
+            in: body
+            description: search term
+            type: string
+            required: true
+      responses:
+          200:
+              description: Returns singular beach object or list of beach objects
+              content:
+                application/json:
+                  schema: BeachSchema
+  """
   search_term = request.args.get('search_term')
   spots = Spot.query.filter(
     and_(or_(
@@ -763,6 +833,24 @@ def add_spot_script():
 @app.route("/spots/add", methods=["POST"])
 @jwt_required(optional=True)
 def add_spot():
+  """ Add Spot
+  ---
+  post:
+      summary: Add Spot
+      description: Add Spot
+      parameters:
+          - name: name
+            in: body
+            description: name
+            type: string
+            required: true
+      responses:
+          200:
+              description: Returns singular beach object or list of beach objects
+              content:
+                application/json:
+                  schema: BeachSchema
+  """
   name = request.json.get('name')
   location_city = request.json.get('location_city')
   description = request.json.get('description')
@@ -951,6 +1039,39 @@ def patch_spot():
 @app.route("/review/add", methods=["POST"])
 @jwt_required()
 def add_review():
+  """ Add Review
+  ---
+  post:
+      summary: Add Review
+      description: Add Review
+      parameters:
+          - name: beach_id
+            in: body
+            description: beach_id
+            type: integer
+            required: true
+          - name: rating
+            in: body
+            description: rating
+            type: integer
+            required: true
+          - name: text
+            in: body
+            description: text
+            type: string
+            required: true
+          - name: activity_type
+            in: body
+            description: text
+            type: string
+            required: true
+      responses:
+          200:
+              description: Returns review object
+              content:
+                application/json:
+                  schema: ReviewSchema
+  """
   user_id = get_jwt_identity()
   user = None
   if user_id:
@@ -1065,23 +1186,36 @@ def add_review():
   review.id
   return { 'data': review.get_dict() }, 200
 
-"""
-Request
-  {
-    'beach_id': '1'
-  }
-
-Response
-  {
-    'data': [
-      {
-
-      }
-    ]
-  }
-"""
 @app.route("/review/get")
 def get_reviews():
+  """ Get Reviews
+  ---
+  get:
+      summary: Get Review
+      description: Get Review
+      parameters:
+          - name: beach_id
+            in: body
+            description: beach_id
+            type: integer
+            required: true
+          - name: limit
+            in: body
+            description: limit on number of reviews to fetch
+            type: integer
+            required: false
+          - name: offset
+            in: body
+            description: offset to start if paginating through reviews
+            type: integer
+            required: false
+      responses:
+          200:
+              description: Returns review object
+              content:
+                application/json:
+                  schema: ReviewSchema
+  """
   sd_id = request.args.get('sd_review_id')
   if sd_id:
     review = Review.query.filter(Review.shorediving_data.has(shorediving_id=sd_id)).first()
@@ -1214,6 +1348,18 @@ def delete_review():
 @app.route("/spots/recs")
 @jwt_required(optional=True)
 def get_recs():
+  """ Recommended Sites
+  ---
+  get:
+      summary: Recommended Sites
+      description: Recommended sites for a specific user based on where they have already visited
+      responses:
+          200:
+              description: Returns array of beaches/dive sites
+              content:
+                application/json:
+                  schema: BeachSchema
+  """
   user_id = get_jwt_identity()
   if not user_id:
     return { 'data': {} }, 401
@@ -1406,6 +1552,24 @@ def create_presigned_post():
 
 @app.route("/user/get")
 def get_user():
+    """ Get User
+    ---
+    get:
+        summary: Get User
+        description: Get User
+        parameters:
+            - name: username
+              in: body
+              description: username
+              type: string
+              required: true
+        responses:
+            200:
+                description: Returns review object
+                content:
+                  application/json:
+                    schema: UserSchema
+    """
     username = request.args.get('username')
     user = User.query \
       .options(joinedload('reviews')) \
@@ -1578,6 +1742,30 @@ def search_location():
 
 @app.route("/spots/nearby")
 def nearby_locations():
+  """ Nearby Locations
+  ---
+  post:
+      summary: Nearby locations given a specific dive site
+      description: Nearby locations given a specific dive site
+      parameters:
+          - name: beach_id
+            in: body
+            description: beach_id
+            type: integer
+            required: true
+      responses:
+          200:
+              description: Returns list of beach objects
+              content:
+                application/json:
+                  schema: BeachSchema
+          400:
+              content:
+                application/json:
+                  schema:
+                    msg: string
+              description: No lat/lng or other location data found for given location
+  """
   beach_id = request.args.get('beach_id')
   spot = Spot.query \
     .options(joinedload(Spot.shorediving_data)) \
@@ -2020,6 +2208,11 @@ with app.test_request_context():
     spec.path(view=user_finish_signup)
     spec.path(view=user_login)
     spec.path(view=get_spots)
+    spec.path(view=add_review)
+    spec.path(view=get_reviews)
+    spec.path(view=get_user)
+    spec.path(view=get_recs)
+    spec.path(view=nearby_locations)
     # ...
 
 @app.route("/spec")

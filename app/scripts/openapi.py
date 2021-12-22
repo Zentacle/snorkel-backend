@@ -27,3 +27,6 @@ class UserSchema(Schema):
 
 class BeachSchema(Schema):
     display_name = fields.Str()
+
+class ReviewSchema(Schema):
+    text = fields.Str()
