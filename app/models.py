@@ -4,6 +4,11 @@ from app.helpers.demicrosoft import demicrosoft
 
 db = SQLAlchemy()
 
+tags = db.Table('tags',
+    db.Column('tag_id', db.Integer, db.ForeignKey('tag.id'), primary_key=True),
+    db.Column('spot_id', db.Integer, db.ForeignKey('spot.id'), primary_key=True)
+)
+
 class ShoreDivingData(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String)
@@ -154,6 +159,8 @@ class Spot(db.Model):
     images = db.relationship("Image", backref="spot")
     submitter = db.relationship("User", uselist=False)
     shorediving_data = db.relationship("ShoreDivingData", back_populates="spot", uselist=False)
+    tags = db.relationship('Tag', secondary=tags, lazy='subquery',
+        backref=db.backref('pages', lazy=True))
 
     def get_basic_data(self):
         data = {}
@@ -364,3 +371,8 @@ class Country(db.Model):
 
     def get_url(self):
         return '/loc/' + self.short_name
+
+class Tag(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    text = db.Column(db.String, nullable=False)
+    type = db.Column(db.String, nullable=False)
