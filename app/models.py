@@ -161,7 +161,7 @@ class Spot(db.Model):
     shorediving_data = db.relationship("ShoreDivingData", back_populates="spot", uselist=False)
     wannadive_data = db.relationship("WannaDiveData", back_populates="spot", uselist=False)
     tags = db.relationship('Tag', secondary=tags, lazy='subquery',
-        backref=db.backref('pages', lazy=True))
+        backref=db.backref('spot', lazy=True))
 
     def get_basic_data(self):
         data = {}
@@ -182,6 +182,8 @@ class Spot(db.Model):
             data.pop('_sa_instance_state', None)
         if data.get('shorediving_data'):
             data.pop('shorediving_data', None)
+        if data.get('tags'):
+            data.pop('tags', None)
         data['url'] = '/Beach/'+str(self.id)+'/'+demicrosoft(self.name).lower()
         return data
 
@@ -381,4 +383,6 @@ class Tag(db.Model):
 class WannaDiveData(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     url = db.Column(db.String, nullable=False)
+    spot_id = db.Column(db.Integer, db.ForeignKey('spot.id'), nullable=False)
 
+    spot = db.relationship("Spot", back_populates="wannadive_data", uselist=False)
