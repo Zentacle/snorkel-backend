@@ -882,6 +882,20 @@ def add_spot_wdscript():
   spot.id #need this to get data loaded, not sure why
   return { 'data': spot.get_dict() }
 
+@app.route("/spots/tag/shore", methods=["GET"])
+def tag_shore_spots():
+  tag = Tag.query.filter(and_(Tag.text=='shore', Tag.type=='Access')).first()
+  if not tag:
+    tag = Tag(
+      text='shore',
+      type='Access',
+    )
+  spots = ShoreDivingData.query.all()
+  for sd_spot in spots:
+    sd_spot.spot.tags.append(tag)
+  db.session.commit()
+  return { 'data': len(spots) }
+
 @app.route("/spots/add", methods=["POST"])
 @jwt_required(optional=True)
 def add_spot():
