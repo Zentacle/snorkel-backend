@@ -829,6 +829,58 @@ def add_spot_script():
   spot.id #need this to get data loaded, not sure why
   return { 'data': spot.get_dict() }
 
+@app.route("/spots/add/wdscript", methods=["POST"])
+def add_spot_wdscript():
+  name = request.json.get('name')
+  description = request.json.get('description')
+  directions = request.json.get('directions')
+  url = request.json.get('url')
+  location_city = request.json.get('location_city')
+  alternative = request.json.get('alternative')
+  latitude = request.json.get('latitude')
+  longitude = request.json.get('longitude')
+  max_depth = request.json.get('max_depth')
+  difficulty = request.json.get('difficulty') if request.json.get('difficulty') != 'null' else None
+  tags = request.json.get('tags') if request.json.get('tags') else []
+
+  sd_data = WannaDiveData.query.filter_by(url=url).first()
+  if sd_data:
+    return 'Already exists', 400
+
+  full_description = description + '\n\n' + directions
+  if alternative:
+    full_description += '\n\n%(title)s is also known as %(alternative)s.' % { 'title':name, 'alternative':alternative }
+
+  spot = Spot(
+    name=name,
+    location_city=location_city,
+    description=full_description,
+    is_verified=True,
+    latitude=latitude,
+    longitude=longitude,
+    max_depth=max_depth,
+    difficulty=difficulty,
+  )
+
+  sd_data = WannaDiveData(
+    url=url,
+    spot=spot,
+  )
+
+  for tag_text in tags:
+    tag = Tag.query.filter(and_(Tag.text==tag_text, Tag.type=='Access')).first()
+    if not tag:
+      tag = Tag(
+        text=tag_text,
+        type='Access',
+      )
+    spot.tags.append(tag)
+
+  db.session.add(spot)
+  db.session.add(sd_data)
+  db.session.commit()
+  spot.id #need this to get data loaded, not sure why
+  return { 'data': spot.get_dict() }
 
 @app.route("/spots/add", methods=["POST"])
 @jwt_required(optional=True)
