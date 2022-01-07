@@ -159,6 +159,7 @@ class Spot(db.Model):
     images = db.relationship("Image", backref="spot")
     submitter = db.relationship("User", uselist=False)
     shorediving_data = db.relationship("ShoreDivingData", back_populates="spot", uselist=False)
+    wannadive_data = db.relationship("WannaDiveData", back_populates="spot", uselist=False)
     tags = db.relationship('Tag', secondary=tags, lazy='subquery',
         backref=db.backref('pages', lazy=True))
 
@@ -376,3 +377,8 @@ class Tag(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     text = db.Column(db.String, nullable=False)
     type = db.Column(db.String, nullable=False)
+
+class WannaDiveData(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    url = db.Column(db.String, nullable=False)
+
