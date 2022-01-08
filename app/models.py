@@ -183,6 +183,9 @@ class Spot(db.Model):
         if data.get('shorediving_data'):
             data.pop('shorediving_data', None)
         if data.get('tags'):
+            data['access'] = []
+            for tag in data.get('tags'):
+                data['access'].append(tag.get_dict())
             data.pop('tags', None)
         data['url'] = '/Beach/'+str(self.id)+'/'+demicrosoft(self.name).lower()
         return data
@@ -379,6 +382,12 @@ class Tag(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     text = db.Column(db.String, nullable=False)
     type = db.Column(db.String, nullable=False)
+
+    def get_dict(self):
+        data = self.__dict__.copy()
+        if data.get('_sa_instance_state'):
+            data.pop('_sa_instance_state', None)
+        return data
 
 class WannaDiveData(db.Model):
     id = db.Column(db.Integer, primary_key=True)
