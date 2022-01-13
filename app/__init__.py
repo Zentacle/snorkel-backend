@@ -629,6 +629,10 @@ def get_spots():
       if spot_data['country']:
         spot_data['country'] = spot.country.get_dict()
     beach_id = spot.id
+    if not spot.location_google and spot.latitude and spot.longitude:
+      spot_data['location_google'] = ('http://maps.google.com/maps?q=%(latitude)f,%(longitude)f'
+        % { 'latitude': spot.latitude, 'longitude': spot.longitude}
+      )
     spot_data["ratings"] = get_summary_reviews_helper(beach_id)
     return { 'data': spot_data }
   query = Spot.query
@@ -723,6 +727,10 @@ def get_spots():
       spot_data['beach_name_for_url'] = spot.get_beach_name_for_url()
     if spot.shorediving_data:
       spot_data['sd_url'] = spot.shorediving_data.get_url()
+    if not spot.location_google and spot.latitude and spot.longitude:
+      spot_data['location_google'] = ('http://maps.google.com/maps?q=%(latitude)f,%(longitude)f'
+        % { 'latitude': spot.latitude, 'longitude': spot.longitude}
+      )
     output.append(spot_data)
   resp = { 'data': output }
   if area:
