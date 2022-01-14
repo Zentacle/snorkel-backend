@@ -2308,25 +2308,25 @@ def get_typeahead():
       'url': loc.get_url(),
     }
     results.append(result)
-  # for loc in area_ones:
-  #   result = {
-  #     'id': loc.id,
-  #     'text': loc.name,
-  #     'url': loc.get_url(),
-  #   }
-  #   results.append(result)
-  # for loc in area_twos:
-  #   result = {
-  #     'id': loc.id,
-  #     'text': loc.name,
-  #     'url': loc.get_url(),
-  #   }
-  #   results.append(result)
-  # for loc in localities:
-  #   result = {
-  #     'id': loc.id,
-  #     'text': loc.name,
-  #     'url': loc.get_url(),
-  #   }
-  #   results.append(result)
+  for loc in area_ones:
+    result = {
+      'id': loc.id,
+      'text': loc.name,
+      'url': loc.get_url(loc.country),
+    }
+    results.append(result)
+  for loc in area_twos:
+    result = {
+      'id': loc.id,
+      'text': loc.name,
+      'url': loc.get_url(loc.country, loc.area_one),
+    }
+    results.append(result)
+  for loc in localities:
+    result = {
+      'id': loc.id,
+      'text': loc.name,
+      'url': loc.get_url(loc.country, loc.area_one, loc.area_two),
+    }
+    results.append(result)
   return { 'data': results }
