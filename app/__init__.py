@@ -2276,25 +2276,26 @@ def add_station_id():
   spot.id
   return { 'data': spot.get_dict() }
 
-with app.test_request_context():
-    spec.path(view=user_signup)
-    spec.path(view=user_google_signup)
-    spec.path(view=user_finish_signup)
-    spec.path(view=user_login)
-    spec.path(view=get_spots)
-    spec.path(view=add_review)
-    spec.path(view=get_reviews)
-    spec.path(view=get_user)
-    spec.path(view=get_recs)
-    spec.path(view=nearby_locations)
-    # ...
-
-@app.route("/spec")
-def get_apispec():
-    return jsonify(spec.to_dict())
-
 @app.route("/search/typeahead")
 def get_typeahead():
+  """ Search Typeahead
+  ---
+  get:
+      summary: Typeahead locations for search bar
+      description: Typeahead locations for search bar
+      parameters:
+          - name: query
+            in: body
+            description: query
+            type: string
+            required: true
+      responses:
+          200:
+              description: Returns list of typeahead objects
+              content:
+                application/json:
+                  schema: TypeAheadSchema
+  """
   query = request.args.get('query')
   countries = Country.query.filter(Country.name.ilike('%'+query+'%')).all()
   area_ones = AreaOne.query.filter(AreaOne.name.ilike('%'+query+'%')).all()
@@ -2306,6 +2307,7 @@ def get_typeahead():
       'id': loc.id,
       'text': loc.name,
       'url': loc.get_url(),
+      'type': 'location',
     }
     results.append(result)
   for loc in area_ones:
@@ -2313,6 +2315,7 @@ def get_typeahead():
       'id': loc.id,
       'text': loc.name,
       'url': loc.get_url(loc.country),
+      'type': 'location',
     }
     results.append(result)
   for loc in area_twos:
@@ -2321,6 +2324,7 @@ def get_typeahead():
         'id': loc.id,
         'text': loc.name,
         'url': loc.get_url(loc.country, loc.area_one),
+        'type': 'location',
       }
       results.append(result)
   for loc in localities:
@@ -2329,6 +2333,25 @@ def get_typeahead():
         'id': loc.id,
         'text': loc.name,
         'url': loc.get_url(loc.country, loc.area_one, loc.area_two),
+        'type': 'location',
       }
       results.append(result)
   return { 'data': results[:10] }
+
+with app.test_request_context():
+    spec.path(view=user_signup)
+    spec.path(view=user_google_signup)
+    spec.path(view=user_finish_signup)
+    spec.path(view=user_login)
+    spec.path(view=get_spots)
+    spec.path(view=add_review)
+    spec.path(view=get_reviews)
+    spec.path(view=get_user)
+    spec.path(view=get_recs)
+    spec.path(view=nearby_locations)
+    spec.path(view=get_typeahead)
+    # ...
+
+@app.route("/spec")
+def get_apispec():
+    return jsonify(spec.to_dict())

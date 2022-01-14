@@ -30,3 +30,9 @@ class BeachSchema(Schema):
 
 class ReviewSchema(Schema):
     text = fields.Str()
+
+class TypeAheadSchema(Schema):
+    text = fields.Str()
+    id = fields.Int()
+    type = fields.Str()
+    url = fields.Str()
