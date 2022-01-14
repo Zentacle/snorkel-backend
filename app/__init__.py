@@ -2296,7 +2296,7 @@ def get_apispec():
 @app.route("/search/typeahead")
 def get_typeahead():
   query = request.args.get('query')
-  countries = Country.query.filter(Country.name.contains(query)).all()
+  countries = Country.query.filter(Country.name.ilike('%'+query+'%')).all()
   area_ones = AreaOne.query.filter(AreaOne.name.contains(query)).all()
   area_twos = AreaTwo.query.filter(AreaTwo.name.contains(query)).all()
   localities = Locality.query.filter(Locality.name.contains(query)).all()
