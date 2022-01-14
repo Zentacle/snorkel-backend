@@ -931,6 +931,25 @@ def add_spot_wdscript():
 #   db.session.commit()
 #   return { 'data': len(spots) }
 
+@app.route("/spots/fix_tags")
+def tag_fix():
+  good_short_tag = Tag.query.filter_by(id=1).first()
+  remove_shore_tag = Tag.query.filter_by(id=2).first()
+  spots = Spot.query.filter(Spot.tags.has(id=2)).all()
+  edited_spots = []
+  for spot in spots:
+    if len(spot.tags)>2:
+      if spot.tags[0].text == spot.tags[1].text:
+        # spot.tags.remove(remove_shore_tag)
+        edited_spots.append(spot.get_dict())
+    elif len(spot.tags)==1:
+      if spot.tags[0].id==2:
+        # spot.tags.append(good_short_tag)
+        # spot.tags.remove(remove_shore_tag)
+        edited_spots.append(spot.get_dict())
+    # db.session.commit()
+  return { 'data': edited_spots }
+
 @app.route("/spots/add", methods=["POST"])
 @jwt_required(optional=True)
 def add_spot():
