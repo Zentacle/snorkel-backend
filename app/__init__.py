@@ -2331,4 +2331,4 @@ def get_typeahead():
         'url': loc.get_url(loc.country, loc.area_one, loc.area_two),
       }
       results.append(result)
-  return { 'data': results }
+  return { 'data': results[:10] }
