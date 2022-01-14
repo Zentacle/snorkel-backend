@@ -935,7 +935,7 @@ def add_spot_wdscript():
 def tag_fix():
   good_short_tag = Tag.query.filter_by(id=1).first()
   remove_shore_tag = Tag.query.filter_by(id=2).first()
-  spots = Spot.query.filter(Spot.tags.has(id=2)).all()
+  spots = Spot.query.filter(Spot.tags.any(id=2)).all()
   edited_spots = []
   for spot in spots:
     if len(spot.tags)>2:
@@ -947,7 +947,7 @@ def tag_fix():
         # spot.tags.append(good_short_tag)
         # spot.tags.remove(remove_shore_tag)
         edited_spots.append(spot.get_dict())
-    # db.session.commit()
+    # db.session.commit(
   return { 'data': edited_spots }
 
 @app.route("/spots/add", methods=["POST"])
