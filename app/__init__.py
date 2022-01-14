@@ -2323,10 +2323,11 @@ def get_typeahead():
     }
     results.append(result)
   for loc in localities:
-    result = {
-      'id': loc.id,
-      'text': loc.name,
-      'url': loc.get_url(loc.country, loc.area_one, loc.area_two),
-    }
-    results.append(result)
+    if loc.country and loc.area_one and loc.area_two:
+      result = {
+        'id': loc.id,
+        'text': loc.name,
+        'url': loc.get_url(loc.country, loc.area_one, loc.area_two),
+      }
+      results.append(result)
   return { 'data': results }
