@@ -2297,9 +2297,9 @@ def get_apispec():
 def get_typeahead():
   query = request.args.get('query')
   countries = Country.query.filter(Country.name.ilike('%'+query+'%')).all()
-  area_ones = AreaOne.query.filter(AreaOne.name.contains(query)).all()
-  area_twos = AreaTwo.query.filter(AreaTwo.name.contains(query)).all()
-  localities = Locality.query.filter(Locality.name.contains(query)).all()
+  area_ones = AreaOne.query.filter(AreaOne.name.ilike('%'+query+'%')).all()
+  area_twos = AreaTwo.query.filter(AreaTwo.name.ilike('%'+query+'%')).all()
+  localities = Locality.query.filter(Locality.name.ilike('%'+query+'%')).all()
   results = []
   for loc in countries:
     result = {
