@@ -2292,3 +2292,41 @@ with app.test_request_context():
 @app.route("/spec")
 def get_apispec():
     return jsonify(spec.to_dict())
+
+@app.route("/search/typeahead")
+def get_typeahead():
+  query = request.args.get('query')
+  countries = Country.query.filter(Country.name.contains(query)).all()
+  area_ones = AreaOne.query.filter(AreaOne.name.contains(query)).all()
+  area_twos = AreaTwo.query.filter(AreaTwo.name.contains(query)).all()
+  localities = Locality.query.filter(Locality.name.contains(query)).all()
+  results = []
+  for loc in countries:
+    result = {
+      'id': loc.id,
+      'text': loc.name,
+      'url': loc.get_url(),
+    }
+    results.append(result)
+  # for loc in area_ones:
+  #   result = {
+  #     'id': loc.id,
+  #     'text': loc.name,
+  #     'url': loc.get_url(),
+  #   }
+  #   results.append(result)
+  # for loc in area_twos:
+  #   result = {
+  #     'id': loc.id,
+  #     'text': loc.name,
+  #     'url': loc.get_url(),
+  #   }
+  #   results.append(result)
+  # for loc in localities:
+  #   result = {
+  #     'id': loc.id,
+  #     'text': loc.name,
+  #     'url': loc.get_url(),
+  #   }
+  #   results.append(result)
+  return { 'data': results }
