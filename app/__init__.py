@@ -426,6 +426,33 @@ def user_login():
 @app.route("/user/patch", methods=["PATCH"])
 @jwt_required()
 def patch_user():
+  """ Patch User
+    ---
+    patch:
+        summary: patch user (admin only)
+        description: patch user (admin only). also include the params of the user that you want to change in the body
+        parameters:
+          - name: id
+            in: body
+            description: user id
+            type: int
+            required: true
+        responses:
+            200:
+                description: Returns User object
+                content:
+                  application/json:
+                    schema: UserSchema
+            400:
+                content:
+                  application/json:
+                    schema:
+                      Error:
+                        properties:
+                          msg:
+                            type: string
+                description: Not logged in.
+  """
   user = get_current_user()
   user_id = request.json.get('id')
   if user.admin and user_id:
@@ -890,19 +917,19 @@ def add_spot_wdscript():
   spot.id #need this to get data loaded, not sure why
   return { 'data': spot.get_dict() }
 
-@app.route("/spots/tag/shore", methods=["GET"])
-def tag_shore_spots():
-  tag = Tag.query.filter(and_(Tag.text=='shore', Tag.type=='Access')).first()
-  if not tag:
-    tag = Tag(
-      text='shore',
-      type='Access',
-    )
-  spots = ShoreDivingData.query.all()
-  for sd_spot in spots:
-    sd_spot.spot.tags.append(tag)
-  db.session.commit()
-  return { 'data': len(spots) }
+# @app.route("/spots/tag/shore", methods=["POST"])
+# def tag_shore_spots():
+#   tag = Tag.query.filter(and_(Tag.text=='shore', Tag.type=='Access')).first()
+#   if not tag:
+#     tag = Tag(
+#       text='shore',
+#       type='Access',
+#     )
+#   spots = ShoreDivingData.query.all()
+#   for sd_spot in spots:
+#     sd_spot.spot.tags.append(tag)
+#   db.session.commit()
+#   return { 'data': len(spots) }
 
 @app.route("/spots/add", methods=["POST"])
 @jwt_required(optional=True)
@@ -1063,6 +1090,33 @@ def approve_spot():
 @app.route("/spots/patch", methods=["PATCH"])
 @jwt_required()
 def patch_spot():
+  """ Patch Beach
+    ---
+    patch:
+        summary: patch beach (admin only)
+        description: patch beach (admin only). also include the params of the beach that you want to change in the body
+        parameters:
+          - name: id
+            in: body
+            description: beach id
+            type: int
+            required: true
+        responses:
+            200:
+                description: Returns Beach object
+                content:
+                  application/json:
+                    schema: BeachSchema
+            400:
+                content:
+                  application/json:
+                    schema:
+                      Error:
+                        properties:
+                          msg:
+                            type: string
+                description: Not logged in.
+  """
   if not get_current_user().admin:
     return { 'msg': "Only admins can do that" }, 401
   beach_id = request.json.get('id')
@@ -1350,6 +1404,34 @@ def get_summary_reviews_helper(beach_id):
 
 @app.route("/review/patch", methods=["PATCH"])
 def patch_review():
+  # TODO: Change this function to be auth protected
+  """ Patch Review
+    ---
+    patch:
+        summary: patch review
+        description: patch review. also include the params of the review that you want to change in the body
+        parameters:
+          - name: id
+            in: body
+            description: beach id
+            type: int
+            required: true
+        responses:
+            200:
+                description: Returns Beach object
+                content:
+                  application/json:
+                    schema: BeachSchema
+            400:
+                content:
+                  application/json:
+                    schema:
+                      Error:
+                        properties:
+                          msg:
+                            type: string
+                description: Not logged in.
+  """
   beach_id = request.json.get('id')
   spot = Review.query.filter_by(id=beach_id).first_or_404()
   updates = request.json
@@ -2342,6 +2424,7 @@ with app.test_request_context():
     spec.path(view=user_signup)
     spec.path(view=user_google_signup)
     spec.path(view=user_finish_signup)
+    spec.path(view=patch_user)
     spec.path(view=user_login)
     spec.path(view=get_spots)
     spec.path(view=add_review)
@@ -2350,6 +2433,8 @@ with app.test_request_context():
     spec.path(view=get_recs)
     spec.path(view=nearby_locations)
     spec.path(view=get_typeahead)
+    spec.path(view=patch_review)
+    spec.path(view=patch_spot)
     # ...
 
 @app.route("/spec")
