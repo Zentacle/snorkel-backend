@@ -940,14 +940,14 @@ def tag_fix():
   for spot in spots:
     if len(spot.tags)>=2:
       if spot.tags[0].text == spot.tags[1].text:
-        # spot.tags.remove(remove_shore_tag)
+        spot.tags.remove(remove_shore_tag)
         edited_spots.append(spot.get_dict())
     elif len(spot.tags)==1:
       if spot.tags[0].id==2:
-        # spot.tags.append(good_short_tag)
-        # spot.tags.remove(remove_shore_tag)
+        spot.tags.append(good_short_tag)
+        spot.tags.remove(remove_shore_tag)
         edited_spots.append(spot.get_dict())
-    # db.session.commit(
+    db.session.commit()
   return { 'num_spots': len(spots), 'data': edited_spots }
 
 @app.route("/spots/add", methods=["POST"])
