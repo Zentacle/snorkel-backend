@@ -938,7 +938,7 @@ def tag_fix():
   spots = Spot.query.filter(Spot.tags.any(id=2)).all()
   edited_spots = []
   for spot in spots:
-    if len(spot.tags)>2:
+    if len(spot.tags)>=2:
       if spot.tags[0].text == spot.tags[1].text:
         # spot.tags.remove(remove_shore_tag)
         edited_spots.append(spot.get_dict())
@@ -948,7 +948,7 @@ def tag_fix():
         # spot.tags.remove(remove_shore_tag)
         edited_spots.append(spot.get_dict())
     # db.session.commit(
-  return { 'data': edited_spots }
+  return { 'num_spots': len(spots), 'data': edited_spots }
 
 @app.route("/spots/add", methods=["POST"])
 @jwt_required(optional=True)
