@@ -2075,6 +2075,9 @@ def locality_get():
     if locality_data.get('country'):
       locality_data['country'] = locality_data.get('country').get_simple_dict()
     data.append(locality_data)
+    if 'url' in locality_data and not locality.url:
+      locality.url = locality_data['url']
+  db.session.commit()
   return { 'data': data }
 
 @app.route("/locality/area_two")
