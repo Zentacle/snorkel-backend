@@ -1026,7 +1026,8 @@ def add_spot():
     if response.get('status') == 'OK':
       result = response.get('result')
       if latitude and longitude:
-        location_google = 'http://maps.google.com/maps?q={latitude},{longitude}'.format(latitude=latitude, longitude=longitude)
+        location_google = 'http://maps.google.com/maps?q={latitude},{longitude}' \
+          .format(latitude=latitude, longitude=longitude)
       else:
         location_google = result.get('url')
         latitude = result.get('geometry').get('location').get('lat')
@@ -1198,7 +1199,8 @@ def patch_spot():
     if updates.get('latitude') and updates.get('longitude'):
       latitude = updates.get('latitude')
       longitude = updates.get('longitude')
-      spot.location_google = 'http://maps.google.com/maps?q={latitude},{longitude}'.format(latitude=latitude, longitude=longitude)
+      spot.location_google = 'http://maps.google.com/maps?q={latitude},{longitude}' \
+        .format(latitude=latitude, longitude=longitude)
   except ValueError as e:
     return e, 500
   db.session.commit()
@@ -1258,7 +1260,9 @@ def add_review():
   activity_type = request.json.get('activity_type')
   images = request.json.get('images') or []
   buddies = request.json.get('buddy_array') or []
-  date_dived = dateutil.parser.isoparse(request.json.get('date_dived')) if request.json.get('date_dived') else datetime.utcnow()
+  date_dived = dateutil.parser.isoparse(request.json.get('date_dived')) \
+    if request.json.get('date_dived') \
+    else datetime.utcnow()
   if not rating:
     return { 'msg': 'Please select a rating' }, 401
   if not activity_type:
@@ -1397,7 +1401,11 @@ def get_reviews():
   limit = request.args.get('limit')
   offset = int(request.args.get('offset')) if request.args.get('offset') else 0
 
-  query = Review.query.options(joinedload('user')).options(joinedload('shorediving_data')).options(joinedload('images')).order_by(Review.date_posted.desc()).filter_by(beach_id=beach_id)
+  query = Review.query.options(joinedload('user')) \
+    .options(joinedload('shorediving_data')) \
+    .options(joinedload('images')) \
+    .order_by(Review.date_posted.desc()) \
+    .filter_by(beach_id=beach_id)
   if limit:
     query = query.limit(limit)
   if offset:
@@ -1429,7 +1437,10 @@ def get_summary_reviews():
   return {"data": get_summary_reviews_helper(request.args.get('beach_id'))}
 
 def get_summary_reviews_helper(beach_id):
-  reviews = db.session.query(db.func.count(Review.rating), Review.rating).filter_by(beach_id=beach_id).group_by(Review.rating).all()
+  reviews = db.session.query(
+    db.func.count(Review.rating),
+    Review.rating
+  ).filter_by(beach_id=beach_id).group_by(Review.rating).all()
   #average = db.session.query(db.func.avg(Review.rating)).filter_by(beach_id=beach_id).first()
   output = {}
   for review in reviews:
@@ -1563,7 +1574,9 @@ def get_recs():
     return { 'data': {} }, 401
   # (SELECT * FROM SPOT a LEFT JOIN REVIEW b ON a.id = b.beach_id WHERE b.author_id = user_id) as my_spots
   # SELECT * FROM SPOT A LEFT JOIN my_spots B ON A.id = B.id WHERE b.id IS NULL
-  spots_been_to = db.session.query(Spot.id).join(Review, Spot.id == Review.beach_id, isouter=True).filter(Review.author_id==user_id).subquery()
+  spots_been_to = db.session.query(Spot.id) \
+    .join(Review, Spot.id == Review.beach_id, isouter=True) \
+    .filter(Review.author_id==user_id).subquery()
   spots = Spot.query \
     .filter(Spot.id.not_in(spots_been_to)) \
     .filter(Spot.is_verified.isnot(False)) \
@@ -1818,7 +1831,9 @@ def add_shore_review():
   rating = max([snorkel, beginner, intermediate, advanced, night])
   activity_type = 'scuba'
   date_posted = dateutil.parser.isoparse(request.json.get('date_dived'))
-  date_dived = dateutil.parser.isoparse(request.json.get('date_dived')) if request.json.get('date_dived') else datetime.utcnow()
+  date_dived = dateutil.parser.isoparse(request.json.get('date_dived')) \
+    if request.json.get('date_dived') \
+    else datetime.utcnow()
   if not rating:
     return { 'msg': 'Please select a rating' }, 401
   if not activity_type:
@@ -1974,7 +1989,10 @@ def nearby_locations():
   if not startlat or not startlng:
     spots = []
     if spot.shorediving_data:
-      spots = Spot.query.filter(Spot.shorediving_data.has(destination_url=spot.shorediving_data.destination_url)).limit(10).all()
+      spots = Spot.query \
+        .filter(Spot.shorediving_data.has(destination_url=spot.shorediving_data.destination_url)) \
+        .limit(10) \
+        .all()
     else:
       spots = Spot.query.filter(Spot.has(country_id=spot.country_id)).limit(10).all()
     output=[]
@@ -2075,9 +2093,9 @@ def locality_get():
     if locality_data.get('country'):
       locality_data['country'] = locality_data.get('country').get_simple_dict()
     data.append(locality_data)
-    if 'url' in locality_data and not locality.url:
-      locality.url = locality_data['url']
-  db.session.commit()
+  #   if 'url' in locality_data and not locality.url:
+  #     locality.url = locality_data['url']
+  # db.session.commit()
   return { 'data': data }
 
 @app.route("/locality/area_two")
