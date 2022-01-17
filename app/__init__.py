@@ -1953,7 +1953,7 @@ def search_location():
   r = requests.get('https://maps.googleapis.com/maps/api/place/textsearch/json', params=params)
   return r.json()
 
-@app.route("/spots/nearby")
+@app.route("/spots/nearby/v1")
 def nearby_locations():
   """ Nearby Locations
   ---
@@ -2045,7 +2045,7 @@ def nearby_locations():
   except Exception as e:
     return { 'msg': str(e) }, 500
 
-@app.route("/spots/nearby/v2")
+@app.route("/spots/nearby")
 def nearby_locations_v2():
   """ Nearby Locations
   ---
