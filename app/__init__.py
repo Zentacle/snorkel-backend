@@ -2081,12 +2081,18 @@ def nearby_locations_v2():
   if not startlat or not startlng:
     spots = []
     if spot.shorediving_data:
-      spots = Spot.query \
-        .filter(Spot.shorediving_data.has(destination_url=spot.shorediving_data.destination_url)) \
-        .limit(10) \
-        .all()
+      try:
+        spots = Spot.query \
+          .filter(Spot.shorediving_data.has(destination_url=spot.shorediving_data.destination_url)) \
+          .limit(10) \
+          .all()
+      except AttributeError as e:
+        return { 'msg': str(e) }
     else:
-      spots = Spot.query.filter(Spot.has(country_id=spot.country_id)).limit(10).all()
+      try:
+        spots = Spot.query.filter(Spot.has(country_id=spot.country_id)).limit(10).all()
+      except AttributeError as e:
+        return { 'msg': str(e) }
     output=[]
     for spot in spots:
       spot_data = spot.get_dict()
