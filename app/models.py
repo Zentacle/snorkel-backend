@@ -382,7 +382,7 @@ class Tag(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     text = db.Column(db.String, nullable=False)
     type = db.Column(db.String, nullable=False)
-    short_name = db.Column(db.String, unique=True)
+    short_name = db.Column(db.String, unique=True, nullable=False)
 
     def get_dict(self):
         data = self.__dict__.copy()
