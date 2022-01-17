@@ -2117,8 +2117,10 @@ def nearby_locations_v2():
   data = []
   for result in results:
     temp_data = result.get_dict()
-    if result.locality:
-      temp_data['locality'] = result.locality.get_dict()
+    if result.locality and result.locality.url:
+      temp_data['locality'] = {
+        'url': result.locality.url
+      }
     data.append(temp_data)
   return { 'data': data }
 
