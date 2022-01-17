@@ -2096,18 +2096,13 @@ def nearby_locations_v2():
     else:
       return { 'msg': 'No lat/lng, country_id, or sd_data for this spot ' }, 400
 
+  results = []
   try:
     query = Spot.query.filter(and_(
       Spot.is_verified == True,
       Spot.id != spot.id,
     )).options(joinedload('locality')).order_by(Spot.distance(startlat, startlng)).limit(10)
     results = query.all()
-    data = []
-    for result in results:
-      temp_data = result.get_dict()
-      temp_data['locality'] = result.locality.get_dict()
-      data.append(temp_data)
-    return { 'data': data }
   except OperationalError as e:
     if "no such function: sqrt" in str(e).lower():
       query = Spot.query.filter(and_(
@@ -2115,17 +2110,16 @@ def nearby_locations_v2():
         Spot.id != spot.id,
       )).options(joinedload('locality')).order_by(Spot.sqlite3_distance(startlat, startlng)).limit(10)
       results = query.all()
-      data = []
-      for result in results:
-        temp_data = result.get_dict()
-        if result.locality:
-          temp_data['locality'] = result.locality.get_dict()
-        data.append(temp_data)
-      return { 'data': data }
     else:
       return { 'msg': str(e) }, 500
   except Exception as e:
     return { 'msg': str(e) }, 500
+  data = []
+  for result in results:
+    temp_data = result.get_dict()
+    temp_data['locality'] = result.locality.get_dict()
+    data.append(temp_data)
+  return { 'data': data }
 
 @app.route("/spots/location")
 def get_location_spots():
