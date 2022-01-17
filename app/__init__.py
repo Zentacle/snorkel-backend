@@ -2023,7 +2023,7 @@ def nearby_locations():
       })
     return { 'data': data }
   except OperationalError as e:
-    if "no such function: SQRT" in str(e):
+    if "no such function: sqrt" in str(e).lower():
       query = "SELECT id, name, hero_img, rating, num_reviews, location_city, difficulty, %(startlng)s + %(startlat)s AS distance FROM spot WHERE latitude is NOT NULL AND longitude is NOT NULL ORDER BY distance LIMIT 10;" % {'startlat':startlat, 'startlng':startlng}
       results = db.engine.execute(query)
       data = []
@@ -2041,9 +2041,91 @@ def nearby_locations():
         })
       return { 'data': data }
     else:
-      return { 'msg': e }, 500
+      return { 'msg': str(e) }, 500
   except Exception as e:
-    return { 'msg': e }, 500
+    return { 'msg': str(e) }, 500
+
+@app.route("/spots/nearby/v2")
+def nearby_locations_v2():
+  """ Nearby Locations
+  ---
+  post:
+      summary: Nearby locations given a specific dive site
+      description: Nearby locations given a specific dive site
+      parameters:
+          - name: beach_id
+            in: body
+            description: beach_id
+            type: integer
+            required: true
+      responses:
+          200:
+              description: Returns list of beach objects
+              content:
+                application/json:
+                  schema: BeachSchema
+          400:
+              content:
+                application/json:
+                  schema:
+                    msg: string
+              description: No lat/lng or other location data found for given location
+  """
+  beach_id = request.args.get('beach_id')
+  spot = Spot.query \
+    .options(joinedload(Spot.shorediving_data)) \
+    .filter_by(id=beach_id) \
+    .first_or_404()
+  startlat = spot.latitude
+  startlng = spot.longitude
+  if not startlat or not startlng:
+    spots = []
+    if spot.shorediving_data:
+      spots = Spot.query \
+        .filter(Spot.shorediving_data.has(destination_url=spot.shorediving_data.destination_url)) \
+        .limit(10) \
+        .all()
+    else:
+      spots = Spot.query.filter(Spot.has(country_id=spot.country_id)).limit(10).all()
+    output=[]
+    for spot in spots:
+      spot_data = spot.get_dict()
+      output.append(spot_data)
+    if len(output):
+      return { 'data': output }
+    else:
+      return { 'msg': 'No lat/lng, country_id, or sd_data for this spot ' }, 400
+
+  try:
+    query = Spot.query.filter(and_(
+      Spot.is_verified == True,
+      Spot.id != spot.id,
+    )).options(joinedload('locality')).order_by(Spot.distance(startlat, startlng)).limit(10)
+    results = query.all()
+    data = []
+    for result in results:
+      temp_data = result.get_dict()
+      temp_data['locality'] = result.locality.get_dict()
+      data.append(temp_data)
+    return { 'data': data }
+  except OperationalError as e:
+    if "no such function: sqrt" in str(e).lower():
+      query = Spot.query.filter(and_(
+        Spot.is_verified == True,
+        Spot.id != spot.id,
+      )).options(joinedload('locality')).order_by(Spot.sqlite3_distance(startlat, startlng)).limit(10)
+      results = query.all()
+      data = []
+      for result in results:
+        temp_data = result.get_dict()
+        if result.locality:
+          temp_data['locality'] = result.locality.get_dict()
+        data.append(temp_data)
+      return { 'data': data }
+    else:
+      return { 'msg': str(e) }, 500
+  except Exception as e:
+    return { 'msg': str(e) }, 500
 
 @app.route("/spots/location")
 def get_location_spots():

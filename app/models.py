@@ -1,6 +1,9 @@
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.ext.hybrid import hybrid_method
 from datetime import datetime
 from app.helpers.demicrosoft import demicrosoft
+from flask import current_app
+from sqlalchemy import func
 
 db = SQLAlchemy()
 
@@ -208,6 +211,45 @@ class Spot(db.Model):
             return float(self.rating) - z * (std_dev/math.sqrt(self.num_reviews))
         else:
             return 0
+
+    @hybrid_method
+    def distance(self, latitude, longitude):
+        import math
+        return math.sqrt(
+            (
+                69.1 * (self.latitude - latitude) ** 2
+                + ((69.1 * (self.longitude - longitude) * math.cos(self.latitude / 57.3)) ** 2)
+            )
+        )
+
+    @distance.expression
+    def distance(self, latitude, longitude):
+        return func.sqrt(
+            (
+                func.pow(69.1 * (self.latitude - latitude), 2)
+                + (func.pow(69.1 * (self.longitude - longitude) * func.cos(self.latitude / 57.3)), 2)
+            )
+        )
+
+    @hybrid_method
+    def sqlite3_distance(self, latitude, longitude):
+        import math
+        return math.sqrt(
+            (
+                69.1 * (self.latitude - latitude) ** 2
+                + ((69.1 * (self.longitude - longitude) * math.cos(self.latitude / 57.3)) ** 2)
+            )
+        )
+
+    @sqlite3_distance.expression
+    def sqlite3_distance(self, latitude, longitude):
+        return func.abs(
+                (69.1 * (self.latitude - latitude) * 69.1 * (self.latitude - latitude))
+                + (
+                    (69.1 * (self.longitude - longitude))
+                    * (69.1 * (self.longitude - longitude))
+                )
+            )
 
 class Review(db.Model):
     id = db.Column(db.Integer, primary_key=True)
