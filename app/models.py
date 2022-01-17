@@ -227,7 +227,7 @@ class Spot(db.Model):
         return func.sqrt(
             (
                 func.pow(69.1 * (self.latitude - latitude), 2)
-                + (func.pow(69.1 * (self.longitude - longitude) * func.cos(self.latitude / 57.3)), 2)
+                + (func.pow(69.1 * (self.longitude - longitude) * func.cos(self.latitude / 57.3), 2))
             )
         )
 
