@@ -300,6 +300,7 @@ class Locality(db.Model):
     country_id = db.Column(db.Integer, db.ForeignKey('country.id'))
     description = db.Column(db.String)
     url = db.Column(db.String, unique=True)
+    map_image_url = db.Column(db.String)
 
     spots = db.relationship('Spot', backref='locality', lazy=True)
 
@@ -331,6 +332,7 @@ class AreaTwo(db.Model):
     country_id = db.Column(db.Integer, db.ForeignKey('country.id'))
     description = db.Column(db.String)
     url = db.Column(db.String, unique=True)
+    map_image_url = db.Column(db.String)
 
     localities = db.relationship('Locality', backref='area_two', lazy=True)
     spots = db.relationship('Spot', backref='area_two', lazy=True)
@@ -367,6 +369,7 @@ class AreaOne(db.Model):
     country_id = db.Column(db.Integer, db.ForeignKey('country.id'))
     description = db.Column(db.String)
     url = db.Column(db.String, unique=True)
+    map_image_url = db.Column(db.String)
 
     area_twos = db.relationship('AreaTwo', backref='area_one', lazy=True)
     localities = db.relationship('Locality', backref='area_one', lazy=True)
@@ -401,6 +404,7 @@ class Country(db.Model):
     short_name = db.Column(db.String, nullable=False)
     description = db.Column(db.String)
     url = db.Column(db.String, unique=True)
+    map_image_url = db.Column(db.String)
 
     area_ones = db.relationship('AreaOne', backref='country', lazy=True)
     area_twos = db.relationship('AreaTwo', backref='country', lazy=True)
