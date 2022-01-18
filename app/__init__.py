@@ -2127,6 +2127,8 @@ def nearby_locations_v2():
       temp_data['locality'] = {
         'url': result.locality.url
       }
+    else:
+      temp_data.pop('locality', None)
     data.append(temp_data)
   return { 'data': data }
 
