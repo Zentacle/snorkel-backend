@@ -147,6 +147,7 @@ class Spot(db.Model):
     last_review_date = db.Column(db.DateTime)
     last_review_viz = db.Column(db.Integer)
     is_verified = db.Column(db.Boolean, nullable=False, default=False)
+    is_deleted = db.Column(db.Boolean, default=False)
     submitter_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     google_place_id = db.Column(db.String)
     latitude = db.Column(db.Float)
@@ -185,6 +186,10 @@ class Spot(db.Model):
             data.pop('_sa_instance_state', None)
         if data.get('shorediving_data'):
             data.pop('shorediving_data', None)
+        if data.get('is_verified'):
+            data.pop('is_verified', None)
+        if data.get('is_deleted'):
+            data.pop('is_deleted', None)
         if data.get('tags'):
             data['access'] = []
             for tag in data.get('tags'):
