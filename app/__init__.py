@@ -2570,6 +2570,34 @@ def get_typeahead():
       results.append(result)
   return { 'data': results[:10] }
 
+@app.route("/spots/merge", methods=["GET"])
+def merge_spot():
+  orig_id = request.args.get('orig_id')
+  dupe_id = request.args.get('dupe_id')
+  orig = Spot.query.filter_by(id=orig_id).first()
+  dupe = Spot.query.filter_by(id=dupe_id).first()
+  wd_data = WannaDiveData.query.filter_by(spot_id=dupe_id).first()
+  if wd_data:
+    wd_data.spot_id = orig.id
+  if not orig.latitude or not orig.longitude:
+    orig.latitude = dupe.latitude
+    orig.longitude = dupe.longitude
+  if not orig.difficulty:
+    orig.difficulty = dupe.difficulty
+  if not orig.max_depth:
+    orig.max_depth = dupe.max_depth
+  if not orig.rating:
+    orig.rating = dupe.rating
+  if not orig.last_review_viz:
+    orig.last_review_viz = dupe.last_review_viz
+  for tag in dupe.tags:
+    if tag not in orig.tags:
+      orig.tags.append(tag)
+  dupe.is_deleted = True
+  db.session.commit()
+  orig.id
+  return { 'data': orig.get_dict() }
+
 with app.test_request_context():
     spec.path(view=user_signup)
     spec.path(view=user_google_signup)
