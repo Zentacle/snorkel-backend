@@ -2570,12 +2570,12 @@ def get_typeahead():
       results.append(result)
   return { 'data': results[:10] }
 
-@app.route("/spots/merge", methods=["GET"])
+@app.route("/spots/merge", methods=["POST"])
 def merge_spot():
-  orig_id = request.args.get('orig_id')
-  dupe_id = request.args.get('dupe_id')
-  orig = Spot.query.filter_by(id=orig_id).first()
-  dupe = Spot.query.filter_by(id=dupe_id).first()
+  orig_id = request.json.get('orig_id')
+  dupe_id = request.json.get('dupe_id')
+  orig = Spot.query.filter_by(id=orig_id).first_or_404()
+  dupe = Spot.query.filter_by(id=dupe_id).first_or_404()
   wd_data = WannaDiveData.query.filter_by(spot_id=dupe_id).first()
   if wd_data:
     wd_data.spot_id = orig.id
