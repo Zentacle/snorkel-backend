@@ -667,6 +667,7 @@ def get_spots():
     query = query.filter(Spot.is_verified.isnot(True))
   else:
     query = query.filter(Spot.is_verified.isnot(False))
+    query = query.filter(Spot.is_deleted.isnot(True))
   locality_name = request.args.get('locality')
   area_two_name = request.args.get('area_two')
   area_one_name = request.args.get('area_one')
@@ -798,7 +799,8 @@ def search_spots():
       Spot.location_city.ilike('%'+ search_term + '%'),
       Spot.description.ilike('%'+ search_term + '%')
     ),
-    Spot.is_verified.isnot(False))
+    Spot.is_verified.isnot(False),
+    Spot.is_deleted.isnot(True))
   ).all()
   output = []
   for spot in spots:
@@ -1580,6 +1582,7 @@ def get_recs():
   spots = Spot.query \
     .filter(Spot.id.not_in(spots_been_to)) \
     .filter(Spot.is_verified.isnot(False)) \
+    .filter(Spot.is_deleted.isnot(True)) \
     .order_by(Spot.num_reviews.desc().nullslast(), Spot.rating.desc()) \
     .limit(25) \
     .all()
@@ -2106,6 +2109,7 @@ def nearby_locations_v2():
   try:
     query = Spot.query.filter(and_(
       Spot.is_verified == True,
+      Spot.is_deleted.is_not(True),
       Spot.id != spot.id,
     )).options(joinedload('locality')).order_by(Spot.distance(startlat, startlng)).limit(10)
     results = query.all()
@@ -2113,6 +2117,7 @@ def nearby_locations_v2():
     if "no such function: sqrt" in str(e).lower():
       query = Spot.query.filter(and_(
         Spot.is_verified == True,
+        Spot.is_deleted.is_not(True),
         Spot.id != spot.id,
       )).options(joinedload('locality')).order_by(Spot.sqlite3_distance(startlat, startlng)).limit(10)
       results = query.all()
