@@ -1102,6 +1102,7 @@ def add_spot():
         'description': description,
         'location': location_city,
         'url': 'https://www.zentacle.com'+spot.get_url(),
+        'approve_url': 'https://www.zentacle.com/api/spots/approve?id='+spot.id,
     }
     if not os.environ.get('FLASK_ENV') == 'development':
       try:
