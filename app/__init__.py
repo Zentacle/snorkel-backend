@@ -478,7 +478,7 @@ def get_me():
     """ Fetch Current User
     ---
     get:
-        summary: fetch current user
+        summary: fetch current user (without reviews)
         description: fetch current user. Store auth token in header as Authorization: `Bearer ${token}`
         responses:
             200:
@@ -1814,7 +1814,7 @@ def get_user():
     ---
     get:
         summary: Get User
-        description: Get User
+        description: Get User (and their reviews)
         parameters:
             - name: username
               in: body
