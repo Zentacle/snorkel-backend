@@ -43,7 +43,7 @@ class BeachSchema(Schema):
     entry_map = fields.Str()
     hero_img = fields.Str()
     location_google = fields.Str()
-    access = fields.Nested(TagSchema())
+    access = fields.List(fields.Nested(TagSchema()))
 
 class ReviewSchema(Schema):
     text = fields.Str()
