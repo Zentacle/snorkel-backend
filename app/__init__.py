@@ -1128,12 +1128,12 @@ def add_spot():
           print(e.body)
   return { 'data': spot.get_dict() }, 200
 
-@app.route("/spots/approve", methods=["POST"])
+@app.route("/spots/approve", methods=["GET"])
 @jwt_required()
 def approve_spot():
   if not get_current_user().admin:
     return { 'msg': "Only admins can do that" }, 401
-  beach_id = request.json.get('id')
+  beach_id = request.args.get('id')
   spot = Spot.query.filter_by(id=beach_id).first_or_404()
   if spot.is_verified:
     spot_data = spot.get_dict()
