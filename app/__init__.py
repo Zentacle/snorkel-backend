@@ -2,6 +2,7 @@ from __future__ import print_function
 from flask import Flask, request, jsonify
 from flask.helpers import make_response
 from flask_cors import CORS
+import io
 import os
 import os.path
 import logging
@@ -1738,6 +1739,19 @@ def create_presigned_url_local(filename, expiration=3600):
     # The response contains the presigned URL
     return {'data': response}
 
+@app.route("/upload", methods=["POST"])
+@jwt_required()
+def upload():
+  import uuid
+  # check if the post request has the file part
+  if 'file' not in request.files:
+      return 422, 'No file included'
+  upload_file = request.files['file']
+  s3_key = str(uuid.uuid4())
+  user = get_current_user()
+  contents = upload_file.file.read()
+  result = boto3.client("s3").upload_fileobj(io.BytesIO(contents), os.environ.get('S3_BUCKET_NAME'), s3_key)
+  return 
 
 @app.route("/s3-upload")
 def create_presigned_post():
@@ -1957,7 +1971,7 @@ def search_location():
   return r.json()
 
 @app.route("/spots/nearby/v1")
-def nearby_locations():
+def nearby_locations_v1():
   """ Nearby Locations
   ---
   post:
@@ -2049,7 +2063,7 @@ def nearby_locations():
     return { 'msg': str(e) }, 500
 
 @app.route("/spots/nearby")
-def nearby_locations_v2():
+def nearby_locations():
   """ Nearby Locations
   ---
   post:
@@ -2618,6 +2632,7 @@ with app.test_request_context():
     spec.path(view=get_typeahead)
     spec.path(view=patch_review)
     spec.path(view=patch_spot)
+    spec.path(view=search_spots)
     # ...
 
 @app.route("/spec")
