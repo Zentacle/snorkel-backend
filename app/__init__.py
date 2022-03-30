@@ -782,10 +782,40 @@ def search_spots():
       description: search
       parameters:
           - name: search_term
-            in: body
+            in: query
             description: search term
             type: string
             required: true
+          - name: activity
+            in: query
+            description: activity filter. either "scuba", "freediving", or "snorkel"
+            type: string
+            required: false
+          - name: difficulty
+            in: query
+            description: difficulty filter. either "beginner", "intermediate", or "advanced"
+            type: string
+            required: false
+          - name: entry
+            in: query
+            description: entry filter. either "shore" or "boat"
+            type: string
+            required: false
+          - name: max_depth
+            in: query
+            description: max_depth filter
+            type: int
+            required: false
+          - name: max_depth_type
+            in: query
+            description: max_depth filter units. either "m" or "ft"
+            type: string
+            required: false
+          - name: sort
+            in: query
+            description: sort either "rating" or "popularity"
+            type: string
+            required: false
       responses:
           200:
               description: Returns singular beach object or list of beach objects

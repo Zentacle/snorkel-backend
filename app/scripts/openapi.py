@@ -25,8 +25,25 @@ class UserSchema(Schema):
     last_name = fields.Str()
     profile_pic = fields.Str()
 
+class TagSchema(Schema):
+    id = fields.Int()
+    short_name = fields.Str()
+    text = fields.Str()
+    type = fields.Str()
+
 class BeachSchema(Schema):
-    display_name = fields.Str()
+    name = fields.Str()
+    id = fields.Int()
+    description = fields.Str()
+    location_city = fields.Str()
+    num_reviews = fields.Int()
+    rating = fields.Float()
+    url = fields.Str()
+    difficulty = fields.Str()
+    entry_map = fields.Str()
+    hero_img = fields.Str()
+    location_google = fields.Str()
+    access = fields.Nested(TagSchema())
 
 class ReviewSchema(Schema):
     text = fields.Str()
