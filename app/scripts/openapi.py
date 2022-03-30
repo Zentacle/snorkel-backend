@@ -17,14 +17,6 @@ spec = APISpec(
 )
 
 # Reference your schemas definitions
-class UserSchema(Schema):
-    display_name = fields.Str()
-    username = fields.Str()
-    email = fields.Str()
-    first_name = fields.Str()
-    last_name = fields.Str()
-    profile_pic = fields.Str()
-
 class TagSchema(Schema):
     id = fields.Int()
     short_name = fields.Str()
@@ -47,6 +39,20 @@ class BeachSchema(Schema):
 
 class ReviewSchema(Schema):
     text = fields.Str()
+    spot = fields.Nested(BeachSchema())
+    date_dived = fields.Str()
+    id = fields.Int()
+    rating = fields.Float()
+    activity_type = fields.Str()
+    visibility = fields.Int()
+class UserSchema(Schema):
+    display_name = fields.Str()
+    username = fields.Str()
+    email = fields.Str()
+    first_name = fields.Str()
+    last_name = fields.Str()
+    profile_pic = fields.Str()
+    reviews = fields.List(fields.Nested(ReviewSchema()))
 
 class TypeAheadSchema(Schema):
     text = fields.Str()
