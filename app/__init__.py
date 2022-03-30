@@ -781,7 +781,7 @@ def search_spots():
       summary: Search
       description: search
       parameters:
-          - name: search_term
+          - name: query
             in: query
             description: search term
             type: string
@@ -823,7 +823,7 @@ def search_spots():
                 application/json:
                   schema: BeachSchema
   """
-  search_term = request.args.get('search_term')
+  search_term = request.args.get('query')
   spots = Spot.query.filter(
     and_(or_(
       Spot.name.ilike('%' + search_term + '%'),
