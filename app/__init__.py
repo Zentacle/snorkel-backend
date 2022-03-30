@@ -1495,13 +1495,73 @@ def patch_review():
     ---
     patch:
         summary: patch review
-        description: patch review. also include the params of the review that you want to change in the body
+        description: patch review. include the id and any specific params of the review that you want to change in the body
         parameters:
           - name: id
             in: body
             description: beach id
             type: int
             required: true
+          - name: datetime
+            in: body
+            description: date and time in UTC format
+            type: string
+            required: false
+          - name: dive_length
+            in: body
+            description: amount of time in water
+            type: int
+            required: false
+          - name: max_depth
+            in: body
+            description: max depth
+            type: int
+            required: false
+          - name: water_temp
+            in: body
+            description: water temp
+            type: string
+            required: false
+          - name: air_temp
+            in: body
+            description: air temp
+            type: string
+            required: false
+          - name: visibility
+            in: body
+            description: visibility (1-5)
+            type: int
+            required: false
+          - name: activity_type
+            in: body
+            description: activity_type (scuba, snorkel, freediving)
+            type: string
+            required: false
+          - name: entry
+            in: body
+            description: entry (shore, boat)
+            type: string
+            required: false
+          - name: weight
+            in: body
+            description: weight
+            type: int
+            required: false
+          - name: start_air
+            in: body
+            description: start air
+            type: int
+            required: false
+          - name: end_air
+            in: body
+            description: end air
+            type: int
+            required: false
+          - name: air_type
+            in: body
+            description: air type (normal, ean32, ean36)
+            type: string
+            required: false
         responses:
             200:
                 description: Returns Beach object
