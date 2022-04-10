@@ -2712,6 +2712,10 @@ def merge_spot():
 def geocode():
     beach_id = request.args.get('id')
     spot = Spot.query.filter_by(id=beach_id).first_or_404()
+    if not spot.latitude or not spot.longitude:
+      return { 'msg': 'no lat/lng' }, 422
+    if spot.country:
+      return { 'msg': 'already has address components' }, 422
     r = requests.get('https://maps.googleapis.com/maps/api/geocode/json', params = {
       'latlng': f'{spot.latitude},{spot.longitude}',
       'key': os.environ.get('GOOGLE_API_KEY')
