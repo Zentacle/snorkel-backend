@@ -2708,6 +2708,31 @@ def merge_spot():
   orig.id
   return { 'data': orig.get_dict() }
 
+@app.route("/spot/geocode")
+def geocode():
+    beach_id = request.args.get('id')
+    spot = Spot.query.filter_by(id=beach_id).first_or_404()
+    r = requests.get('https://maps.googleapis.com/maps/api/geocode/json', params = {
+      'latlng': f'{spot.latitude},{spot.longitude}',
+      'key': os.environ.get('GOOGLE_API_KEY')
+    })
+    response = r.json()
+    if response.get('status') == 'OK':
+          address_components = response.get('results')[0].get('address_components')
+          locality, area_2, area_1, country = get_localities(address_components)
+          if not spot.locality:
+            spot.locality = locality
+          if not spot.area_one:
+            spot.area_one = area_1
+          if not spot.area_two:
+            spot.area_two = area_2
+          if not spot.country:
+            spot.country = country
+          db.session.add(spot)
+          db.session.commit()
+          spot.id
+    return spot.get_dict()
+
 with app.test_request_context():
     spec.path(view=user_signup)
     spec.path(view=user_google_signup)
