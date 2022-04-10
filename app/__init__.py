@@ -8,8 +8,8 @@ import os.path
 import logging
 
 from app.models import *
-from sqlalchemy.orm import joinedload, lazyload
-from sqlalchemy import or_, and_, not_, func
+from sqlalchemy.orm import joinedload
+from sqlalchemy import or_, and_, not_, func, sql
 import bcrypt
 from flask_jwt_extended import *
 from datetime import timezone, timedelta
@@ -674,10 +674,15 @@ def get_spots():
   area_one_name = request.args.get('area_one')
   country_name = request.args.get('country')
   if locality_name:
+    area_two_spot_query = Spot.area_two.has(short_name=area_two_name)
+    area_two_area_query = Locality.area_two.has(short_name=area_two_name)
+    if area_two_name == '_':
+      area_two_spot_query = sql.true()
+      area_two_area_query = sql.true()
     query = query.filter(
       and_(
         Spot.locality.has(short_name=locality_name),
-        Spot.area_two.has(short_name=area_two_name),
+        area_two_spot_query,
         Spot.area_one.has(short_name=area_one_name),
         Spot.country.has(short_name=country_name),
       )
@@ -688,7 +693,7 @@ def get_spots():
       .options(joinedload('country')) \
       .filter(
         Locality.short_name==locality_name,
-        Locality.area_two.has(short_name=area_two_name),
+        area_two_area_query,
         Locality.area_one.has(short_name=area_one_name),
         Locality.country.has(short_name=country_name),
       ) \

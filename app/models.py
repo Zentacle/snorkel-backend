@@ -315,9 +315,9 @@ class Locality(db.Model):
             data.pop('_sa_instance_state', None)
         if not self.short_name:
             data['short_name'] = self.get_short_name()
-        if country and area_one and area_two:
+        if country and area_one:
             data['url'] = self.get_url(country, area_one, area_two)
-        elif self.country and self.area_one and self.area_two:
+        elif self.country and self.area_one:
             data['url'] = self.get_url(self.country, self.area_one, self.area_two)
         return data
 
@@ -325,7 +325,7 @@ class Locality(db.Model):
         return self.short_name.lower() if self.short_name else demicrosoft(self.name).lower()
 
     def get_url(self, country, area_one, area_two):
-        return '/loc/' + country.short_name + '/' + area_one.short_name + '/' + area_two.short_name + '/' + self.get_short_name()
+        return '/loc/' + country.short_name + '/' + area_one.short_name + '/' + area_two.short_name if area_two else '_' + '/' + self.get_short_name()
 
 #County - Doesn't always exist
 class AreaTwo(db.Model):
