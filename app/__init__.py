@@ -2715,6 +2715,7 @@ def merge_spot():
 
 @app.route("/spot/geocode")
 def geocode():
+    return 'hello world', 200
     beach_id = request.args.get('id')
     spot = Spot.query.filter_by(id=beach_id).first_or_404()
     if not spot.latitude or not spot.longitude:
