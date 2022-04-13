@@ -1261,6 +1261,11 @@ def add_review():
             description: beach_id
             type: integer
             required: true
+          - name: title
+            in: body
+            description: text
+            type: string
+            required: false
           - name: rating
             in: body
             description: rating
@@ -1518,6 +1523,11 @@ def patch_review():
             description: amount of time in water
             type: int
             required: false
+          - name: difficulty
+            in: body
+            description: difficulty
+            type: string
+            required: false
           - name: max_depth
             in: body
             description: max depth
@@ -1526,12 +1536,12 @@ def patch_review():
           - name: water_temp
             in: body
             description: water temp
-            type: string
+            type: number
             required: false
           - name: air_temp
             in: body
             description: air temp
-            type: string
+            type: number
             required: false
           - name: visibility
             in: body
