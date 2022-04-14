@@ -57,6 +57,6 @@ class UserSchema(Schema):
 class TypeAheadSchema(Schema):
     text = fields.Str()
     id = fields.Int()
-    type = fields.Str()
+    type = fields.Str(description="Either 'location' (if it's a country, state, etc) or 'site' (if it's a specific dive site)")
     url = fields.Str()
     subtext = fields.Str()

@@ -2642,10 +2642,15 @@ def get_typeahead():
       description: Typeahead locations for search bar
       parameters:
           - name: query
-            in: body
+            in: query
             description: query
             type: string
             required: true
+          - name: beach_only
+            in: query
+            description: should only return beach spots. ie ?beach_only=True
+            type: string
+            required: false
       responses:
           200:
               description: Returns list of typeahead objects
@@ -2654,11 +2659,25 @@ def get_typeahead():
                   schema: TypeAheadSchema
   """
   query = request.args.get('query')
-  countries = Country.query.filter(Country.name.ilike('%'+query+'%')).all()
-  area_ones = AreaOne.query.filter(AreaOne.name.ilike('%'+query+'%')).all()
-  area_twos = AreaTwo.query.filter(AreaTwo.name.ilike('%'+query+'%')).all()
-  localities = Locality.query.filter(Locality.name.ilike('%'+query+'%')).all()
+  beach_only = request.args.get('beach_only')
   results = []
+  spots = Spot.query.filter(Spot.name.ilike('%'+query+'%')).limit(25).all()
+  for loc in spots:
+    result = {
+      'id': loc.id,
+      'text': loc.name,
+      'url': loc.get_url(),
+      'type': 'site',
+      'subtext': loc.name,
+    }
+    results.append(result)
+  if beach_only:
+    return { 'data': results }
+
+  countries = Country.query.filter(Country.name.ilike('%'+query+'%')).limit(10).all()
+  area_ones = AreaOne.query.filter(AreaOne.name.ilike('%'+query+'%')).limit(10).all()
+  area_twos = AreaTwo.query.filter(AreaTwo.name.ilike('%'+query+'%')).limit(10).all()
+  localities = Locality.query.filter(Locality.name.ilike('%'+query+'%')).limit(10).all()
   for loc in countries:
     result = {
       'id': loc.id,
@@ -2697,7 +2716,7 @@ def get_typeahead():
         'subtext': loc.country.name,
       }
       results.append(result)
-  return { 'data': results[:10] }
+  return { 'data': results }
 
 @app.route("/spots/merge", methods=["POST"])
 def merge_spot():
