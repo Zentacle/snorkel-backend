@@ -2665,6 +2665,7 @@ def get_typeahead():
       'text': loc.name,
       'url': loc.get_url(),
       'type': 'location',
+      'subtext': loc.name,
     }
     results.append(result)
   for loc in area_ones:
@@ -2673,6 +2674,7 @@ def get_typeahead():
       'text': loc.name,
       'url': loc.get_url(loc.country),
       'type': 'location',
+      'subtext': loc.country.name,
     }
     results.append(result)
   for loc in area_twos:
@@ -2682,6 +2684,7 @@ def get_typeahead():
         'text': loc.name,
         'url': loc.get_url(loc.country, loc.area_one),
         'type': 'location',
+        'subtext': loc.country.name,
       }
       results.append(result)
   for loc in localities:
@@ -2691,6 +2694,7 @@ def get_typeahead():
         'text': loc.name,
         'url': loc.get_url(loc.country, loc.area_one, loc.area_two),
         'type': 'location',
+        'subtext': loc.country.name,
       }
       results.append(result)
   return { 'data': results[:10] }

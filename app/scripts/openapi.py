@@ -59,3 +59,4 @@ class TypeAheadSchema(Schema):
     id = fields.Int()
     type = fields.Str()
     url = fields.Str()
+    subtext = fields.Str()
