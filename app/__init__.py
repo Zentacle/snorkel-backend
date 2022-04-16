@@ -1316,6 +1316,7 @@ def add_review():
   sd_id = request.json.get('sd_id')
   visibility = request.json.get('visibility') if request.json.get('visibility') != '' else None
   text = request.json.get('text')
+  title = request.json.get('title')
   rating = request.json.get('rating')
   activity_type = request.json.get('activity_type')
   images = request.json.get('images') or []
@@ -1377,6 +1378,7 @@ def add_review():
     rating=rating,
     activity_type=activity_type,
     date_dived=date_dived,
+    title=title,
   )
 
   for image in images:

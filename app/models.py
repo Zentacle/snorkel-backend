@@ -268,6 +268,7 @@ class Review(db.Model):
     date_dived = db.Column(db.DateTime, nullable=True,
         default=datetime.utcnow)
     activity_type = db.Column(db.String)
+    title = db.Column(db.String)
 
     images = db.relationship("Image", backref=db.backref('review', lazy=True))
     shorediving_data = db.relationship("ShoreDivingReview", back_populates="review", uselist=False)
