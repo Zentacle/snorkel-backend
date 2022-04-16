@@ -829,6 +829,8 @@ def search_spots():
                   schema: BeachSchema
   """
   search_term = request.args.get('query')
+  if not search_term:
+    search_term = request.args.get('search_term')
   difficulty = request.args.get('difficulty')
   activity = request.args.get('activity')
   entry = request.args.get('entry')
