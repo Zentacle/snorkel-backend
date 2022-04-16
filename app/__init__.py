@@ -829,15 +829,31 @@ def search_spots():
                   schema: BeachSchema
   """
   search_term = request.args.get('query')
+  difficulty = request.args.get('difficulty')
+  activity = request.args.get('activity')
+  entry = request.args.get('entry')
+  sort = request.args.get('sort')
+  difficulty_query = sql.true()
+  entry_query = sql.true()
+  activity_query = sql.true()
+  sort_query = sql.true()
+  if difficulty:
+    difficulty_query = Spot.difficulty.__eq__(difficulty)
+  # if entry:
+    # entry_query = Spot.difficulty.is_(difficulty)
+  # if activity:
+    # activity_query = Spot.
   spots = Spot.query.filter(
-    and_(or_(
-      Spot.name.ilike('%' + search_term + '%'),
-      Spot.location_city.ilike('%'+ search_term + '%'),
-      Spot.description.ilike('%'+ search_term + '%')
-    ),
-    Spot.is_verified.isnot(False),
-    Spot.is_deleted.isnot(True))
-  ).all()
+    and_(
+      or_(
+        Spot.name.ilike('%' + search_term + '%'),
+        Spot.location_city.ilike('%'+ search_term + '%'),
+        Spot.description.ilike('%'+ search_term + '%')
+      ),
+      Spot.is_verified.isnot(False),
+      Spot.is_deleted.isnot(True)),
+      difficulty_query,
+    ).all()
   output = []
   for spot in spots:
     spot_data = spot.get_dict()
@@ -1402,7 +1418,7 @@ def add_review():
     except Exception as e:
         print(e.body)
   review.id
-  return { 'data': review.get_dict() }, 200
+  return { 'review': review.get_dict(), 'spot': spot.get_dict() }, 200
 
 @app.route("/review/get")
 def get_reviews():
