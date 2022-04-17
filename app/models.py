@@ -285,6 +285,8 @@ class Review(db.Model):
         data = self.__dict__.copy()
         if data.get('_sa_instance_state'):
             data.pop('_sa_instance_state', None)
+        if data.get('spot'):
+            data.pop('spot', None)
         return data
 
 class Image(db.Model):

@@ -1425,12 +1425,37 @@ def add_review():
   return { 'review': review.get_dict(), 'spot': spot.get_dict() }, 200
 
 @app.route("/review/get")
+def get_review():
+  """ Get Reviews
+  ---
+  get:
+      summary: Get Single Review
+      description: Get Single Review
+      parameters:
+          - name: review_id
+            in: body
+            description: review_id
+            type: integer
+            required: true
+      responses:
+          200:
+              description: Returns review object
+              content:
+                application/json:
+                  schema: ReviewSchema
+  """
+  review_id = request.args.get('review_id')
+  review = Review.query.filter_by(id=review_id).first()
+  spot = review.spot
+  return { 'review': review.get_dict(), 'spot': spot.get_dict() }
+
+@app.route("/reviews/get")
 def get_reviews():
   """ Get Reviews
   ---
   get:
-      summary: Get Review
-      description: Get Review
+      summary: Get Reviews for spot
+      description: Get Reviews for spot
       parameters:
           - name: beach_id
             in: body
