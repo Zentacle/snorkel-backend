@@ -1919,12 +1919,16 @@ def get_user():
               required: true
         responses:
             200:
-                description: Returns review object
+                description: Returns user object
                 content:
                   application/json:
                     schema: UserSchema
     """
     username = request.args.get('username')
+    if not username:
+      return {
+        'msg': 'Include a username in the request. If you are trying to get the logged in user, use /user/me'
+      }, 422
     user = User.query \
       .options(joinedload('reviews')) \
       .filter(func.lower(User.username)==username.lower()).first()
