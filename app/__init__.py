@@ -1533,14 +1533,14 @@ def patch_review():
             description: beach id
             type: int
             required: true
-          - name: datetime
+          - name: date_dived
             in: body
-            description: date and time in UTC format
+            description: date and time of dive in UTC format
             type: string
             required: false
           - name: dive_length
             in: body
-            description: amount of time in water
+            description: amount of time in water (in minutes)
             type: int
             required: false
           - name: difficulty
