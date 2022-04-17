@@ -1617,6 +1617,8 @@ def patch_review():
   beach_id = request.json.get('id')
   spot = Review.query.filter_by(id=beach_id).first_or_404()
   updates = request.json
+  if "date_dived" in updates:
+    updates['date_dived'] = dateutil.parser.isoparse(request.json.get('date_dived'))
   updates.pop('id', None)
   try:
     for key in updates.keys():
