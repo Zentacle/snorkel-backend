@@ -2843,6 +2843,7 @@ with app.test_request_context():
     spec.path(view=patch_review)
     spec.path(view=patch_spot)
     spec.path(view=search_spots)
+    spec.path(view=get_review)
     # ...
 
 @app.route("/spec")
