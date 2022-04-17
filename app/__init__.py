@@ -1617,6 +1617,7 @@ def patch_review():
   beach_id = request.json.get('id')
   spot = Review.query.filter_by(id=beach_id).first_or_404()
   updates = request.json
+  updates['date_dived'] = datetime.strptime(updates['date_dived'], "%a, %d %b %Y %H:%M:%S %Z")
   updates.pop('id', None)
   try:
     for key in updates.keys():
