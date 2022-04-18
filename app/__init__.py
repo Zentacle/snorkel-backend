@@ -499,6 +499,7 @@ def get_me():
     user = get_current_user()
     resp = make_response(user.get_dict())
     auth_token = create_access_token(identity=user.id)
+    resp['access_token'] = auth_token
     set_access_cookies(resp, auth_token)
     return resp
 
