@@ -497,9 +497,10 @@ def get_me():
                 description: Not logged in.
     """
     user = get_current_user()
-    resp = make_response(user.get_dict())
     auth_token = create_access_token(identity=user.id)
-    resp['access_token'] = auth_token
+    resp_data = user.get_dict()
+    resp_data['access_token'] = auth_token
+    resp = make_response(resp_data)
     set_access_cookies(resp, auth_token)
     return resp
 
