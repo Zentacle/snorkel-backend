@@ -1446,9 +1446,49 @@ def get_review():
                   schema: ReviewSchema
   """
   review_id = request.args.get('review_id')
-  review = Review.query.filter_by(id=review_id).first()
-  spot = review.spot
-  return { 'review': review.get_dict(), 'spot': spot.get_dict() }
+  if review_id:
+    review = Review.query.filter_by(id=review_id).first()
+    spot = review.spot
+    return { 'review': review.get_dict(), 'spot': spot.get_dict() }
+  else:
+    sd_id = request.args.get('sd_review_id')
+    if sd_id:
+      review = Review.query.filter(Review.shorediving_data.has(shorediving_id=sd_id)).first()
+      if review:
+        data = review.get_dict()
+        data['user'] = review.user.get_dict()
+        return { 'data': [data] }
+    beach_id = request.args.get('beach_id')
+    limit = request.args.get('limit')
+    offset = int(request.args.get('offset')) if request.args.get('offset') else 0
+
+    query = Review.query.options(joinedload('user')) \
+      .options(joinedload('shorediving_data')) \
+      .options(joinedload('images')) \
+      .order_by(Review.date_posted.desc()) \
+      .filter_by(beach_id=beach_id)
+    if limit:
+      query = query.limit(limit)
+    if offset:
+      query = query.offset(offset)
+    reviews = query.all()
+    output = []
+    for review in reviews:
+      data = review.get_dict()
+      data['user'] = review.user.get_dict()
+      try:
+        data['shorediving_data'] = review.shorediving_data.get_dict()
+      except Exception:
+        pass
+      image_data = []
+      signedUrls = []
+      for image in review.images:
+        image_data.append(image.get_dict())
+        signedUrls.append(create_unsigned_url(image.url, 'reviews', os.environ.get('S3_BUCKET_NAME')))
+      data['images'] = image_data
+      data['signedUrls'] = signedUrls
+      output.append(data)
+    return { 'data': output, 'next_offset': offset + len(output) }
 
 @app.route("/reviews/get")
 def get_reviews():
