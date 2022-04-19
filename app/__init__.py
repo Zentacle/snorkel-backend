@@ -1760,6 +1760,17 @@ def get_recs():
   get:
       summary: Recommended Sites
       description: Recommended sites for a specific user based on where they have already visited
+      parameters:
+          - name: lat
+            in: query
+            description: latitude as a decimal
+            type: number
+            required: false
+          - name: lng
+            in: query
+            description: longitude as a decimal
+            type: number
+            required: false
       responses:
           200:
               description: Returns array of beaches/dive sites
