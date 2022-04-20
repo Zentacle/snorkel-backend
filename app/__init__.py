@@ -2021,6 +2021,8 @@ def get_user():
       review.spot
       review_data = review.get_dict()
       review_data['spot'] = review.spot.get_dict()
+      if not review_data.get('title'):
+        review_data['title'] = review.spot.name
       reviews_data.append(review_data)
     user_data['reviews'] = reviews_data
     return { 'data': user_data }
