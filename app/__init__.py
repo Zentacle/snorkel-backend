@@ -1687,6 +1687,7 @@ def patch_review():
   if "date_dived" in updates:
     updates['date_dived'] = dateutil.parser.isoparse(request.json.get('date_dived'))
   updates.pop('id', None)
+  updates.pop('date_posted', None)
   try:
     for key in updates.keys():
       setattr(spot, key, updates.get(key))
