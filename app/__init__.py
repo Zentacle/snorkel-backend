@@ -6,6 +6,9 @@ import io
 import os
 import os.path
 import logging
+import jwt
+from jwt.algorithms import RSAAlgorithm
+import json
 
 from app.models import *
 from sqlalchemy.orm import joinedload
@@ -253,6 +256,50 @@ def user_signup():
     unencrypted_password=unencrypted_password,
   )
   return resp
+
+@app.route("/user/apple_register", methods=["POST"])
+def user_apple_signup():
+  #https://developer.apple.com/documentation/sign_in_with_apple/sign_in_with_apple_js/configuring_your_webpage_for_sign_in_with_apple
+  code = request.json.get('code')
+  id_token = request.json.get('id_token')
+  user = request.json.get('user')
+  state = request.json.get('state')
+  r = requests.post(
+    'https://appleid.apple.com/auth/token',
+    body={
+      'redirect_uri': '',
+      'code': code,
+    }
+  ).json()
+  first_name = user.get('name').get('firstName')
+  last_name = user.get('name').get('lastName')
+  display_name = first_name + last_name
+  email = user.get('email')
+  resp = create_account(
+      db,
+      first_name,
+      last_name,
+      display_name,
+      email,
+    )
+
+  #https://gist.github.com/davidhariri/b053787aabc9a8a9cc0893244e1549fe
+  key_payload = requests.get('https://appleid.apple.com/auth/keys').json()
+  public_key = RSAAlgorithm.from_jwk(json.dumps(key_payload["keys"][0]))
+  try:
+      token = jwt.decode(id_token, public_key, audience=os.environ.get("APPLE_APP_ID"), algorithm="RS256")
+  except jwt.exceptions.ExpiredSignatureError as e:
+      raise Exception("That token has expired")
+  except jwt.exceptions.InvalidAudienceError as e:
+      raise Exception("That token's audience did not match")
+  except Exception as e:
+      print(e)
+      raise Exception("An unexpected error occoured")
+
+  email = token.get("email", None)
+
+  return token
+
 
 @app.route("/user/google_register", methods=["POST"])
 def user_google_signup():
