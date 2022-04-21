@@ -275,13 +275,6 @@ def user_apple_signup():
   last_name = user.get('name').get('lastName')
   display_name = first_name + last_name
   email = user.get('email')
-  resp = create_account(
-      db,
-      first_name,
-      last_name,
-      display_name,
-      email,
-    )
 
   #https://gist.github.com/davidhariri/b053787aabc9a8a9cc0893244e1549fe
   key_payload = requests.get('https://appleid.apple.com/auth/keys').json()
@@ -296,9 +289,17 @@ def user_apple_signup():
       print(e)
       raise Exception("An unexpected error occoured")
 
-  email = token.get("email", None)
+  user = User.query.filter_by(email=email).first()
+  if user:
+    return login(user)
 
-  return token
+  return create_account(
+      db,
+      first_name,
+      last_name,
+      display_name,
+      email,
+    )
 
 
 @app.route("/user/google_register", methods=["POST"])
