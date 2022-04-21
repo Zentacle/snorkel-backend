@@ -2823,7 +2823,12 @@ def get_typeahead():
       'text': loc.name,
       'url': loc.get_url(),
       'type': 'site',
-      'subtext': loc.name,
+      'subtext': loc.location_city,
+      'data': {
+        'latitude': loc.latitude,
+        'longitude': loc.longitude,
+        'location_city': loc.location_city,
+      }
     }
     results.append(result)
   if beach_only:
