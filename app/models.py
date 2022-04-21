@@ -286,6 +286,8 @@ class Review(db.Model):
         data = self.__dict__.copy()
         if data.get('_sa_instance_state'):
             data.pop('_sa_instance_state', None)
+        if not data.get('title') and self.spot.name:
+            data['title'] = self.spot.name
         if data.get('spot'):
             data.pop('spot', None)
         return data
