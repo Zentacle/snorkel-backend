@@ -43,7 +43,7 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["JWT_SECRET_KEY"] = "super-secret"  # Change this!
 app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(hours=1)
 app.config["JWT_REFRESH_TOKEN_EXPIRES"] = timedelta(days=30)
-app.config["JWT_TOKEN_LOCATION"] = ["cookies", "headers"]
+app.config["JWT_TOKEN_LOCATION"] = ["headers", "cookies"]
 app.config["JWT_SESSION_COOKIE"] = False
 if __name__ != '__main__':
   gunicorn_logger = logging.getLogger('gunicorn.error')
