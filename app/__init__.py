@@ -272,7 +272,7 @@ def user_apple_signup():
           200:
               description: Returns User object
               content:
-                application/json:g
+                application/json:
                   schema: UserSchema
           400:
               content:
