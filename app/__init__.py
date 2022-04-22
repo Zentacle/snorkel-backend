@@ -259,6 +259,28 @@ def user_signup():
 
 @app.route("/user/apple_register", methods=["POST"])
 def user_apple_signup():
+  """ Apple Register
+  ---
+  post:
+      summary: Register new user with Apple auth endpoint.
+      description: Register a new user with Apple auth
+      requestBody:
+        content:
+          application/json:
+            schema: AppleRegisterSchema
+      responses:
+          200:
+              description: Returns User object
+              content:
+                application/json:g
+                  schema: UserSchema
+          400:
+              content:
+                application/json:
+                  schema:
+                    msg: string
+              description: User couldn't be created.
+  """
   #https://developer.apple.com/documentation/sign_in_with_apple/sign_in_with_apple_js/configuring_your_webpage_for_sign_in_with_apple
   code = request.json.get('code')
   id_token = request.json.get('id_token')
@@ -2943,6 +2965,7 @@ def geocode():
 
 with app.test_request_context():
     spec.path(view=user_signup)
+    spec.path(view=user_apple_signup)
     spec.path(view=user_google_signup)
     spec.path(view=user_finish_signup)
     spec.path(view=patch_user)

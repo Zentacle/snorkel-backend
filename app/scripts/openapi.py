@@ -60,3 +60,9 @@ class TypeAheadSchema(Schema):
     type = fields.Str(description="Either 'location' (if it's a country, state, etc) or 'site' (if it's a specific dive site)")
     url = fields.Str()
     subtext = fields.Str()
+
+class AppleRegisterSchema(Schema):
+    id_token = fields.Str()
+    code = fields.Str()
+    user = fields.Dict()
+    state = fields.Str()
