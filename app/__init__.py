@@ -264,10 +264,11 @@ def user_apple_signup():
   id_token = request.json.get('id_token')
   user = request.json.get('user')
   state = request.json.get('state')
-  first_name = user.get('name').get('firstName')
-  last_name = user.get('name').get('lastName')
-  display_name = first_name + last_name
-  email = user.get('email')
+  if user:
+    first_name = user.get('name').get('firstName')
+    last_name = user.get('name').get('lastName')
+    display_name = first_name + last_name
+    email = user.get('email')
 
   #https://gist.github.com/davidhariri/b053787aabc9a8a9cc0893244e1549fe
   key_payload = requests.get('https://appleid.apple.com/auth/keys').json()
