@@ -278,9 +278,17 @@ def user_apple_signup():
 
   #https://gist.github.com/davidhariri/b053787aabc9a8a9cc0893244e1549fe
   key_payload = requests.get('https://appleid.apple.com/auth/keys').json()
-  public_key = RSAAlgorithm.from_jwk(json.dumps(key_payload["keys"][0]))
+  token_headers = jwt.get_unverified_header(id_token)
+  jwk = None
+  for key in key_payload["keys"]:
+    if key.get('kid') == token_headers.get('kid'):
+      jwk = key
+  if not jwk:
+    return 'No matching key found', 500
+  public_key = RSAAlgorithm.from_jwk(json.dumps(jwk))
+
   try:
-      token = jwt.decode(id_token, public_key, audience=os.environ.get("APPLE_APP_ID"), algorithm="RS256")
+      token = jwt.decode(id_token, public_key, audience=os.environ.get("APPLE_APP_ID"), algorithms=["RS256"])
   except jwt.exceptions.ExpiredSignatureError as e:
       raise Exception("That token has expired")
   except jwt.exceptions.InvalidAudienceError as e:
@@ -288,6 +296,8 @@ def user_apple_signup():
   except Exception as e:
       print(e)
       raise Exception("An unexpected error occoured")
+  if not email:
+    email = token.get('email')
 
   user = User.query.filter_by(email=email).first()
   if user:
