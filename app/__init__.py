@@ -57,7 +57,7 @@ app.config["JWT_COOKIE_SECURE"] = (True
 )
 
 cors = CORS(app)
-jwt = JWTManager(app)
+jwtManager = JWTManager(app)
 db.init_app(app)
 migrate = Migrate(compare_type=True)
 migrate.init_app(app, db)
@@ -66,7 +66,7 @@ migrate.init_app(app, db)
 # a protected route is accessed. This should return any python object on a
 # successful lookup, or None if the lookup failed for any reason (for example
 # if the user has been deleted from the database).
-@jwt.user_lookup_loader
+@jwtManager.user_lookup_loader
 def user_lookup_callback(_jwt_header, jwt_data):
     user_id = jwt_data["sub"]
     return User.query.filter_by(id=user_id).one_or_none()
@@ -264,6 +264,7 @@ def user_apple_signup():
   id_token = request.json.get('id_token')
   user = request.json.get('user')
   state = request.json.get('state')
+  email = None
   if user:
     first_name = user.get('name').get('firstName')
     last_name = user.get('name').get('lastName')
