@@ -264,13 +264,6 @@ def user_apple_signup():
   id_token = request.json.get('id_token')
   user = request.json.get('user')
   state = request.json.get('state')
-  r = requests.post(
-    'https://appleid.apple.com/auth/token',
-    body={
-      'redirect_uri': '',
-      'code': code,
-    }
-  ).json()
   first_name = user.get('name').get('firstName')
   last_name = user.get('name').get('lastName')
   display_name = first_name + last_name
