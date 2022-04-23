@@ -2958,6 +2958,25 @@ def geocode():
 @app.route("/review/upload", methods=["POST"])
 @jwt_required()
 def upload_file():
+    """ Upload File
+    ---
+    get:
+        summary: Upload a file so that it can be attached to a review
+        description: Upload a file so that it can be attached to a review (one at a time)
+        requestBody:
+            - name: file
+              content:
+                image/png:
+                  schema:
+                    type: string
+                    format: binary
+        responses:
+            200:
+                description: Returns the url of the s3 upload
+                content:
+                  application/json:
+                    schema: ImageUploadResponse
+    """
     # check if the post request has the file part
     if 'file' not in request.files:
         return { 'msg': 'No file included in request' }, 422

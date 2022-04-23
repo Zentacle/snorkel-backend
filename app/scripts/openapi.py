@@ -66,3 +66,6 @@ class AppleRegisterSchema(Schema):
     code = fields.Str()
     user = fields.Dict()
     state = fields.Str()
+
+class ImageUploadResponse(Schema):
+    data: fields.Str()
