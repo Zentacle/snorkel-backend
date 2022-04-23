@@ -10,6 +10,7 @@ import logging
 import jwt
 from jwt.algorithms import RSAAlgorithm
 import json
+from werkzeug.utils import secure_filename
 
 from app.models import *
 from sqlalchemy.orm import joinedload
@@ -2967,6 +2968,31 @@ def geocode():
           db.session.commit()
           spot.id
     return spot.get_dict()
+
+@app.route("/review/upload", methods=["POST"])
+def upload_file():
+    # check if the post request has the file part
+    if 'file' not in request.files:
+        return { 'msg': 'No file included in request' }, 422
+    file = request.files['file']
+    # If the user does not select a file, the browser submits an
+    # empty file without a filename.
+    if file.filename == '':
+        return { 'msg': 'Submitted an empty file' }, 422
+    s3_url = ''
+    if file:
+        import uuid
+        s3_key = str(uuid.uuid4())
+        contents = file.read()
+        bucket = os.environ.get('S3_BUCKET_NAME')
+        logging.error (f"Content Type {file.content_type}")
+        s3_url = boto3.client("s3").upload_fileobj(io.BytesIO(contents), bucket, 'reviews/'+s3_key,
+                                  ExtraArgs={'ACL': 'public-read',
+                                              'ContentType': file.content_type}
+                                  )
+        s3_url = f'https://{bucket}.s3.amazonaws.com/reviews/{s3_key}'
+        return { 'data': s3_url }
+    return { 'msg': 'something else went wrong with the file'}, 500
 
 with app.test_request_context():
     spec.path(view=user_signup)
