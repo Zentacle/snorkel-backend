@@ -2969,7 +2969,7 @@ def upload_file():
     s3_url = ''
     if file:
         import uuid
-        s3_key = str(uuid.uuid4())
+        s3_key = str(get_current_user().id) + '_' + str(uuid.uuid4())
         contents = file.read()
         bucket = os.environ.get('S3_BUCKET_NAME')
         logging.error (f"Content Type {file.content_type}")
