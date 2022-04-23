@@ -62,7 +62,7 @@ class TypeAheadSchema(Schema):
     subtext = fields.Str()
 
 class ImageUploadRequestSchema(Schema):
-    data = fields.Str()
+    data = fields.Raw(type='file')
 
 class ImageUploadResponseSchema(Schema):
     file = fields.Str()
