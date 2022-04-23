@@ -69,3 +69,6 @@ class AppleRegisterSchema(Schema):
 
 class ImageUploadResponse(Schema):
     data: fields.Str()
+
+class ImageUploadRequest(Schema):
+    file: fields.Str()

@@ -2966,9 +2966,7 @@ def upload_file():
         requestBody:
             content:
               multipart/form-data:
-                schema:
-                  type: string
-                  format: binary
+                schema: ImageUploadRequest
         responses:
             200:
                 description: Returns the url of the s3 upload
