@@ -61,14 +61,14 @@ class TypeAheadSchema(Schema):
     url = fields.Str()
     subtext = fields.Str()
 
+class ImageUploadRequestSchema(Schema):
+    data = fields.Str()
+
+class ImageUploadResponseSchema(Schema):
+    file = fields.Str()
+
 class AppleRegisterSchema(Schema):
     id_token = fields.Str()
     code = fields.Str()
     user = fields.Dict()
     state = fields.Str()
-
-class ImageUploadResponse(Schema):
-    data: fields.Str()
-
-class ImageUploadRequest(Schema):
-    file: fields.Str()

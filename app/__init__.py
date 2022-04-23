@@ -2966,13 +2966,13 @@ def upload_file():
         requestBody:
             content:
               multipart/form-data:
-                schema: ImageUploadRequest
+                schema: ImageUploadRequestSchema
         responses:
             200:
                 description: Returns the url of the s3 upload
                 content:
                   application/json:
-                    schema: ImageUploadResponse
+                    schema: ImageUploadResponseSchema
     """
     # check if the post request has the file part
     if 'file' not in request.files:
