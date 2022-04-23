@@ -2026,20 +2026,6 @@ def create_presigned_url_local(filename, expiration=3600):
     # The response contains the presigned URL
     return {'data': response}
 
-@app.route("/upload", methods=["POST"])
-@jwt_required()
-def upload():
-  import uuid
-  # check if the post request has the file part
-  if 'file' not in request.files:
-      return 422, 'No file included'
-  upload_file = request.files['file']
-  s3_key = str(uuid.uuid4())
-  user = get_current_user()
-  contents = upload_file.file.read()
-  result = boto3.client("s3").upload_fileobj(io.BytesIO(contents), os.environ.get('S3_BUCKET_NAME'), s3_key)
-  return 
-
 @app.route("/s3-upload")
 def create_presigned_post():
     bucket_name = os.environ.get('S3_BUCKET_NAME')
@@ -2970,6 +2956,7 @@ def geocode():
     return spot.get_dict()
 
 @app.route("/review/upload", methods=["POST"])
+@jwt_required()
 def upload_file():
     # check if the post request has the file part
     if 'file' not in request.files:
@@ -3012,6 +2999,7 @@ with app.test_request_context():
     spec.path(view=patch_spot)
     spec.path(view=search_spots)
     spec.path(view=get_review)
+    spec.path(view=upload_file)
     # ...
 
 @app.route("/spec")
