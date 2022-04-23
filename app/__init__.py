@@ -2,6 +2,7 @@ from __future__ import print_function
 from flask import Flask, request, jsonify
 from flask.helpers import make_response
 from flask_cors import CORS
+from flask_caching import Cache
 import io
 import os
 import os.path
@@ -45,6 +46,8 @@ app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(hours=1)
 app.config["JWT_REFRESH_TOKEN_EXPIRES"] = timedelta(days=30)
 app.config["JWT_TOKEN_LOCATION"] = ["headers", "cookies"]
 app.config["JWT_SESSION_COOKIE"] = False
+app.config["CACHE_TYPE"] = "SimpleCache"
+app.config["CACHE_DEFAULT_TIMEOUT"] = 300
 if __name__ != '__main__':
   gunicorn_logger = logging.getLogger('gunicorn.error')
   app.logger.handlers = gunicorn_logger.handlers
@@ -57,6 +60,7 @@ app.config["JWT_COOKIE_SECURE"] = (True
 )
 
 cors = CORS(app)
+cache = Cache(app)
 jwtManager = JWTManager(app)
 db.init_app(app)
 migrate = Migrate(compare_type=True)
@@ -2535,6 +2539,7 @@ def get_area_one():
     data.append(locality_data)
   return { 'data': data }
 
+@cache.cached()
 @app.route("/locality/country")
 def get_country():
   sq = db.session.query(Spot.country_id, func.count(Spot.id).label('count')).group_by(Spot.country_id).subquery()
