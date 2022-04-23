@@ -2960,16 +2960,15 @@ def geocode():
 def upload_file():
     """ Upload File
     ---
-    get:
+    post:
         summary: Upload a file so that it can be attached to a review
         description: Upload a file so that it can be attached to a review (one at a time)
         requestBody:
-            - name: file
-              content:
-                image/png:
-                  schema:
-                    type: string
-                    format: binary
+            content:
+              multipart/form-data:
+                schema:
+                  type: string
+                  format: binary
         responses:
             200:
                 description: Returns the url of the s3 upload
