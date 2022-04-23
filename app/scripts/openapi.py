@@ -62,10 +62,10 @@ class TypeAheadSchema(Schema):
     subtext = fields.Str()
 
 class ImageUploadRequestSchema(Schema):
-    data = fields.Raw(type='file')
+    file = fields.Raw(type='file')
 
 class ImageUploadResponseSchema(Schema):
-    file = fields.Str()
+    data = fields.Str()
 
 class AppleRegisterSchema(Schema):
     id_token = fields.Str()
