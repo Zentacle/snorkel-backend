@@ -278,6 +278,7 @@ class Review(db.Model):
     air_temp = db.Column(db.Integer)
     water_temp = db.Column(db.Integer)
     max_depth = db.Column(db.Integer)
+    difficulty = db.Column(db.String)
 
     images = db.relationship("Image", backref=db.backref('review', lazy=True))
     shorediving_data = db.relationship("ShoreDivingReview", back_populates="review", uselist=False)
