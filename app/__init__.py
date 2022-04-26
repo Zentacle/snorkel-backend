@@ -612,7 +612,6 @@ def refresh_token():
   auth_token = create_access_token(identity=user_id)
   return jsonify(auth_token=auth_token)
 
-@cache.cached(query_string=True)
 @app.route("/spots/get")
 def get_spots():
   """ Get Dive Sites/Beaches
@@ -1574,7 +1573,6 @@ def get_review():
       output.append(data)
     return { 'data': output, 'next_offset': offset + len(output) }
 
-@cache.cached(query_string=True)
 @app.route("/reviews/get")
 def get_reviews():
   """ Get Reviews
