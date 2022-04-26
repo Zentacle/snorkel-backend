@@ -45,6 +45,7 @@ class ReviewSchema(Schema):
     rating = fields.Float()
     activity_type = fields.Str()
     visibility = fields.Int()
+
 class UserSchema(Schema):
     display_name = fields.Str()
     username = fields.Str()
