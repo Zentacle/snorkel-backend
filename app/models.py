@@ -323,6 +323,7 @@ class Locality(db.Model):
     map_image_url = db.Column(db.String)
 
     spots = db.relationship('Spot', backref='locality', lazy=True)
+    shops = db.relationship('DiveShop', backref='locality', lazy=True)
 
     def get_dict(self, country=None, area_one=None, area_two=None):
         data = self.__dict__.copy()
@@ -356,6 +357,7 @@ class AreaTwo(db.Model):
 
     localities = db.relationship('Locality', backref='area_two', lazy=True)
     spots = db.relationship('Spot', backref='area_two', lazy=True)
+    shops = db.relationship('DiveShop', backref='area_two', lazy=True)
 
     def get_simple_dict(self):
         return {
@@ -394,6 +396,7 @@ class AreaOne(db.Model):
     area_twos = db.relationship('AreaTwo', backref='area_one', lazy=True)
     localities = db.relationship('Locality', backref='area_one', lazy=True)
     spots = db.relationship('Spot', backref='area_one', lazy=True)
+    shops = db.relationship('DiveShop', backref='area_one', lazy=True)
 
     def get_simple_dict(self):
         return {
@@ -430,6 +433,7 @@ class Country(db.Model):
     area_twos = db.relationship('AreaTwo', backref='country', lazy=True)
     localities = db.relationship('Locality', backref='country', lazy=True)
     spots = db.relationship('Spot', backref='country', lazy=True)
+    shops = db.relationship('DiveShop', backref='country', lazy=True)
 
     def get_simple_dict(self):
         return {
@@ -466,3 +470,20 @@ class WannaDiveData(db.Model):
     spot_id = db.Column(db.Integer, db.ForeignKey('spot.id'), nullable=False)
 
     spot = db.relationship("Spot", back_populates="wannadive_data", uselist=False)
+
+class DiveShop(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    url = db.Column(db.String)
+    fareharbor_url = db.Column(db.String)
+    address1 = db.Column(db.String)
+    address2 = db.Column(db.String)
+    city = db.Column(db.String)
+    state = db.Column(db.String)
+    zip = db.Column(db.String)
+    logo_img = db.Column(db.String)
+    latitude = db.Column(db.Float)
+    longitude = db.Column(db.Float)
+    locality_id = db.Column(db.Integer, db.ForeignKey('locality.id'), nullable=True)
+    area_two_id = db.Column(db.Integer, db.ForeignKey('area_two.id'), nullable=True)
+    area_one_id = db.Column(db.Integer, db.ForeignKey('area_one.id'), nullable=True)
+    country_id = db.Column(db.Integer, db.ForeignKey('country.id'), nullable=True)
