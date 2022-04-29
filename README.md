@@ -3,7 +3,7 @@ Not included in the github is the environment variables file. You will need to g
 ```
 export FLASK_APP='app'
 export FLASK_ENV='development'
-export DATABASE_URL='sqlite:///example.sql'
+export DATABASE_URL='postgresql://localhost:5432/snorkel'
 export SENDGRID_API_KEY=''
 export AWS_ACCESS_KEY_ID=''
 export AWS_SECRET_ACCESS_KEY=''
@@ -29,13 +29,13 @@ venv\Scripts\activate
 
 #run
 pip install -r requirements.txt
+psql
+`CREATE DATABASE snorkel;`
+#exit out of postgres
+flask db upgrade
 flask run
 ```
 
-Once you have it up and running, if it's your first time starting the application, navigate to http://localhost:5000/db
-
-This initializes the db. You should get a message that says "Welcome to Zentacle".
-
-You should be able to check if the db works by typing in `sqlite3 app/example.sql` and then typing `.tables` which prints out a list of the tables that were created.
+You should be able to check if the db works by typing in `psql snorkel` and then typing `\dt` which prints out a list of the tables that were created.
 
 You can then backfill the db with some test data using Postman and importing this collection and running it `https://www.getpostman.com/collections/96c8d497940f948f89b0`.
