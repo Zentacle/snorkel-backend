@@ -2860,41 +2860,113 @@ def get_typeahead():
   area_twos = AreaTwo.query.filter(AreaTwo.name.ilike('%'+query+'%')).limit(10).all()
   localities = Locality.query.filter(Locality.name.ilike('%'+query+'%')).limit(10).all()
   for loc in countries:
+    url = loc.get_url()
+    segments = url.split("/")
+    country = segments[2]
+    area_one = None
+    area_two = None
+    locality = None
+    if len(segments) > 3:
+      area_one = segments[3]
+    if len(segments) > 4:
+      area_two = segments[4]
+    if len(segments) > 5:
+      locality = segments[5]
     result = {
       'id': loc.id,
       'text': loc.name,
-      'url': loc.get_url(),
+      'url': url,
       'type': 'location',
       'subtext': loc.name,
+      'data': {
+        'country': country,
+        'area_one': area_one,
+        'area_two': area_two,
+        'locality': locality
+      }
     }
     results.append(result)
   for loc in area_ones:
+    url = loc.get_url(loc.country)
+    segments = url.split("/")
+    country = segments[2]
+    area_one = None
+    area_two = None
+    locality = None
+    if len(segments) > 3:
+      area_one = segments[3]
+    if len(segments) > 4:
+      area_two = segments[4]
+    if len(segments) > 5:
+      locality = segments[5]
     result = {
       'id': loc.id,
       'text': loc.name,
-      'url': loc.get_url(loc.country),
+      'url': url,
       'type': 'location',
       'subtext': loc.country.name,
+      'data': {
+        'country': country,
+        'area_one': area_one,
+        'area_two': area_two,
+        'locality': locality
+      }
     }
     results.append(result)
   for loc in area_twos:
     if loc.country and loc.area_one:
+      url = loc.get_url(loc.country, loc.area_one)
+      segments = url.split("/")
+      country = segments[2]
+      area_one = None
+      area_two = None
+      locality = None
+      if len(segments) > 3:
+        area_one = segments[3]
+      if len(segments) > 4:
+        area_two = segments[4]
+      if len(segments) > 5:
+        locality = segments[5]
       result = {
         'id': loc.id,
         'text': loc.name,
-        'url': loc.get_url(loc.country, loc.area_one),
+        'url': url,
         'type': 'location',
         'subtext': loc.country.name,
+        'data': {
+          'country': country,
+          'area_one': area_one,
+          'area_two': area_two,
+          'locality': locality
+        }
       }
       results.append(result)
   for loc in localities:
     if loc.country and loc.area_one and loc.area_two:
+      url = loc.get_url(loc.country, loc.area_one, loc.area_two)
+      segments = url.split("/")
+      country = segments[2]
+      area_one = None
+      area_two = None
+      locality = None
+      if len(segments) > 3:
+        area_one = segments[3]
+      if len(segments) > 4:
+        area_two = segments[4]
+      if len(segments) > 5:
+        locality = segments[5]
       result = {
         'id': loc.id,
         'text': loc.name,
-        'url': loc.get_url(loc.country, loc.area_one, loc.area_two),
+        'url': url,
         'type': 'location',
         'subtext': loc.country.name,
+        'data': {
+          'country': country,
+          'area_one': area_one,
+          'area_two': area_two,
+          'locality': locality
+        }
       }
       results.append(result)
   return { 'data': results }
