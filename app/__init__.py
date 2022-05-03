@@ -382,7 +382,7 @@ def user_google_signup():
     if user:
       return login(user)
     first_name = idinfo.get('given_name')
-    last_name = idinfo.get('last_name')
+    last_name = idinfo.get('family_name')
     display_name = idinfo.get('name')
     profile_pic = idinfo.get('picture')
     resp = create_account(
