@@ -29,7 +29,8 @@ def create_account(
   if not first_name:
     return { 'msg': 'Please enter a name' }, 400
 
-  user = User.query.filter_by(email=email).first()
+  email = email.lower()
+  user = User.query.filter(func.lower(User.email)==email).first()
   if user:
     return { 'msg': 'An account with this email already exists' }, 400
   if username:

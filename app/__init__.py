@@ -317,7 +317,7 @@ def user_apple_signup():
   if not email:
     email = token.get('email')
 
-  user = User.query.filter_by(email=email).first()
+  user = User.query.filter(func.lower(User.email)==email.lower()).first()
   if user:
     return login(user)
 
@@ -384,7 +384,7 @@ def user_google_signup():
 
     # ID token is valid. Get the user's Google Account ID from the decoded token.
     email = idinfo.get('email')
-    user = User.query.filter_by(email=email).first()
+    user = User.query.filter(func.lower(User.email)==email.lower()).first()
     if user:
       return login(user)
     first_name = idinfo.get('given_name')
@@ -502,7 +502,7 @@ def user_login():
   email = request.json.get('email')
   password = request.json.get('password')
   
-  user = User.query.filter(or_(User.email==email, User.username==email)).first()
+  user = User.query.filter(or_(func.lower(User.email)==email.lower(), User.username==email)).first()
   if not user:
     return { 'msg': 'Wrong password or user does not exist' }, 400
   if bcrypt.checkpw(password.encode('utf-8'), user.password.encode('utf-8')):
