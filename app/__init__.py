@@ -289,14 +289,9 @@ def user_apple_signup():
   #https://developer.apple.com/documentation/sign_in_with_apple/sign_in_with_apple_js/configuring_your_webpage_for_sign_in_with_apple
   code = request.json.get('code')
   id_token = request.json.get('id_token')
-  user = request.json.get('user')
   state = request.json.get('state')
   email = None
-  if user:
-    first_name = user.get('name').get('firstName')
-    last_name = user.get('name').get('lastName')
-    display_name = first_name + last_name
-    email = user.get('email')
+  
 
   #https://gist.github.com/davidhariri/b053787aabc9a8a9cc0893244e1549fe
   key_payload = requests.get('https://appleid.apple.com/auth/keys').json()
@@ -308,6 +303,7 @@ def user_apple_signup():
   if not jwk:
     return 'No matching key found', 500
   public_key = RSAAlgorithm.from_jwk(json.dumps(jwk))
+
 
   try:
       token = jwt.decode(id_token, public_key, audience=os.environ.get("APPLE_APP_ID"), algorithms=["RS256"])
@@ -325,13 +321,23 @@ def user_apple_signup():
   if user:
     return login(user)
 
-  return create_account(
+  # renamed  to avoid confusion and possible name clashes
+  user_body = request.json.get('user')
+  if user_body:
+    first_name = user_body.get('name').get('firstName')
+    last_name = user_body.get('name').get('lastName')
+    display_name = first_name + last_name
+    email = user_body.get('email')
+
+    return create_account(
       db,
       first_name,
       last_name,
       display_name,
       email,
     )
+
+  return { "msg": "user doesn't exist and didn't get a user object"}, 422
 
 
 @app.route("/user/google_register", methods=["POST"])
