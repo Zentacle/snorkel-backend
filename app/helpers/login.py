@@ -10,7 +10,8 @@ def login(user):
       'data': {
         'status': 'success',
         'message': 'Successfully logged in.',
-        'auth_token': auth_token
+        'auth_token': auth_token,
+        'refresh_token': refresh_token
       },
       'user': user.get_dict()
     }
