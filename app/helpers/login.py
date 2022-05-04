@@ -10,11 +10,13 @@ def login(user):
       'data': {
         'status': 'success',
         'message': 'Successfully logged in.',
-        'auth_token': auth_token
+        'auth_token': auth_token,
+        'refresh-token': refresh_token
       },
       'user': user.get_dict()
     }
     resp = make_response(responseObject)
+    resp.set_cookie('access-token', auth_token)
     set_access_cookies(resp, auth_token)
     set_refresh_cookies(resp, refresh_token)
     return resp
