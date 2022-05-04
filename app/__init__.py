@@ -337,6 +337,8 @@ def user_apple_signup():
       email,
     )
 
+  return { "msg": "user doesn't exist and didn't get a user object"}, 422
+
 
 @app.route("/user/google_register", methods=["POST"])
 def user_google_signup():
