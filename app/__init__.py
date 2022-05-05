@@ -8,6 +8,7 @@ import os
 import os.path
 import logging
 import jwt
+import secrets
 from jwt.algorithms import RSAAlgorithm
 import json
 from werkzeug.utils import secure_filename
@@ -3076,6 +3077,65 @@ def upload_file():
         s3_url = f'https://{bucket}.s3.amazonaws.com/reviews/{s3_key}'
         return { 'data': s3_url }
     return { 'msg': 'something else went wrong with the file'}, 500
+
+@app.route('/password/request', methods=['POST'])
+def request_reset_password():
+  email = request.json.get('email')
+  user = User.query.filter(func.lower(User.email)==email.lower()).first_or_404()
+
+  reset_obj = PasswordReset(
+    user_id=user.id,
+    token=secrets.token_urlsafe(),
+  )
+  db.session.add(reset_obj)
+  db.session.commit()
+
+  message = Mail(
+      from_email=('hello@zentacle.com', 'Zentacle'),
+      to_emails=email)
+
+  message.template_id = 'd-61fcfe0f648c4237849621389db5c75c'
+  message.reply_to = 'mayank@zentacle.com'
+  message.dynamic_template_data = {
+      'url': 'https://www.zentacle.com/resetpassword?token='+reset_obj.token,
+  }
+  try:
+      sg = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
+      sg.send(message)
+  except Exception as e:
+      print(e.body)
+
+  return {'msg': 'Password reset sent, check your email for a reset link'}
+
+@app.route('/password/reset', methods=['POST'])
+def reset_password():
+  token = request.json.get('token')
+  password = request.json.get('password')
+
+  reset_obj = PasswordReset.query.filter_by(token=token).first()
+  if reset_obj:
+    if reset_obj.token_expiry < datetime.utcnow():
+      return {'msg': 'Link expired. Try reseting your password again'}, 401
+    user_id = reset_obj.user_id
+    user = User.query.filter_by(id=user_id).first()
+    hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+    user.password = hashed_password
+    db.session.commit()
+    refresh_token = create_refresh_token(identity=user.id)
+    auth_token = create_access_token(identity=user.id)
+    responseObject = {
+      'status': 'success',
+      'msg': 'Successfully reset password. You are now logged in',
+      'auth_token': auth_token,
+      'refresh_token': refresh_token
+    }
+    resp = make_response(responseObject)
+    set_access_cookies(resp, auth_token)
+    set_refresh_cookies(resp, refresh_token)
+    db.session.delete(reset_obj)
+    db.session.commit()
+    return resp
+  return {'msg': 'No token or password provided'}, 422
 
 with app.test_request_context():
     spec.path(view=user_signup)

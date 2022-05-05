@@ -1,6 +1,6 @@
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.ext.hybrid import hybrid_method
-from datetime import datetime
+from datetime import datetime, timedelta
 from app.helpers.demicrosoft import demicrosoft
 from flask import current_app
 from sqlalchemy import func
@@ -487,3 +487,9 @@ class DiveShop(db.Model):
     area_two_id = db.Column(db.Integer, db.ForeignKey('area_two.id'), nullable=True)
     area_one_id = db.Column(db.Integer, db.ForeignKey('area_one.id'), nullable=True)
     country_id = db.Column(db.Integer, db.ForeignKey('country.id'), nullable=True)
+
+class PasswordReset(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    token = db.Column(db.String, nullable=False, unique=True)
+    token_expiry = db.Column(db.DateTime, nullable=False, default=(lambda: datetime.utcnow() + timedelta(minutes=15)))
