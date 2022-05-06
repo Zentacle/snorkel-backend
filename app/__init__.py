@@ -103,7 +103,11 @@ def db_create():
   return "<h1>Welcome to Zentacle</h1>"
 
 @app.route("/delete")
+@jwt_required()
 def delete():
+  user = get_current_user()
+  if not user.admin:
+    return {'msg': 'You must be an admin to that'}, 403
   email = request.args.get('email')
   user = User.query.filter_by(email=email).first()
   db.session.delete(user)
@@ -134,7 +138,11 @@ def get_emails():
   return { 'data': output }
 
 @app.route("/getall")
+@jwt_required()
 def getAllData():
+    user = get_current_user()
+    if not user.admin:
+      return {'msg': 'You must be an admin to that'}, 403
     users = None
     if request.args.get('top'):
       users = db.session.query(
@@ -2671,7 +2679,11 @@ def add_shorediving_pic():
   return { 'data': shorediving.spot.get_dict() }
 
 @app.route("/reviews/delete", methods=["POST"])
+@jwt_required()
 def delete_shore_diving_ids():
+  user = get_current_user()
+  if not user.admin:
+    return {'msg': 'You must be an admin to that'}, 403
   id = request.json.get('id')
   sd_review = ShoreDivingReview.query.filter_by(shorediving_id=id).first_or_404()
   review = sd_review.review
