@@ -1807,14 +1807,18 @@ def delete_spot():
   return {}
 
 @app.route("/review/delete", methods=["POST"])
+@jwt_required()
 def delete_review():
   review_id = request.args.get('review_id')
   keep_images = request.args.get('keep_images')
 
+  user = get_current_user()
   review = Review.query \
     .filter_by(id=review_id) \
     .options(joinedload(Review.images)) \
     .first_or_404()
+  if review.author_id != user.id or not user.admin:
+    return {'msg': 'You are not allowed to do that'}, 403
   beach_id = review.beach_id
   for image in review.images:
     if not keep_images:
