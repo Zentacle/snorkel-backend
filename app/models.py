@@ -300,6 +300,7 @@ class Image(db.Model):
     review_id = db.Column(db.Integer, db.ForeignKey('review.id'), nullable=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
     caption = db.Column(db.String)
+    created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 
     def get_dict(self):
         return {
