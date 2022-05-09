@@ -2388,14 +2388,19 @@ def nearby_locations():
                     msg: string
               description: No lat/lng or other location data found for given location
   """
-  beach_id = request.args.get('beach_id')
-  spot = Spot.query \
-    .options(joinedload(Spot.shorediving_data)) \
-    .filter_by(id=beach_id) \
-    .first_or_404()
-  startlat = spot.latitude
-  startlng = spot.longitude
+  startlat = request.args.get('lat')
+  startlng = request.args.get('lng')
+  spot_id = None
   if not startlat or not startlng:
+    beach_id = request.args.get('beach_id')
+    spot = Spot.query \
+      .options(joinedload(Spot.shorediving_data)) \
+      .filter_by(id=beach_id) \
+      .first_or_404()
+    startlat = spot.latitude
+    startlng = spot.longitude
+    spot_id = spot.id
+
     spots = []
     if spot.shorediving_data:
       try:
@@ -2424,7 +2429,7 @@ def nearby_locations():
     query = Spot.query.filter(and_(
       Spot.is_verified == True,
       Spot.is_deleted.is_not(True),
-      Spot.id != spot.id,
+      Spot.id != spot_id,
     )).options(joinedload('locality')).order_by(Spot.distance(startlat, startlng)).limit(10)
     results = query.all()
   except OperationalError as e:
@@ -2432,7 +2437,7 @@ def nearby_locations():
       query = Spot.query.filter(and_(
         Spot.is_verified == True,
         Spot.is_deleted.is_not(True),
-        Spot.id != spot.id,
+        Spot.id != spot_id,
       )).options(joinedload('locality')).order_by(Spot.sqlite3_distance(startlat, startlng)).limit(10)
       results = query.all()
     else:
