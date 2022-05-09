@@ -2393,6 +2393,8 @@ def nearby_locations():
   spot_id = None
   if not startlat or not startlng:
     beach_id = request.args.get('beach_id')
+    if not beach_id:
+      return { 'msg': 'Include a lat/lng or a beach_id' }, 422
     spot = Spot.query \
       .options(joinedload(Spot.shorediving_data)) \
       .filter_by(id=beach_id) \
@@ -2401,6 +2403,7 @@ def nearby_locations():
     startlng = spot.longitude
     spot_id = spot.id
 
+  if not startlat or not startlng:
     spots = []
     if spot.shorediving_data:
       try:
