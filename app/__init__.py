@@ -2868,7 +2868,11 @@ def get_typeahead():
   query = request.args.get('query')
   beach_only = request.args.get('beach_only')
   results = []
-  spots = Spot.query.filter(Spot.name.ilike('%'+query+'%')).limit(25).all()
+  spots = Spot.query \
+    .filter(Spot.name.ilike('%'+query+'%')) \
+    .filter(Spot.is_deleted.is_not(True)) \
+    .limit(25) \
+    .all()
   for loc in spots:
     result = {
       'id': loc.id,
