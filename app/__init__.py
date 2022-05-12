@@ -137,12 +137,8 @@ def get_emails():
     output.append(data)
   return { 'data': output }
 
-@app.route("/getall")
-@jwt_required()
+@app.route("/users/all")
 def getAllData():
-    user = get_current_user()
-    if not user.admin:
-      return {'msg': 'You must be an admin to that'}, 403
     users = None
     if request.args.get('top'):
       users = db.session.query(
