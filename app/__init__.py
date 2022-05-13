@@ -138,6 +138,7 @@ def get_emails():
   return { 'data': output }
 
 @app.route("/users/all")
+@cache.cached(query_string=True)
 def getAllData():
     users = None
     if request.args.get('top'):
@@ -624,6 +625,7 @@ def refresh_token():
   return jsonify(auth_token=auth_token)
 
 @app.route("/spots/get")
+@cache.cached(query_string=True)
 def get_spots():
   """ Get Dive Sites/Beaches
   ---
@@ -1585,6 +1587,7 @@ def get_review():
     return { 'data': output, 'next_offset': offset + len(output) }
 
 @app.route("/reviews/get")
+@cache.cached(query_string=True)
 def get_reviews():
   """ Get Reviews
   ---
@@ -1998,6 +2001,7 @@ def get_images():
            
 
 @app.route("/beachimages")
+@cache.cached(query_string=True)
 def get_beach_images():
     beach_id = request.args.get('beach_id')
     output = []
@@ -2009,6 +2013,7 @@ def get_beach_images():
     return {'data': output}
 
 @app.route("/reviewimages")
+@cache.cached(query_string=True)
 def get_review_images():
     review_id = request.args.get('review_id')
     output = []
@@ -2069,6 +2074,7 @@ def create_presigned_post():
     return response
 
 @app.route("/user/get")
+@cache.cached(query_string=True)
 def get_user():
     """ Get User
     ---
@@ -2267,6 +2273,7 @@ def search_location():
   return r.json()
 
 @app.route("/spots/nearby")
+@cache.cached(query_string=True)
 def nearby_locations():
   """ Nearby Locations
   ---
@@ -2382,6 +2389,7 @@ def get_location_spots():
   return { 'data': data }
 
 @app.route("/locality/locality")
+@cache.cached(query_string=True)
 def locality_get():
   limit = request.args.get('limit') if request.args.get('limit') else 15
   country_short_name = request.args.get('country')
@@ -2417,6 +2425,7 @@ def locality_get():
   return { 'data': data }
 
 @app.route("/locality/area_two")
+@cache.cached(query_string=True)
 def get_area_two():
   limit = request.args.get('limit') if request.args.get('limit') else 25
   country_short_name = request.args.get('country')
@@ -2443,6 +2452,7 @@ def get_area_two():
   return { 'data': data }
 
 @app.route("/locality/area_one")
+@cache.cached(query_string=True)
 def get_area_one():
   country_short_name = request.args.get('country')
   country = Country.query.filter_by(short_name=country_short_name).first()
@@ -2459,8 +2469,8 @@ def get_area_one():
     data.append(locality_data)
   return { 'data': data }
 
-@cache.cached()
 @app.route("/locality/country")
+@cache.cached()
 def get_country():
   sq = db.session.query(Spot.country_id, func.count(Spot.id).label('count')).group_by(Spot.country_id).subquery()
   localities = db.session.query(Country, sq.c.count).join(sq, sq.c.country_id == Country.id).all()
@@ -2745,6 +2755,7 @@ def add_station_id():
   return { 'data': spot.get_dict() }
 
 @app.route("/search/typeahead")
+@cache.cached(query_string=True)
 def get_typeahead():
   """ Search Typeahead
   ---
