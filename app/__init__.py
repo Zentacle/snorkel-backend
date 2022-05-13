@@ -3080,6 +3080,17 @@ def reset_password():
     return resp
   return {'msg': 'No token or password provided'}, 422
 
+@app.route('/beach/tides')
+@cache.cached(query_string=True, timeout=3600)
+def get_tides():
+  station_id = request.args.get('station_id')
+  begin_date = request.args.get('begin_date')
+  end_date = request.args.get('end_date')
+  endpoint = f'https://api.tidesandcurrents.noaa.gov/api/prod/datagetter?product=predictions&begin_date={begin_date}&end_date={end_date}&datum=MLLW&station={station_id}&time_zone=GMT&units=english&interval=hilo&format=json&application=NOS.COOPS.TAC.TidePred'
+  resp = requests.get(endpoint) \
+    .json()
+  return resp
+
 with app.test_request_context():
     spec.path(view=user_signup)
     spec.path(view=user_apple_signup)
