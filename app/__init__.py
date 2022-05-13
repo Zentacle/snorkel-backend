@@ -2020,7 +2020,7 @@ def get_review_images():
     return {'data': output}
 
 def create_unsigned_url(filename, folder, bucket):
-  return f'https://{bucket}.s3.amazonaws.com/{folder}/{filename}'
+  return f'https://www.zentacle.com/image/{folder}/{filename}'
 
 def create_presigned_url_local(filename, expiration=3600):
     """Generate a presigned URL to share an S3 object
