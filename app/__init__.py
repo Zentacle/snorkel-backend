@@ -3080,7 +3080,7 @@ def reset_password():
     return resp
   return {'msg': 'No token or password provided'}, 422
 
-@app.route('/beach/tides')
+@app.route('/spot/tides')
 @cache.cached(query_string=True, timeout=3600)
 def get_tides():
   station_id = request.args.get('station_id')
