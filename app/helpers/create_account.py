@@ -55,7 +55,8 @@ def create_account(
     'status': 'success',
     'message': 'Successfully registered.',
     'auth_token': auth_token,
-    'refresh_token': refresh_token
+    'refresh_token': refresh_token,
+    'user': user.get_dict(),
   }
   resp = make_response(responseObject)
   set_access_cookies(resp, auth_token)

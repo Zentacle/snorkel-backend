@@ -3001,13 +3001,14 @@ def upload_file():
     # check if the post request has the file part
     if 'file' not in request.files:
         return { 'msg': 'No file included in request' }, 422
-    file = request.files['file']
-    # If the user does not select a file, the browser submits an
-    # empty file without a filename.
-    if file.filename == '':
-        return { 'msg': 'Submitted an empty file' }, 422
+    files = request.files.getlist('file')
     s3_url = ''
-    if file:
+    file_urls = []
+    for file in files:
+        # If the user does not select a file, the browser submits an
+        # empty file without a filename.
+        if file.filename == '':
+            return { 'msg': 'Submitted an empty file' }, 422
         import uuid
         s3_key = str(get_current_user().id) + '_' + str(uuid.uuid4())
         contents = file.read()
@@ -3018,8 +3019,8 @@ def upload_file():
                                               'ContentType': file.content_type}
                                   )
         s3_url = f'https://{bucket}.s3.amazonaws.com/reviews/{s3_key}'
-        return { 'data': s3_url }
-    return { 'msg': 'something else went wrong with the file'}, 500
+        file_urls.append(s3_url)
+    return { 'data': file_urls }
 
 @app.route('/password/request', methods=['POST'])
 def request_reset_password():
