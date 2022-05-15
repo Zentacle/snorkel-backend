@@ -1507,6 +1507,7 @@ def add_review():
       to_emails='mayank@zentacle.com')
 
   message.template_id = 'd-3188c5ee843443bf91c5eecf3b66f26d'
+  message.reply_to = user.email
   message.dynamic_template_data = {
       'beach_name': spot.name,
       'first_name': user.first_name,
