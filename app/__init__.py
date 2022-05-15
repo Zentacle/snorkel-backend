@@ -921,6 +921,16 @@ def search_spots():
             description: sort either "rating" or "popularity"
             type: string
             required: false
+          - name: limit
+            in: query
+            description: the max number of results in the response (default 50)
+            type: int
+            required: false
+          - name: offset
+            in: query
+            description: offset in order to paginate the results
+            type: int
+            required: false
       responses:
           200:
               description: Returns singular beach object or list of beach objects
@@ -932,6 +942,7 @@ def search_spots():
   limit = request.args.get('limit') \
     if request.args.get('limit') \
     else 50
+  offset = int(request.args.get('offset')) if request.args.get('offset') else 0
   if not search_term:
     search_term = request.args.get('search_term')
   difficulty = request.args.get('difficulty')
@@ -958,7 +969,10 @@ def search_spots():
       Spot.is_verified.isnot(False),
       Spot.is_deleted.isnot(True)),
       difficulty_query,
-    ).limit(limit).all()
+    ) \
+    .offset(offset) \
+    .limit(limit) \
+    .all()
   output = []
   for spot in spots:
     spot_data = spot.get_dict()
