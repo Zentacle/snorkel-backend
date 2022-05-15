@@ -1612,6 +1612,29 @@ def get_review():
       output.append(data)
     return { 'data': output, 'next_offset': offset + len(output) }
 
+@app.route("/reviews/recent")
+def get_recent_reviews():
+  """ Get Recent Reviews
+  ---
+  get:
+      summary: Get recent reviews
+      description: Get recent reviews
+      responses:
+          200:
+              description: Returns review object
+              content:
+                application/json:
+                  schema: ReviewSchema
+  """
+  reviews = Review.query.order_by(Review.date_posted.desc()).limit(25).all()
+  data = []
+  for review in reviews:
+    spot = review.spot
+    review_data = review.get_dict()
+    review_data['spot'] = spot.get_dict()
+    data.append(review_data)
+  return { 'data': data }
+
 @app.route("/reviews/get")
 @cache.cached(query_string=True)
 def get_reviews():
@@ -3137,6 +3160,7 @@ with app.test_request_context():
     spec.path(view=search_spots)
     spec.path(view=get_review)
     spec.path(view=upload_file)
+    spec.path(view=get_recent_reviews)
     # ...
 
 @app.route("/spec")
