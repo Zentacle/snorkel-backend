@@ -555,7 +555,12 @@ def patch_user():
   try:
     for key in updates.keys():
       if key == 'username':
-        setattr(user, key, updates.get(key).lower())
+        username = updates.get(key)
+        if User.query.filter_by(username=username).first():
+          return {
+            'msg': 'Someone already has that username'
+          }, 401
+        setattr(user, key, username.lower())
       else:
         setattr(user, key, updates.get(key))
   except ValueError as e:
@@ -924,6 +929,9 @@ def search_spots():
                   schema: BeachSchema
   """
   search_term = request.args.get('query')
+  limit = request.args.get('limit') \
+    if request.args.get('limit') \
+    else 50
   if not search_term:
     search_term = request.args.get('search_term')
   difficulty = request.args.get('difficulty')
@@ -950,7 +958,7 @@ def search_spots():
       Spot.is_verified.isnot(False),
       Spot.is_deleted.isnot(True)),
       difficulty_query,
-    ).all()
+    ).limit(limit).all()
   output = []
   for spot in spots:
     spot_data = spot.get_dict()
