@@ -1479,12 +1479,15 @@ def add_review():
   )
 
   for image in images:
-    image = Image(
-      url=image,
-      beach_id=beach_id,
-      user_id=user.id,
-    )
-    review.images.append(image)
+    try:
+      image = Image(
+        url=image,
+        beach_id=beach_id,
+        user_id=user.id,
+      )
+      review.images.append(image)
+    except Exception as e:
+      print(e.body)
 
   db.session.add(review)
   summary = get_summary_reviews_helper(beach_id)
