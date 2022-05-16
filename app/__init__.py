@@ -556,6 +556,10 @@ def patch_user():
     for key in updates.keys():
       if key == 'username':
         username = updates.get(key).lower()
+        if not username.isalnum():
+          return {
+            'msg': 'Usernames can\'t have special characters'
+          }, 422
         if User.query.filter_by(username=username).first():
           return {
             'msg': 'Someone already has that username'
