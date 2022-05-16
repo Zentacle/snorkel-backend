@@ -430,7 +430,7 @@ class AreaOne(db.Model):
 class Country(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String, nullable=False)
-    short_name = db.Column(db.String, nullable=False)
+    short_name = db.Column(db.String, nullable=False, unique=True)
     description = db.Column(db.String)
     url = db.Column(db.String, unique=True)
     map_image_url = db.Column(db.String)
