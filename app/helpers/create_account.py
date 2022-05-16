@@ -52,10 +52,12 @@ def create_account(
   auth_token = create_access_token(identity=user.id)
   refresh_token = create_refresh_token(identity=user.id)
   responseObject = {
-    'status': 'success',
-    'message': 'Successfully registered.',
-    'auth_token': auth_token,
-    'refresh_token': refresh_token,
+    'data': {
+      'status': 'success',
+      'message': 'Successfully registered.',
+      'auth_token': auth_token,
+      'refresh_token': refresh_token,
+    },
     'user': user.get_dict(),
   }
   resp = make_response(responseObject)
