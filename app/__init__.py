@@ -555,7 +555,7 @@ def patch_user():
   try:
     for key in updates.keys():
       if key == 'username':
-        username = updates.get(key)
+        username = updates.get(key).lower()
         if User.query.filter_by(username=username).first():
           return {
             'msg': 'Someone already has that username'
