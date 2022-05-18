@@ -516,6 +516,12 @@ def user_login():
   else:
     return { 'msg': 'Wrong password or user does not exist' }, 400
 
+@app.route("/user/logout")
+def logout():
+  resp = make_response({'msg': 'Successfully logged out'})
+  unset_jwt_cookies(resp)
+  return resp
+
 @app.route("/user/patch", methods=["PATCH"])
 @jwt_required()
 def patch_user():
