@@ -3179,17 +3179,19 @@ def add_partner():
 
 @app.route('/partner/get')
 def get_partners():
-  area_one_id = request.args.get('area_one_id')
-  area_two_id = request.args.get('area_two_id')
-  country_id = request.args.get('country_id')
-  locality_id = request.args.get('locality_id')
+  area_one_id = request.args.get('area_one')
+  area_two_id = request.args.get('area_two')
+  country_id = request.args.get('country')
+  locality_id = request.args.get('locality')
+
   dive_partners = DivePartnerAd.query \
     .options(joinedload('user')) \
-    .filter(or_(
-      DivePartnerAd.area_one_id==area_one_id,
-      DivePartnerAd.area_two_id==area_two_id,
-      DivePartnerAd.locality_id==locality_id,
-      DivePartnerAd.country_id==country_id,
+    .filter(
+      or_(
+        DivePartnerAd.area_one_id==area_one_id if area_one_id else sql.false(),
+        DivePartnerAd.area_two_id==area_two_id if area_two_id else sql.false(),
+        DivePartnerAd.locality_id==locality_id if locality_id else sql.false(),
+        DivePartnerAd.country_id==country_id if country_id else sql.false(),
     )).all()
   partners = []
   for partner in dive_partners:
