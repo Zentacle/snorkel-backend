@@ -2159,18 +2159,20 @@ def get_user():
         'msg': 'Include a username in the request. If you are trying to get the logged in user, use /user/me'
       }, 422
     user = User.query \
-      .options(joinedload('reviews')) \
       .filter(func.lower(User.username)==username.lower()).first()
+    reviews = Review.query.filter_by(author_id=user.id).order_by(Review.date_dived.desc()).all()
     if not user:
       return { 'msg': 'User doesn\'t exist' }, 404
     user_data = user.get_dict()
     reviews_data = []
-    for review in user.reviews:
+    for index, review in enumerate(reviews):
       review.spot
       review_data = review.get_dict()
       review_data['spot'] = review.spot.get_dict()
       if not review_data.get('title'):
         review_data['title'] = review.spot.name
+      title = review_data['title']
+      review_data['title'] = f'#{index+1} - {title}'
       reviews_data.append(review_data)
     user_data['reviews'] = reviews_data
     return { 'data': user_data }
