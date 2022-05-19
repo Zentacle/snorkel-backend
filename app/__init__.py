@@ -3200,7 +3200,7 @@ def get_partners():
     partners.append(partner_dict)
   return { 'data': partners }
 
-@app.route('/partner/connect')
+@app.route('/partner/connect', methods=['POST'])
 @jwt_required()
 def connect_partner():
   current_user = get_current_user()
