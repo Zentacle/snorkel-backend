@@ -3204,7 +3204,7 @@ def get_partners():
 @jwt_required()
 def connect_partner():
   current_user = get_current_user()
-  user_id = request.body.get('user_id')
+  user_id = request.json.get('user_id')
   user = User.query.filter_by(id=user_id).first()
 
   message = Mail(
@@ -3224,6 +3224,9 @@ def connect_partner():
       sg.send(message)
   except Exception as e:
       print(e.body)
+  return {
+    'msg': 'We\'ve sent them an email with your contact info!',
+  }
 
 with app.test_request_context():
     spec.path(view=user_signup)
