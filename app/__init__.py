@@ -3216,7 +3216,8 @@ def connect_partner():
   message.dynamic_template_data = {
       'receiver_name': user.first_name,
       'request_name': current_user.first_name,
-      'username': current_user.username,
+      'request_username': current_user.username,
+      'request_email': current_user.email,
   }
   try:
       sg = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
