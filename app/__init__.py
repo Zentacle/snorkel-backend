@@ -3200,6 +3200,30 @@ def get_partners():
     partners.append(partner_dict)
   return { 'data': partners }
 
+@app.route('/partner/connect')
+@jwt_required()
+def connect_partner():
+  current_user = get_current_user()
+  user_id = request.body.get('user_id')
+  user = User.query.filter_by(id=user_id).first()
+
+  message = Mail(
+      from_email=('hello@zentacle.com', 'Zentacle'),
+      to_emails=user.email)
+
+  message.template_id = 'd-bd201d4de3ad404ebf5b8fe7045c15a3'
+  message.reply_to = current_user.email
+  message.dynamic_template_data = {
+      'receiver_name': user.first_name,
+      'request_name': current_user.first_name,
+      'username': current_user.username,
+  }
+  try:
+      sg = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
+      sg.send(message)
+  except Exception as e:
+      print(e.body)
+
 with app.test_request_context():
     spec.path(view=user_signup)
     spec.path(view=user_apple_signup)
