@@ -3153,6 +3153,51 @@ def get_tides():
     .json()
   return resp
 
+@app.route('/partner/add', methods=["POST"])
+def add_partner():
+  user_id = request.json.get('user_id')
+  area_one_id = request.json.get('area_one_id')
+  area_two_id = request.json.get('area_two_id')
+  country_id = request.json.get('country_id')
+  locality_id = request.json.get('locality_id')
+  latitude = request.json.get('latitude')
+  longitude = request.json.get('longitude')
+
+  partner = DivePartnerAd(
+    user_id=user_id,
+    area_one_id=area_one_id, 
+    area_two_id=area_two_id,
+    country_id=country_id,
+    locality_id=locality_id,
+    latitude=latitude,
+    longitude=longitude,
+  )
+  db.session.add(partner)
+  db.session.commit()
+  partner.id
+  return { 'data': partner }
+
+@app.route('/partner/get')
+def get_partners():
+  area_one_id = request.args.get('area_one_id')
+  area_two_id = request.args.get('area_two_id')
+  country_id = request.args.get('country_id')
+  locality_id = request.args.get('locality_id')
+  dive_partners = DivePartnerAd.query \
+    .options(joinedload('user')) \
+    .filter(or_(
+      DivePartnerAd.area_one_id==area_one_id,
+      DivePartnerAd.area_two_id==area_two_id,
+      DivePartnerAd.locality_id==locality_id,
+      DivePartnerAd.country_id==country_id,
+    )).all()
+  partners = []
+  for partner in dive_partners:
+    partner_dict = partner.get_dict()
+    partner_dict['user'] = partner.user.get_dict()
+    partners.append(partner_dict)
+  return { 'data': partners }
+
 with app.test_request_context():
     spec.path(view=user_signup)
     spec.path(view=user_apple_signup)

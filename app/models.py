@@ -499,3 +499,26 @@ class PasswordReset(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     token = db.Column(db.String, nullable=False, unique=True)
     token_expiry = db.Column(db.DateTime, nullable=False, default=(lambda: datetime.utcnow() + timedelta(minutes=15)))
+
+class DivePartnerAd(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    locality_id = db.Column(db.Integer, db.ForeignKey('locality.id'), nullable=True)
+    area_two_id = db.Column(db.Integer, db.ForeignKey('area_two.id'), nullable=True)
+    area_one_id = db.Column(db.Integer, db.ForeignKey('area_one.id'), nullable=True)
+    country_id = db.Column(db.Integer, db.ForeignKey('country.id'), nullable=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    latitude = db.Column(db.Float)
+    longitude = db.Column(db.Float)
+
+    country = db.relationship("Country", backref="dive_partner_ad")
+    area_one = db.relationship("AreaOne", backref="dive_partner_ad")
+    area_two = db.relationship("AreaTwo", backref="dive_partner_ad")
+    locality = db.relationship("Locality", backref="dive_partner_ad")
+
+    user = db.relationship("User", backref="dive_partner_ad")
+
+    def get_dict(self):
+        data = self.__dict__.copy()
+        if data.get('_sa_instance_state'):
+            data.pop('_sa_instance_state', None)
+        return data
