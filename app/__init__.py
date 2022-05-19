@@ -3175,7 +3175,7 @@ def add_partner():
   db.session.add(partner)
   db.session.commit()
   partner.id
-  return { 'data': partner }
+  return { 'data': partner.get_dict() }
 
 @app.route('/partner/get')
 def get_partners():
