@@ -3204,7 +3204,7 @@ def get_partners():
 @jwt_required()
 def connect_partner():
   current_user = get_current_user()
-  user_id = request.json.get('user_id')
+  user_id = request.json.get('userId')
   user = User.query.filter_by(id=user_id).first()
 
   message = Mail(
