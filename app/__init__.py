@@ -1636,7 +1636,9 @@ def get_recent_reviews():
                 application/json:
                   schema: ReviewSchema
   """
-  reviews = Review.query.order_by(Review.date_posted.desc()).limit(25).all()
+  reviews = Review.query \
+    .options(joinedload('spot')) \
+    .order_by(Review.date_posted.desc()).limit(25).all()
   data = []
   for review in reviews:
     spot = review.spot
