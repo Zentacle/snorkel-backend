@@ -3205,7 +3205,7 @@ def get_buddies():
     )).all()
   partners = []
   for partner in dive_partners:
-    partner_dict = partner['user'].get_dict()
+    partner_dict = partner.user.get_dict()
     partners.append(partner_dict)
   return { 'data': partners }
 
