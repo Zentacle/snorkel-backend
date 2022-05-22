@@ -3155,8 +3155,8 @@ def get_tides():
     .json()
   return resp
 
-@app.route('/partner/add', methods=["POST"])
-def add_partner():
+@app.route('/buddy/add', methods=["POST"])
+def add_buddy():
   user_id = request.json.get('user_id')
   area_one_id = request.json.get('area_one_id')
   area_two_id = request.json.get('area_two_id')
@@ -3165,7 +3165,7 @@ def add_partner():
   latitude = request.json.get('latitude')
   longitude = request.json.get('longitude')
 
-  partner = DivePartnerAd(
+  buddy = DivePartnerAd(
     user_id=user_id,
     area_one_id=area_one_id, 
     area_two_id=area_two_id,
@@ -3174,17 +3174,25 @@ def add_partner():
     latitude=latitude,
     longitude=longitude,
   )
-  db.session.add(partner)
+  db.session.add(buddy)
   db.session.commit()
-  partner.id
-  return { 'data': partner.get_dict() }
+  buddy.id
+  return { 'data': buddy.get_dict() }
 
-@app.route('/partner/get')
-def get_partners():
+@app.route('/buddy/get')
+def get_buddies():
   area_one_id = request.args.get('area_one')
   area_two_id = request.args.get('area_two')
   country_id = request.args.get('country')
   locality_id = request.args.get('locality')
+
+  if not area_one_id and not area_two_id and not country_id and not locality_id:
+    dive_partners = User.query.join(DivePartnerAd).filter(User.id==DivePartnerAd.user_id).limit(10).all()
+    partners = []
+    for partner in dive_partners:
+      partner_dict = partner.get_dict()
+      partners.append(partner_dict)
+    return { 'data': partners }
 
   dive_partners = DivePartnerAd.query \
     .options(joinedload('user')) \
@@ -3197,14 +3205,13 @@ def get_partners():
     )).all()
   partners = []
   for partner in dive_partners:
-    partner_dict = partner.get_dict()
-    partner_dict['user'] = partner.user.get_dict()
+    partner_dict = partner['user'].get_dict()
     partners.append(partner_dict)
   return { 'data': partners }
 
-@app.route('/partner/connect', methods=['POST'])
+@app.route('/buddy/connect', methods=['POST'])
 @jwt_required()
-def connect_partner():
+def connect_buddy():
   current_user = get_current_user()
   user_id = request.json.get('userId')
   user = User.query.filter_by(id=user_id).first()

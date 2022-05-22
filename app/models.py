@@ -105,6 +105,7 @@ class User(db.Model):
     admin = db.Column(db.Boolean, nullable=False, default=False)
     is_fake=db.Column(db.Boolean, default=False)
     unit=db.Column(db.String, default='imperial')
+    bio=db.Column(db.String)
 
     reviews = db.relationship(
         "Review",
