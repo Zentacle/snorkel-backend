@@ -3149,7 +3149,7 @@ def fetch_dive_shops():
   return { 'data': data }
 
 @app.route('/dive_shops/create', methods=['POST'])
-# @jwt_required()
+@jwt_required()
 def create_dive_shop():
   url = request.json.get('url')
   fareharbor_url = request.json.get('fareharbor_url')
