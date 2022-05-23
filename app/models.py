@@ -494,6 +494,32 @@ class DiveShop(db.Model):
     area_one_id = db.Column(db.Integer, db.ForeignKey('area_one.id'), nullable=True)
     country_id = db.Column(db.Integer, db.ForeignKey('country.id'), nullable=True)
 
+    def get_simple_dict(self):
+      return {
+        'id': self.id,
+        'url': self.url,
+        'logo_img': self.logo_img,
+        'latitude': self.latitude,
+        'longitude': self.longitude,
+        'address1': self.address1,
+        'address2': self.address2
+      }
+
+    def get_dict(self):
+     return {
+        'id': self.id,
+        'url': self.url,
+        "fareharbor_url": self.fareharbor_url,
+        'logo_img': self.logo_img,
+        'latitude': self.latitude,
+        'longitude': self.longitude,
+        'address1': self.address1,
+        'address2': self.address2,
+        "city": self.city,
+        "state": self.state
+      }
+      
+
 class PasswordReset(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
