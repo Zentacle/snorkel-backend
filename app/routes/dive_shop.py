@@ -13,7 +13,11 @@ def fetch_dive_shops():
 
 @bp.route('/get/<int:id>', methods=['GET'])
 def fetch_dive_shop(id):
-  print('id selected', id)
+  dive_shop = DiveShop.query.get(id)
+  if dive_shop:
+    data = dive_shop.get_dict()
+    return { 'data': data }
+  return 'No dive shop found', 400
 
 @bp.route('/create', methods=['POST'])
 @jwt_required()
