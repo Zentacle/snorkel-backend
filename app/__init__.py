@@ -3142,8 +3142,8 @@ def reset_password():
     return resp
   return {'msg': 'No token or password provided'}, 422
 
-from app.routes import dive_shop
-app.register_blueprint(dive_shop.bp)
+from app.routes import shop
+app.register_blueprint(shop.bp)
 
 @app.route('/spot/tide')
 @cache.cached(query_string=True, timeout=3600)

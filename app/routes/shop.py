@@ -3,7 +3,7 @@ from app.models import DiveShop
 from app import db
 from flask_jwt_extended import jwt_required, get_current_user
 
-bp = Blueprint('dive_shop', __name__, url_prefix="/shop")
+bp = Blueprint('shop', __name__, url_prefix="/shop")
 
 @bp.route('/get', methods=['GET'])
 def fetch_dive_shops():
@@ -62,10 +62,10 @@ def create_dive_shop():
 def update_dive_shop(id):
   dive_shop = dive_shop = DiveShop.query.get_or_404(id)
   user = get_current_user()
-    
+
   # restrict access to patching a dive log
   if dive_shop.owner_user_id != user.id and not user.admin:
-    return "Only shop owner and admin can perform this action", 403
+    return { "msg": "Only shop owner and admin can perform this action" }, 403
 
   updates = request.json
   try:
@@ -77,4 +77,9 @@ def update_dive_shop(id):
   data = dive_shop.get_dict()
 
   return { 'data': data }
+
+@bp.route('/upload_stamp_image', methods=['POST'])
+@jwt_required()
+def upload_stamp_image():
+  pass
   
