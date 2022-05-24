@@ -3,7 +3,7 @@ from app.models import DiveShop
 from app import db
 from flask_jwt_extended import jwt_required, get_current_user
 
-bp = Blueprint('dive_shop', __name__, url_prefix="/dive_shops")
+bp = Blueprint('dive_shop', __name__, url_prefix="/shop")
 
 @bp.route('/get', methods=['GET'])
 def fetch_dive_shops():
@@ -59,7 +59,7 @@ def create_dive_shop():
 
   return { 'dive_shop': dive_shop.get_dict() }
 
-@bp.route('/<int:id>/patch', methods=['PATCH'])
+@bp.route('/patch/<int:id>', methods=['PATCH'])
 @jwt_required()
 def update_dive_shop(id):
   dive_shop = dive_shop = DiveShop.query.get(id)

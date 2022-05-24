@@ -495,6 +495,7 @@ class DiveShop(db.Model):
     country_id = db.Column(db.Integer, db.ForeignKey('country.id'), nullable=True)
     owner_user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
     stamp_uri = db.Column(db.String, nullable=True)
+    owner = db.relationship("User", uselist=False)
 
     def get_simple_dict(self):
       return {
@@ -505,6 +506,7 @@ class DiveShop(db.Model):
         'longitude': self.longitude,
         'address1': self.address1,
         'address2': self.address2,
+        "owner_user_id": self.owner_user_id,
       }
 
     def get_dict(self):
@@ -520,7 +522,8 @@ class DiveShop(db.Model):
         "city": self.city,
         "state": self.state,
         "owner_user_id": self.owner_user_id,
-        "stamp_uri": self.stamp_uri
+        "stamp_uri": self.stamp_uri,
+        "owner": self.owner and self.owner.get_dict()
       }
       
 
