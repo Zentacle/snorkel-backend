@@ -494,6 +494,7 @@ class DiveShop(db.Model):
     area_one_id = db.Column(db.Integer, db.ForeignKey('area_one.id'), nullable=True)
     country_id = db.Column(db.Integer, db.ForeignKey('country.id'), nullable=True)
     owner_user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+    stamp_uri = db.Column(db.String, nullable=True)
 
     def get_simple_dict(self):
       return {
@@ -518,7 +519,8 @@ class DiveShop(db.Model):
         'address2': self.address2,
         "city": self.city,
         "state": self.state,
-        "owner_user_id": self.owner_user_id
+        "owner_user_id": self.owner_user_id,
+        "stamp_uri": self.stamp_uri
       }
       
 
