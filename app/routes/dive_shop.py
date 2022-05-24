@@ -1,7 +1,7 @@
 from flask import Blueprint, request
 from app.models import DiveShop
 from app import db
-from flask_jwt_extended import jwt_required
+from flask_jwt_extended import jwt_required, get_current_user
 
 bp = Blueprint('dive_shop', __name__, url_prefix="/dive_shops")
 
@@ -58,3 +58,27 @@ def create_dive_shop():
   db.session.commit()
 
   return { 'dive_shop': dive_shop.get_dict() }
+
+@bp.route('/<int:id>/patch', methods=['PATCH'])
+@jwt_required()
+def update_dive_shop(id):
+  dive_shop = dive_shop = DiveShop.query.get(id)
+  user = get_current_user()
+  
+  if dive_shop:
+    # restrict access to patching a dive log
+    if dive_shop.owner_user_id != id or not user.admin:
+      return "Only shop owner and admin can perform this action", 403
+
+    updates = request.json
+    try:
+      for key in updates.keys():
+        setattr(dive_shop, key, updates.get(key))
+    except ValueError as e:
+      return e, 500
+    db.session.commit()
+    data = dive_shop.get_dict()
+
+    return { 'data': data }
+  
+  return 'No dive shop found', 400 
