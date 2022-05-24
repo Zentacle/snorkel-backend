@@ -57,7 +57,7 @@ def create_dive_shop():
   db.session.add(dive_shop)
   db.session.commit()
 
-  return { 'dive_shop': dive_shop.get_dict() }
+  return { 'data': dive_shop.get_dict() }
 
 @bp.route('/patch/<int:id>', methods=['PATCH'])
 @jwt_required()
