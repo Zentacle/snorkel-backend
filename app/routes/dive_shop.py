@@ -13,11 +13,9 @@ def fetch_dive_shops():
 
 @bp.route('/get/<int:id>', methods=['GET'])
 def fetch_dive_shop(id):
-  dive_shop = DiveShop.query.get(id)
-  if dive_shop:
-    data = dive_shop.get_dict()
-    return { 'data': data }
-  return 'No dive shop found', 400
+  dive_shop = DiveShop.query.get_or_404(id)
+  data = dive_shop.get_dict()
+  return { 'data': data }
 
 @bp.route('/create', methods=['POST'])
 @jwt_required()
@@ -62,23 +60,21 @@ def create_dive_shop():
 @bp.route('/patch/<int:id>', methods=['PATCH'])
 @jwt_required()
 def update_dive_shop(id):
-  dive_shop = dive_shop = DiveShop.query.get(id)
+  dive_shop = dive_shop = DiveShop.query.get_or_404(id)
   user = get_current_user()
-  
-  if dive_shop:
-    # restrict access to patching a dive log
-    if dive_shop.owner_user_id != id or not user.admin:
-      return "Only shop owner and admin can perform this action", 403
+    
+  # restrict access to patching a dive log
+  if dive_shop.owner_user_id != user.id and not user.admin:
+    return "Only shop owner and admin can perform this action", 403
 
-    updates = request.json
-    try:
-      for key in updates.keys():
-        setattr(dive_shop, key, updates.get(key))
-    except ValueError as e:
-      return e, 500
-    db.session.commit()
-    data = dive_shop.get_dict()
+  updates = request.json
+  try:
+    for key in updates.keys():
+      setattr(dive_shop, key, updates.get(key))
+  except ValueError as e:
+    return e, 500
+  db.session.commit()
+  data = dive_shop.get_dict()
 
-    return { 'data': data }
+  return { 'data': data }
   
-  return 'No dive shop found', 400 
