@@ -502,11 +502,11 @@ class DiveShop(db.Model):
         'id': self.id,
         'url': self.url,
         'logo_img': self.logo_img,
-        'latitude': self.latitude,
-        'longitude': self.longitude,
+        "fareharbor_url": self.fareharbor_url,
+        "city": self.city,
+        "state": self.state,
         'address1': self.address1,
         'address2': self.address2,
-        "owner_user_id": self.owner_user_id,
       }
 
     def get_dict(self):
