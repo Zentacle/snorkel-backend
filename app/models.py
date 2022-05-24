@@ -496,6 +496,39 @@ class DiveShop(db.Model):
     area_two_id = db.Column(db.Integer, db.ForeignKey('area_two.id'), nullable=True)
     area_one_id = db.Column(db.Integer, db.ForeignKey('area_one.id'), nullable=True)
     country_id = db.Column(db.Integer, db.ForeignKey('country.id'), nullable=True)
+    owner_user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+    stamp_uri = db.Column(db.String, nullable=True)
+    owner = db.relationship("User", uselist=False)
+
+    def get_simple_dict(self):
+      return {
+        'id': self.id,
+        'url': self.url,
+        'logo_img': self.logo_img,
+        "fareharbor_url": self.fareharbor_url,
+        "city": self.city,
+        "state": self.state,
+        'address1': self.address1,
+        'address2': self.address2,
+      }
+
+    def get_dict(self):
+     return {
+        'id': self.id,
+        'url': self.url,
+        "fareharbor_url": self.fareharbor_url,
+        'logo_img': self.logo_img,
+        'latitude': self.latitude,
+        'longitude': self.longitude,
+        'address1': self.address1,
+        'address2': self.address2,
+        "city": self.city,
+        "state": self.state,
+        "owner_user_id": self.owner_user_id,
+        "stamp_uri": self.stamp_uri,
+        "owner": self.owner and self.owner.get_dict()
+      }
+      
 
 class PasswordReset(db.Model):
     id = db.Column(db.Integer, primary_key=True)
