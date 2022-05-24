@@ -518,6 +518,7 @@ class DiveShop(db.Model):
         'address2': self.address2,
         "city": self.city,
         "state": self.state,
+        "owner_user_id": self.owner_user_id
       }
       
 
