@@ -1,7 +1,7 @@
 """add owner user id to dive shop Model
 
 Revision ID: 68b56a7e8edb
-Revises: af11b5deeae9
+Revises: 691a6ab0aca8
 Create Date: 2022-05-24 07:04:17.274334
 
 """
@@ -11,7 +11,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision = '68b56a7e8edb'
-down_revision = 'af11b5deeae9'
+down_revision = '691a6ab0aca8'
 branch_labels = None
 depends_on = None
 

@@ -8,9 +8,12 @@ from sqlalchemy import func
 db = SQLAlchemy()
 
 tags = db.Table('tags',
-    db.Column('tag_id', db.Integer, db.ForeignKey('tag.id'), primary_key=True),
-    db.Column('spot_id', db.Integer, db.ForeignKey('spot.id'), primary_key=True)
-)
+                db.Column('tag_id', db.Integer, db.ForeignKey(
+                    'tag.id'), primary_key=True),
+                db.Column('spot_id', db.Integer, db.ForeignKey(
+                    'spot.id'), primary_key=True)
+                )
+
 
 class ShoreDivingData(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -22,7 +25,8 @@ class ShoreDivingData(db.Model):
     region_url = db.Column(db.String)
     spot_id = db.Column(db.Integer, db.ForeignKey('spot.id'), nullable=False)
 
-    spot = db.relationship("Spot", back_populates="shorediving_data", uselist=False)
+    spot = db.relationship(
+        "Spot", back_populates="shorediving_data", uselist=False)
 
     def get_dict(self):
         return {
@@ -58,6 +62,7 @@ class ShoreDivingData(db.Model):
     def create_url(cls, shorediving_data):
         return '/Earth/' + shorediving_data.region_url + '/' + shorediving_data.destination_url + '/' + shorediving_data.name_url
 
+
 class ShoreDivingReview(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     shorediving_id = db.Column(db.String, unique=True)
@@ -81,7 +86,8 @@ class ShoreDivingReview(db.Model):
     surf = db.Column(db.Integer)
     average = db.Column(db.Float)
 
-    review = db.relationship("Review", back_populates="shorediving_data", uselist=False)
+    review = db.relationship(
+        "Review", back_populates="shorediving_data", uselist=False)
 
     def get_dict(self):
         return {
@@ -89,6 +95,7 @@ class ShoreDivingReview(db.Model):
             'id': self.id,
             'shorediving_id': self.shorediving_id,
         }
+
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -100,12 +107,14 @@ class User(db.Model):
     profile_pic = db.Column(db.String)
     password = db.Column(db.String)
     registered_on = db.Column(db.DateTime, nullable=False,
-        default=datetime.utcnow)
+                              default=datetime.utcnow)
     hometown = db.Column(db.String)
     admin = db.Column(db.Boolean, nullable=False, default=False)
-    is_fake=db.Column(db.Boolean, default=False)
-    unit=db.Column(db.String, default='imperial')
-    bio=db.Column(db.String)
+    is_fake = db.Column(db.Boolean, default=False)
+    unit = db.Column(db.String, nullable=False, default='imperial')
+    bio = db.Column(db.String)
+    latitude = db.Column(db.Float)
+    longitude = db.Column(db.Float)
 
     reviews = db.relationship(
         "Review",
@@ -135,6 +144,28 @@ class User(db.Model):
             pass
         return data
 
+    @hybrid_method
+    def distance(self, latitude, longitude):
+        import math
+        return math.sqrt(
+            (
+                69.1 * (self.latitude - latitude) ** 2
+                + ((69.1 * (self.longitude - longitude)
+                   * math.cos(self.latitude / 57.3)) ** 2)
+            )
+        )
+
+    @distance.expression
+    def distance(self, latitude, longitude):
+        return func.sqrt(
+            (
+                func.pow(69.1 * (self.latitude - latitude), 2)
+                + (func.pow(69.1 * (self.longitude - longitude)
+                   * func.cos(self.latitude / 57.3), 2))
+            )
+        )
+
+
 class Spot(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String, nullable=False)
@@ -155,19 +186,25 @@ class Spot(db.Model):
     latitude = db.Column(db.Float)
     longitude = db.Column(db.Float)
     difficulty = db.Column(db.String)
-    locality_id = db.Column(db.Integer, db.ForeignKey('locality.id'), nullable=True)
-    area_two_id = db.Column(db.Integer, db.ForeignKey('area_two.id'), nullable=True)
-    area_one_id = db.Column(db.Integer, db.ForeignKey('area_one.id'), nullable=True)
-    country_id = db.Column(db.Integer, db.ForeignKey('country.id'), nullable=True)
+    locality_id = db.Column(
+        db.Integer, db.ForeignKey('locality.id'), nullable=True)
+    area_two_id = db.Column(
+        db.Integer, db.ForeignKey('area_two.id'), nullable=True)
+    area_one_id = db.Column(
+        db.Integer, db.ForeignKey('area_one.id'), nullable=True)
+    country_id = db.Column(
+        db.Integer, db.ForeignKey('country.id'), nullable=True)
     noaa_station_id = db.Column(db.String)
 
     reviews = db.relationship("Review", backref="spot")
     images = db.relationship("Image", backref="spot")
     submitter = db.relationship("User", uselist=False)
-    shorediving_data = db.relationship("ShoreDivingData", back_populates="spot", uselist=False)
-    wannadive_data = db.relationship("WannaDiveData", back_populates="spot", uselist=False)
+    shorediving_data = db.relationship(
+        "ShoreDivingData", back_populates="spot", uselist=False)
+    wannadive_data = db.relationship(
+        "WannaDiveData", back_populates="spot", uselist=False)
     tags = db.relationship('Tag', secondary=tags, lazy='subquery',
-        backref=db.backref('spot', lazy=True))
+                           backref=db.backref('spot', lazy=True))
 
     def get_basic_data(self):
         data = {}
@@ -218,8 +255,8 @@ class Spot(db.Model):
 
     def get_confidence_score(self):
         import math
-        z = 1.645 # 90% confidence interval (could 1.960 for 95%)
-        std_dev = 0.50 # roughly calculated based on existing review data
+        z = 1.645  # 90% confidence interval (could 1.960 for 95%)
+        std_dev = 0.50  # roughly calculated based on existing review data
         if self.num_reviews:
             return float(self.rating) - z * (std_dev/math.sqrt(self.num_reviews))
         else:
@@ -231,7 +268,8 @@ class Spot(db.Model):
         return math.sqrt(
             (
                 69.1 * (self.latitude - latitude) ** 2
-                + ((69.1 * (self.longitude - longitude) * math.cos(self.latitude / 57.3)) ** 2)
+                + ((69.1 * (self.longitude - longitude)
+                   * math.cos(self.latitude / 57.3)) ** 2)
             )
         )
 
@@ -240,7 +278,8 @@ class Spot(db.Model):
         return func.sqrt(
             (
                 func.pow(69.1 * (self.latitude - latitude), 2)
-                + (func.pow(69.1 * (self.longitude - longitude) * func.cos(self.latitude / 57.3), 2))
+                + (func.pow(69.1 * (self.longitude - longitude)
+                   * func.cos(self.latitude / 57.3), 2))
             )
         )
 
@@ -250,19 +289,21 @@ class Spot(db.Model):
         return math.sqrt(
             (
                 69.1 * (self.latitude - latitude) ** 2
-                + ((69.1 * (self.longitude - longitude) * math.cos(self.latitude / 57.3)) ** 2)
+                + ((69.1 * (self.longitude - longitude)
+                   * math.cos(self.latitude / 57.3)) ** 2)
             )
         )
 
     @sqlite3_distance.expression
     def sqlite3_distance(self, latitude, longitude):
         return func.abs(
-                (69.1 * (self.latitude - latitude) * 69.1 * (self.latitude - latitude))
-                + (
-                    (69.1 * (self.longitude - longitude))
-                    * (69.1 * (self.longitude - longitude))
-                )
+            (69.1 * (self.latitude - latitude) * 69.1 * (self.latitude - latitude))
+            + (
+                (69.1 * (self.longitude - longitude))
+                * (69.1 * (self.longitude - longitude))
             )
+        )
+
 
 class Review(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -270,11 +311,11 @@ class Review(db.Model):
     text = db.Column(db.String)
     author_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     beach_id = db.Column(db.Integer, db.ForeignKey('spot.id'), nullable=False)
-    visibility = db.Column(db.Integer, nullable=True) # in ft
+    visibility = db.Column(db.Integer, nullable=True)  # in ft
     date_posted = db.Column(db.DateTime, nullable=False,
-        default=datetime.utcnow)
+                            default=datetime.utcnow)
     date_dived = db.Column(db.DateTime, nullable=True,
-        default=datetime.utcnow)
+                           default=datetime.utcnow)
     activity_type = db.Column(db.String)
     title = db.Column(db.String)
     dive_length = db.Column(db.Integer)
@@ -289,7 +330,8 @@ class Review(db.Model):
     difficulty = db.Column(db.String)
 
     images = db.relationship("Image", backref=db.backref('review', lazy=True))
-    shorediving_data = db.relationship("ShoreDivingReview", back_populates="review", uselist=False)
+    shorediving_data = db.relationship(
+        "ShoreDivingReview", back_populates="review", uselist=False)
 
     def get_dict(self):
         data = self.__dict__.copy()
@@ -301,11 +343,13 @@ class Review(db.Model):
             data.pop('spot', None)
         return data
 
+
 class Image(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     url = db.Column(db.String, unique=False, nullable=False)
     beach_id = db.Column(db.Integer, db.ForeignKey('spot.id'), nullable=True)
-    review_id = db.Column(db.Integer, db.ForeignKey('review.id'), nullable=True)
+    review_id = db.Column(
+        db.Integer, db.ForeignKey('review.id'), nullable=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
     caption = db.Column(db.String)
     created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
@@ -318,7 +362,9 @@ class Image(db.Model):
             'caption': self.caption,
         }
 
-#City
+# City
+
+
 class Locality(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     google_name = db.Column(db.String)
@@ -343,7 +389,8 @@ class Locality(db.Model):
         if country and area_one:
             data['url'] = self.get_url(country, area_one, area_two)
         elif self.country and self.area_one:
-            data['url'] = self.get_url(self.country, self.area_one, self.area_two)
+            data['url'] = self.get_url(
+                self.country, self.area_one, self.area_two)
         return data
 
     def get_short_name(self):
@@ -352,7 +399,9 @@ class Locality(db.Model):
     def get_url(self, country, area_one, area_two):
         return '/loc/' + country.short_name + '/' + area_one.short_name + '/' + (area_two.short_name if area_two else '_') + '/' + self.get_short_name()
 
-#County - Doesn't always exist
+# County - Doesn't always exist
+
+
 class AreaTwo(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     google_name = db.Column(db.String)
@@ -392,7 +441,9 @@ class AreaTwo(db.Model):
     def get_url(self, country, area_one):
         return '/loc/' + country.short_name + '/' + area_one.short_name + '/' + self.short_name
 
-#State
+# State
+
+
 class AreaOne(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String, nullable=False)
@@ -429,7 +480,9 @@ class AreaOne(db.Model):
     def get_url(self, country):
         return '/loc/' + country.short_name + '/' + self.short_name
 
-#Country
+# Country
+
+
 class Country(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String, nullable=False)
@@ -461,6 +514,7 @@ class Country(db.Model):
     def get_url(self):
         return '/loc/' + self.short_name
 
+
 class Tag(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     text = db.Column(db.String, nullable=False)
@@ -473,12 +527,15 @@ class Tag(db.Model):
             data.pop('_sa_instance_state', None)
         return data
 
+
 class WannaDiveData(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     url = db.Column(db.String, nullable=False)
     spot_id = db.Column(db.Integer, db.ForeignKey('spot.id'), nullable=False)
 
-    spot = db.relationship("Spot", back_populates="wannadive_data", uselist=False)
+    spot = db.relationship(
+        "Spot", back_populates="wannadive_data", uselist=False)
+
 
 class DiveShop(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -492,56 +549,67 @@ class DiveShop(db.Model):
     logo_img = db.Column(db.String)
     latitude = db.Column(db.Float)
     longitude = db.Column(db.Float)
-    locality_id = db.Column(db.Integer, db.ForeignKey('locality.id'), nullable=True)
-    area_two_id = db.Column(db.Integer, db.ForeignKey('area_two.id'), nullable=True)
-    area_one_id = db.Column(db.Integer, db.ForeignKey('area_one.id'), nullable=True)
-    country_id = db.Column(db.Integer, db.ForeignKey('country.id'), nullable=True)
-    owner_user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+    locality_id = db.Column(
+        db.Integer, db.ForeignKey('locality.id'), nullable=True)
+    area_two_id = db.Column(
+        db.Integer, db.ForeignKey('area_two.id'), nullable=True)
+    area_one_id = db.Column(
+        db.Integer, db.ForeignKey('area_one.id'), nullable=True)
+    country_id = db.Column(
+        db.Integer, db.ForeignKey('country.id'), nullable=True)
+    owner_user_id = db.Column(
+        db.Integer, db.ForeignKey('user.id'), nullable=True)
     stamp_uri = db.Column(db.String, nullable=True)
     owner = db.relationship("User", uselist=False)
 
     def get_simple_dict(self):
-      return {
-        'id': self.id,
-        'url': self.url,
-        'logo_img': self.logo_img,
-        "fareharbor_url": self.fareharbor_url,
-        "city": self.city,
-        "state": self.state,
-        'address1': self.address1,
-        'address2': self.address2,
-      }
+        return {
+            'id': self.id,
+            'url': self.url,
+            'logo_img': self.logo_img,
+            "fareharbor_url": self.fareharbor_url,
+            "city": self.city,
+            "state": self.state,
+            'address1': self.address1,
+            'address2': self.address2,
+        }
 
     def get_dict(self):
-     return {
-        'id': self.id,
-        'url': self.url,
-        "fareharbor_url": self.fareharbor_url,
-        'logo_img': self.logo_img,
-        'latitude': self.latitude,
-        'longitude': self.longitude,
-        'address1': self.address1,
-        'address2': self.address2,
-        "city": self.city,
-        "state": self.state,
-        "owner_user_id": self.owner_user_id,
-        "stamp_uri": self.stamp_uri,
-        "owner": self.owner and self.owner.get_dict()
-      }
-      
+        return {
+            'id': self.id,
+            'url': self.url,
+            "fareharbor_url": self.fareharbor_url,
+            'logo_img': self.logo_img,
+            'latitude': self.latitude,
+            'longitude': self.longitude,
+            'address1': self.address1,
+            'address2': self.address2,
+            "city": self.city,
+            "state": self.state,
+            "owner_user_id": self.owner_user_id,
+            "stamp_uri": self.stamp_uri,
+            "owner": self.owner and self.owner.get_dict()
+        }
+
 
 class PasswordReset(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     token = db.Column(db.String, nullable=False, unique=True)
-    token_expiry = db.Column(db.DateTime, nullable=False, default=(lambda: datetime.utcnow() + timedelta(minutes=15)))
+    token_expiry = db.Column(db.DateTime, nullable=False, default=(
+        lambda: datetime.utcnow() + timedelta(minutes=15)))
+
 
 class DivePartnerAd(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    locality_id = db.Column(db.Integer, db.ForeignKey('locality.id'), nullable=True)
-    area_two_id = db.Column(db.Integer, db.ForeignKey('area_two.id'), nullable=True)
-    area_one_id = db.Column(db.Integer, db.ForeignKey('area_one.id'), nullable=True)
-    country_id = db.Column(db.Integer, db.ForeignKey('country.id'), nullable=True)
+    locality_id = db.Column(
+        db.Integer, db.ForeignKey('locality.id'), nullable=True)
+    area_two_id = db.Column(
+        db.Integer, db.ForeignKey('area_two.id'), nullable=True)
+    area_one_id = db.Column(
+        db.Integer, db.ForeignKey('area_one.id'), nullable=True)
+    country_id = db.Column(
+        db.Integer, db.ForeignKey('country.id'), nullable=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     latitude = db.Column(db.Float)
     longitude = db.Column(db.Float)
