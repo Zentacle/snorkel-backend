@@ -87,14 +87,13 @@ def update_dive_shop(id):
 def upload_stamp_image():
   if 'file' not in request.files:
     return { 'msg': 'No file included in request' }, 422
-  file = request.files.get('file')
   request_url = wally_api_base + '/files/upload'
   headers = {
-    "Content-Type": "multipart/form-data",
     "Authorization": "Bearer " + wally_auth_token
   }
 
-  response = requests.post(request_url, headers=headers, data=file)
+  response = requests.post(request_url, headers=headers, data={}, files=request.files)
+  response.raise_for_status()
   data = response.json()
 
-  print('wally resp', data)
+  return { 'data':  data }
