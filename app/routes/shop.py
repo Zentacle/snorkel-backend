@@ -1,9 +1,13 @@
+import requests
+import os
 from flask import Blueprint, request
 from app.models import DiveShop
 from app import db
 from flask_jwt_extended import jwt_required, get_current_user
 
 bp = Blueprint('shop', __name__, url_prefix="/shop")
+wally_api_base = os.environ.get('WALLY_API')
+wally_auth_token = os.environ.get('WALLY_AUTH_TOKEN')
 
 @bp.route('/get', methods=['GET'])
 def fetch_dive_shops():
@@ -78,8 +82,18 @@ def update_dive_shop(id):
 
   return { 'data': data }
 
-@bp.route('/upload_stamp_image', methods=['POST'])
+@bp.route('/stamp_image', methods=['POST'])
 @jwt_required()
 def upload_stamp_image():
-  pass
-  
+  if 'file' not in request.files:
+    return { 'msg': 'No file included in request' }, 422
+  request_url = wally_api_base + '/files/upload'
+  headers = {
+    "Authorization": "Bearer " + wally_auth_token
+  }
+
+  response = requests.post(request_url, headers=headers, data={}, files=request.files)
+  response.raise_for_status()
+  data = response.json()
+
+  return { 'data':  data }
