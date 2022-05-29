@@ -611,6 +611,14 @@ def get_me():
     set_access_cookies(resp, auth_token)
     return resp
 
+@app.route("/users/nearby")
+def users_nearby():
+  latitude = request.args.get('latitude')
+  longitude = request.args.get('longitude')
+  query = User.query.filter(User.latitude.is_not(None)).order_by(User.distance(latitude, longitude)).limit(10)
+  results = query.all()
+  return { 'data': [result.get_dict() for result in results] }
+
 @app.route("/refresh")
 @jwt_required(refresh=True)
 def refresh_token():
