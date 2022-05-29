@@ -24,6 +24,8 @@ def fetch_dive_shop(id):
 @bp.route('/create', methods=['POST'])
 @jwt_required()
 def create_dive_shop():
+  user = get_current_user()
+
   url = request.json.get('url')
   fareharbor_url = request.json.get('fareharbor_url')
   address1 = request.json.get('address1')
@@ -53,11 +55,27 @@ def create_dive_shop():
     locality_id=locality_id,
     area_one_id=area_one_id,
     area_two_id=area_two_id,
-    country_id=country_id
+    country_id=country_id,
+    owner_user_id=user.id
   )
+
+  request_url = wally_api_base + '/wallets/create'
+  headers = {
+    'Authorization': 'Bearer ' + wally_auth_token,
+    'Content-Type': 'application/json',
+  }
 
   db.session.add(dive_shop)
   db.session.commit()
+
+  payload = {
+    'id': 'shop_' + str(dive_shop.id),
+    'email': user.email, # owner is the current user, so owner email is current user email
+    'tags': ['shop']
+  }
+
+  response = requests.post(request_url, headers=headers, json=payload)
+  response.raise_for_status()
 
   return { 'data': dive_shop.get_dict() }
 
