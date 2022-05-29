@@ -82,7 +82,7 @@ def update_dive_shop(id):
 
   return { 'data': data }
 
-@bp.route('/upload_stamp_image', methods=['POST'])
+@bp.route('/stamp_image', methods=['POST'])
 @jwt_required()
 def upload_stamp_image():
   if 'file' not in request.files:
