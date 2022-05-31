@@ -59,7 +59,7 @@ def create_dive_shop():
     owner_user_id=user.id
   )
 
-  request_url = wally_api_base + '/wallets/create'
+  request_url = f'{wally_api_base}/wallets/create'
   headers = {
     'Authorization': f'Bearer {wally_auth_token}',
     'Content-Type': 'application/json',
@@ -76,7 +76,6 @@ def create_dive_shop():
 
   response = requests.post(request_url, headers=headers, json=payload)
   response.raise_for_status()
-  print(response.json())
 
   return { 'data': dive_shop.get_dict() }
 
@@ -106,7 +105,7 @@ def update_dive_shop(id):
 def upload_stamp_image():
   if 'file' not in request.files:
     return { 'msg': 'No file included in request' }, 422
-  request_url = wally_api_base + '/files/upload'
+  request_url = f'{wally_api_base}/files/upload'
   headers = {
     'Authorization': f'Bearer {wally_auth_token}'
   }
