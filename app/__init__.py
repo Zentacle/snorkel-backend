@@ -3234,7 +3234,7 @@ def connect_buddy():
   message.template_id = 'd-bd201d4de3ad404ebf5b8fe7045c15a3'
   message.reply_to = current_user.email
   message.dynamic_template_data = {
-      'receiver_name': user.first_name,
+      'receiver_name': user.display_name,
       'request_name': current_user.first_name,
       'request_username': current_user.username,
       'request_email': current_user.email,
