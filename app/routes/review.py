@@ -2,6 +2,7 @@ import os
 import logging
 import boto3
 import io
+import requests
 from flask import Blueprint, request
 from app.models import (
   Review,
@@ -33,6 +34,8 @@ from sqlalchemy import and_
 from app.helpers.demicrosoft import demicrosoft
 
 bp = Blueprint('review', __name__, url_prefix="")
+wally_api_base = os.environ.get('WALLY_API')
+wally_auth_token = os.environ.get('WALLY_AUTH_TOKEN')
 
 @bp.route("/review/add", methods=["POST"])
 @jwt_required()
@@ -176,6 +179,22 @@ def add_review():
     spot.last_review_date = date_dived
     spot.last_review_viz = visibility
   db.session.commit()
+
+  request_url = f'{wally_api_base}/wallets/create'
+  headers = {
+    'Authorization': f'Bearer {wally_auth_token}',
+    'Content-Type': 'application/json',
+  }
+
+  payload = {
+    'id': f'user_{str(user.id)}',
+    'email': user.email, # owner is the current user, so owner email is current user email
+    'tags': ['user']
+  }
+
+  response = requests.post(request_url, headers=headers, json=payload)
+  response.raise_for_status()
+
   message = Mail(
       from_email=('hello@zentacle.com', 'Zentacle'),
       to_emails='mayank@zentacle.com')
