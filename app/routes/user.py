@@ -24,12 +24,12 @@ from google.auth.transport import requests as google_requests
 import bcrypt
 from flask.helpers import make_response
 
-bp = Blueprint('user', __name__, url_prefix="/user")
+bp = Blueprint('user', __name__, url_prefix="")
 
 """
 Auth data goes in a cookie
 """
-@bp.route("/register", methods=["POST"])
+@bp.route("/user/register", methods=["POST"])
 def user_signup():
   """ Register
   ---
@@ -100,7 +100,7 @@ def user_signup():
   )
   return resp
 
-@bp.route("/apple_register", methods=["POST"])
+@bp.route("/user/apple_register", methods=["POST"])
 def user_apple_signup():
   """ Apple Register
   ---
@@ -178,7 +178,7 @@ def user_apple_signup():
   return { "msg": "user doesn't exist and didn't get a user object"}, 422
 
 
-@bp.route("/google_register", methods=["POST"])
+@bp.route("/user/google_register", methods=["POST"])
 def user_google_signup():
   """ Google Register
   ---
@@ -244,7 +244,7 @@ def user_google_signup():
     pass
   return { 'data': userid, 'token': token }
 
-@bp.route("/register/password", methods=["POST"])
+@bp.route("/user/register/password", methods=["POST"])
 def user_finish_signup():
   """ Add account password
   ---
@@ -303,7 +303,7 @@ def user_finish_signup():
 Save the response token as an Authorization header with the format
 Authorization: Bearer <token>
 """
-@bp.route("/login", methods=["POST"])
+@bp.route("/user/login", methods=["POST"])
 def user_login():
   """ Login
   ---
@@ -348,13 +348,13 @@ def user_login():
   else:
     return { 'msg': 'Wrong password or user does not exist' }, 400
 
-@bp.route("/logout")
+@bp.route("/user/logout")
 def logout():
   resp = make_response({'msg': 'Successfully logged out'})
   unset_jwt_cookies(resp)
   return resp
 
-@bp.route("/patch", methods=["PATCH"])
+@bp.route("/user/patch", methods=["PATCH"])
 @jwt_required()
 def patch_user():
   """ Patch User
@@ -411,7 +411,7 @@ def patch_user():
   user.id
   return user.get_dict(), 200
 
-@bp.route("/me")
+@bp.route("/user/me")
 @jwt_required(refresh=True)
 def get_me():
     """ Fetch Current User
@@ -442,6 +442,14 @@ def get_me():
     resp = make_response(resp_data)
     set_access_cookies(resp, auth_token)
     return resp
+
+@bp.route("/users/nearby")
+def users_nearby():
+  latitude = request.args.get('latitude')
+  longitude = request.args.get('longitude')
+  query = User.query.filter(User.latitude.is_not(None)).order_by(User.distance(latitude, longitude)).limit(10)
+  results = query.all()
+  return { 'data': [result.get_dict() for result in results] }
 
 @bp.route("/user/get")
 @cache.cached(query_string=True)

@@ -2065,7 +2065,7 @@ def connect_buddy():
   message.reply_to = current_user.email
   message.dynamic_template_data = {
       'receiver_name': user.first_name,
-      'request_name': current_user.first_name,
+      'request_name': current_user.display_name,
       'request_username': current_user.username,
       'request_email': current_user.email,
   }
