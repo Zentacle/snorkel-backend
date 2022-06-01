@@ -1,7 +1,7 @@
 import os
 from flask import Blueprint, request
-from app.models import User
-from app import db, app
+from app.models import User, Review
+from app import db, app, cache
 import jwt
 import json
 import requests
@@ -442,3 +442,48 @@ def get_me():
     resp = make_response(resp_data)
     set_access_cookies(resp, auth_token)
     return resp
+
+@bp.route("/user/get")
+@cache.cached(query_string=True)
+def get_user():
+    """ Get User
+    ---
+    get:
+        summary: Get User
+        description: Get User (and their reviews)
+        parameters:
+            - name: username
+              in: body
+              description: username
+              type: string
+              required: true
+        responses:
+            200:
+                description: Returns user object
+                content:
+                  application/json:
+                    schema: UserSchema
+    """
+    username = request.args.get('username')
+    if not username:
+      return {
+        'msg': 'Include a username in the request. If you are trying to get the logged in user, use /user/me'
+      }, 422
+    user = User.query \
+      .filter(func.lower(User.username)==username.lower()).first()
+    reviews = Review.query.filter_by(author_id=user.id).order_by(Review.date_dived.desc()).all()
+    if not user:
+      return { 'msg': 'User doesn\'t exist' }, 404
+    user_data = user.get_dict()
+    reviews_data = []
+    for index, review in enumerate(reviews):
+      review.spot
+      review_data = review.get_dict()
+      review_data['spot'] = review.spot.get_dict()
+      if not review_data.get('title'):
+        review_data['title'] = review.spot.name
+      title = review_data['title']
+      review_data['title'] = f'#{index+1} - {title}'
+      reviews_data.append(review_data)
+    user_data['reviews'] = reviews_data
+    return { 'data': user_data }
