@@ -16,7 +16,6 @@ from app import (
   db,
   get_summary_reviews_helper,
   create_unsigned_url,
-  cache,
   fake_users
 )
 from flask_jwt_extended import (
@@ -33,11 +32,11 @@ from sqlalchemy.orm import joinedload
 from sqlalchemy import and_
 from app.helpers.demicrosoft import demicrosoft
 
-bp = Blueprint('review', __name__, url_prefix="")
+bp = Blueprint('review', __name__, url_prefix="review")
 wally_api_base = os.environ.get('WALLY_API')
 wally_auth_token = os.environ.get('WALLY_AUTH_TOKEN')
 
-@bp.route("/review/add", methods=["POST"])
+@bp.route("/add", methods=["POST"])
 @jwt_required()
 def add_review():
   """ Add Review
@@ -216,9 +215,9 @@ def add_review():
   review.id
   return { 'review': review.get_dict(), 'spot': spot.get_dict() }, 200
 
-@bp.route("/review/get")
+@bp.route("/get")
 def get_review():
-  """ Get Reviews
+  """ Get Review
   ---
   get:
       summary: Get Single Review
@@ -283,110 +282,14 @@ def get_review():
       output.append(data)
     return { 'data': output, 'next_offset': offset + len(output) }
 
-
-@bp.route("/reviews/recent")
-def get_recent_reviews():
-  """ Get Recent Reviews
-  ---
-  get:
-      summary: Get recent reviews
-      description: Get recent reviews
-      responses:
-          200:
-              description: Returns review object
-              content:
-                application/json:
-                  schema: ReviewSchema
-  """
-  reviews = Review.query \
-    .options(joinedload('spot')) \
-    .order_by(Review.date_posted.desc()).limit(25).all()
-  data = []
-  for review in reviews:
-    spot = review.spot
-    review_data = review.get_dict()
-    review_data['spot'] = spot.get_dict()
-    data.append(review_data)
-  return { 'data': data }
-
-@bp.route("/reviews/get")
-@cache.cached(query_string=True)
-def get_reviews():
-  """ Get Reviews
-  ---
-  get:
-      summary: Get Reviews for spot
-      description: Get Reviews for spot
-      parameters:
-          - name: beach_id
-            in: body
-            description: beach_id
-            type: integer
-            required: true
-          - name: limit
-            in: body
-            description: limit on number of reviews to fetch
-            type: integer
-            required: false
-          - name: offset
-            in: body
-            description: offset to start if paginating through reviews
-            type: integer
-            required: false
-      responses:
-          200:
-              description: Returns review object
-              content:
-                application/json:
-                  schema: ReviewSchema
-  """
-  sd_id = request.args.get('sd_review_id')
-  if sd_id:
-    review = Review.query.filter(Review.shorediving_data.has(shorediving_id=sd_id)).first()
-    if review:
-      data = review.get_dict()
-      data['user'] = review.user.get_dict()
-      return { 'data': [data] }
-  beach_id = request.args.get('beach_id')
-  limit = request.args.get('limit')
-  offset = int(request.args.get('offset')) if request.args.get('offset') else 0
-
-  query = Review.query.options(joinedload('user')) \
-    .options(joinedload('shorediving_data')) \
-    .options(joinedload('images')) \
-    .order_by(Review.date_posted.desc()) \
-    .filter_by(beach_id=beach_id)
-  if limit:
-    query = query.limit(limit)
-  if offset:
-    query = query.offset(offset)
-  reviews = query.all()
-  output = []
-  for review in reviews:
-    data = review.get_dict()
-    data['user'] = review.user.get_dict()
-    try:
-      data['shorediving_data'] = review.shorediving_data.get_dict()
-    except Exception:
-      pass
-    image_data = []
-    signedUrls = []
-    for image in review.images:
-      image_data.append(image.get_dict())
-      signedUrls.append(create_unsigned_url(image.url, 'reviews', os.environ.get('S3_BUCKET_NAME')))
-    data['images'] = image_data
-    data['signedUrls'] = signedUrls
-    output.append(data)
-  return { 'data': output, 'next_offset': offset + len(output) }
-
 # returns count for each rating for individual beach/area ["1"] ["2"] ["3"], etc
 # returns count for total ratings ["total"]
 # returns average rating for beach ["average"]
-@bp.route("/review/getsummary")
+@bp.route("/getsummary")
 def get_summary_reviews():
   return {"data": get_summary_reviews_helper(request.args.get('beach_id'))}
 
-@bp.route("/review/patch", methods=["PATCH"])
+@bp.route("/patch", methods=["PATCH"])
 def patch_review():
   # TODO: Change this function to be auth protected
   """ Patch Review
@@ -497,7 +400,7 @@ def patch_review():
   spot_data = spot.get_dict()
   return spot_data, 200
 
-@bp.route("/review/upload", methods=["POST"])
+@bp.route("/upload", methods=["POST"])
 @jwt_required()
 def upload_file():
     """ Upload File
@@ -540,7 +443,7 @@ def upload_file():
         file_urls.append(s3_url)
     return { 'data': file_urls }
 
-@bp.route("/review/delete", methods=["POST"])
+@bp.route("/delete", methods=["POST"])
 @jwt_required()
 def delete_review():
   review_id = request.args.get('review_id')
@@ -580,7 +483,7 @@ def delete_review():
   db.session.commit()
   return {}
 
-@bp.route("/review/fake", methods=["POST"])
+@bp.route("/fake", methods=["POST"])
 def submit_fake_review():
   beach_id = request.json.get('beach_id')
   import random
@@ -626,7 +529,7 @@ def submit_fake_review():
   db.session.commit()
   return 'Done', 200
 
-@bp.route("/review/add/shorediving", methods=["POST"])
+@bp.route("/add/shorediving", methods=["POST"])
 def add_shore_review():
   shorediving_beach_id = request.json.get('beach_id')
   snorkel=request.json.get('snorkel')

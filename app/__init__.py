@@ -1982,8 +1982,14 @@ app.register_blueprint(shop.bp)
 from app.routes import user
 app.register_blueprint(user.bp)
 
+from app.routes import users
+app.register_blueprint(users.bp)
+
 from app.routes import review
 app.register_blueprint(review.bp)
+
+from app.routes import reviews
+app.register_blueprint(reviews.bp)
 
 @app.route('/spot/tide')
 @cache.cached(query_string=True, timeout=3600)
