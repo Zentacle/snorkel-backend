@@ -1,7 +1,7 @@
 from flask import Blueprint, request
 from app.models import User
 
-bp = Blueprint('users', __name__, url_prefix="users")
+bp = Blueprint('users', __name__, url_prefix="/users")
 
 @bp.route("/nearby")
 def users_nearby():

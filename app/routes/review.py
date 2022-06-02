@@ -32,7 +32,7 @@ from sqlalchemy.orm import joinedload
 from sqlalchemy import and_
 from app.helpers.demicrosoft import demicrosoft
 
-bp = Blueprint('review', __name__, url_prefix="review")
+bp = Blueprint('review', __name__, url_prefix="/review")
 wally_api_base = os.environ.get('WALLY_API')
 wally_auth_token = os.environ.get('WALLY_AUTH_TOKEN')
 

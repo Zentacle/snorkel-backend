@@ -4,7 +4,7 @@ from app.models import Review
 from app import create_unsigned_url, cache
 from sqlalchemy.orm import joinedload
 
-bp = Blueprint('reviews', __name__, url_prefix="reviews")
+bp = Blueprint('reviews', __name__, url_prefix="/reviews")
 
 @bp.route("/recent")
 def get_recent_reviews():

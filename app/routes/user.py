@@ -24,7 +24,7 @@ from google.auth.transport import requests as google_requests
 import bcrypt
 from flask.helpers import make_response
 
-bp = Blueprint('user', __name__, url_prefix="user")
+bp = Blueprint('user', __name__, url_prefix="/user")
 
 """
 Auth data goes in a cookie
