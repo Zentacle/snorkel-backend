@@ -1,3 +1,4 @@
+import os
 from flask import Blueprint, request
 from app.models import User, DivePartnerAd
 from sqlalchemy import or_, sql
