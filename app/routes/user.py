@@ -487,3 +487,31 @@ def get_user():
       reviews_data.append(review_data)
     user_data['reviews'] = reviews_data
     return { 'data': user_data }
+
+@bp.route("/register/fake", methods=["POST"])
+def user_signup_fake():
+  display_name = request.json.get('display_name')
+  username = display_name.replace(" ", "_").lower()
+  first_name = display_name.split(' ')[0]
+  last_name = display_name.split(' ')[1]
+  email = username + '@zentacle.com'
+  unencrypted_password = 'password'
+  password = bcrypt.hashpw(unencrypted_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+
+  user = User.query.filter_by(display_name=display_name).first()
+  if user:
+    return { 'msg': 'A fake account with this name already exists' }, 400
+
+  user = User(
+    first_name=first_name,
+    last_name=last_name,
+    display_name=display_name,
+    email=email,
+    password=password,
+    username=username,
+    is_fake=True,
+  )
+  db.session.add(user)
+  db.session.commit()
+  user.id
+  return user.get_dict()
