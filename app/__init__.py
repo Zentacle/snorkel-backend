@@ -1644,14 +1644,25 @@ def get_recent_reviews():
                 application/json:
                   schema: ReviewSchema
   """
-  reviews = Review.query \
-    .options(joinedload('spot')) \
-    .order_by(Review.date_posted.desc()).limit(25).all()
+  latitude = request.args.get('latitude')
+  longitude = request.args.get('longitude')
+  reviews = []
+  if latitude and longitude:
+    spots_nearby = db.session.query(Spot.id) \
+      .filter(Spot.distance(latitude, longitude) < 50).subquery()
+    reviews = Review.query \
+      .options(joinedload('spot')) \
+      .filter(Review.beach_id.in_(spots_nearby)) \
+      .order_by(Review.date_posted.desc()).limit(25).all()
+  else:
+    reviews = Review.query \
+      .options(joinedload('spot')) \
+      .order_by(Review.date_posted.desc()).limit(25).all()
   data = []
   for review in reviews:
     spot = review.spot
     review_data = review.get_dict()
-    review_data['spot'] = spot.get_dict()
+    review_data['spot'] = spot.get_simple_dict()
     data.append(review_data)
   return { 'data': data }
 

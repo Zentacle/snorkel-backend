@@ -219,6 +219,14 @@ class Spot(db.Model):
             data[key] = self.get(key)
         return data
 
+    def get_simple_dict(self):
+        data = {
+            'url': self.get_url(),
+            'name': self.name,
+            'location_city': self.location_city,
+        }
+        return data
+
     def get_dict(self):
         data = self.__dict__.copy()
         if data.get('_sa_instance_state'):
