@@ -539,6 +539,7 @@ class WannaDiveData(db.Model):
 
 class DiveShop(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String)
     url = db.Column(db.String)
     fareharbor_url = db.Column(db.String)
     address1 = db.Column(db.String)
@@ -565,6 +566,7 @@ class DiveShop(db.Model):
     def get_simple_dict(self):
         return {
             'id': self.id,
+            'name': self.name,
             'url': self.url,
             'logo_img': self.logo_img,
             "fareharbor_url": self.fareharbor_url,
@@ -577,6 +579,7 @@ class DiveShop(db.Model):
     def get_dict(self):
         return {
             'id': self.id,
+            'name': self.name,
             'url': self.url,
             "fareharbor_url": self.fareharbor_url,
             'logo_img': self.logo_img,
