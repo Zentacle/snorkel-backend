@@ -179,20 +179,21 @@ def add_review():
     spot.last_review_viz = visibility
   db.session.commit()
 
-  request_url = f'{wally_api_base}/wallets/create'
-  headers = {
-    'Authorization': f'Bearer {wally_auth_token}',
-    'Content-Type': 'application/json',
-  }
+  if request.json.get('include_wallet'):
+    request_url = f'{wally_api_base}/wallets/create'
+    headers = {
+      'Authorization': f'Bearer {wally_auth_token}',
+      'Content-Type': 'application/json',
+    }
 
-  payload = {
-    'id': f'user_{str(user.id)}',
-    'email': user.email, # owner is the current user, so owner email is current user email
-    'tags': ['user']
-  }
+    payload = {
+      'id': f'user_{str(user.id)}',
+      'email': user.email, # owner is the current user, so owner email is current user email
+      'tags': ['user']
+    }
 
-  response = requests.post(request_url, headers=headers, json=payload)
-  response.raise_for_status()
+    response = requests.post(request_url, headers=headers, json=payload)
+    response.raise_for_status()
 
   message = Mail(
       from_email=('hello@zentacle.com', 'Zentacle'),
