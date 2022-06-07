@@ -386,9 +386,14 @@ def patch_user():
   """
   user = get_current_user()
   user_id = request.json.get('id')
+  email = request.json.get('email')
+  updates = request.json
   if user.admin and user_id:
     user = User.query.filter_by(id=user_id).first_or_404()
-  updates = request.json
+  elif user.admin and email:
+    user = User.query.filter_by(email=email).first_or_404()
+    updates.pop('email', None)
+
   updates.pop('id', None)
   try:
     for key in updates.keys():
