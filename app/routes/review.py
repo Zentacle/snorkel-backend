@@ -455,7 +455,7 @@ def delete_review():
     .filter_by(id=review_id) \
     .options(joinedload(Review.images)) \
     .first_or_404()
-  if review.author_id != user.id or not user.admin:
+  if review.author_id != user.id and not user.admin:
     return {'msg': 'You are not allowed to do that'}, 403
   beach_id = review.beach_id
   for image in review.images:
