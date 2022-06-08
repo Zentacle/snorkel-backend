@@ -86,7 +86,7 @@ def create_dive_shop():
 @bp.route('/patch/<int:id>', methods=['PATCH'])
 @jwt_required()
 def update_dive_shop(id):
-  dive_shop = dive_shop = DiveShop.query.get_or_404(id)
+  dive_shop = DiveShop.query.get_or_404(id)
   user = get_current_user()
 
   # restrict access to patching a dive log
@@ -104,9 +104,9 @@ def update_dive_shop(id):
 
   return { 'data': data }
 
-@bp.route('/stamp_image', methods=['POST'])
+@bp.route('/<int:id>/stamp_image', methods=['POST'])
 @jwt_required()
-def upload_stamp_image():
+def upload_stamp_image(id):
   if 'file' not in request.files:
     return { 'msg': 'No file included in request' }, 422
   request_url = f'{wally_api_base}/files/upload'
@@ -118,11 +118,15 @@ def upload_stamp_image():
   response.raise_for_status()
   data = response.json()
 
-  return { 'data':  data }
+  dive_shop = DiveShop.query.get_or_404(id)
+  setattr(dive_shop, 'stamp_uri', data.get('uri'))
+  db.session.commit()
 
-@bp.route('/upload', methods=['POST'])
+  return 'ok'
+
+@bp.route('/<int:id>/upload', methods=['POST'])
 @jwt_required()
-def upload():
+def upload(id):
   if 'file' not in request.files:
     return { 'msg': 'No file included in request' }, 422
   # If the user does not select a file, the browser submits an
@@ -134,11 +138,14 @@ def upload():
   s3_key = str(get_current_user().id) + '_' + str(uuid.uuid4())
   contents = file.read()
   bucket = os.environ.get('S3_BUCKET_NAME')
-  logging.error (f"Content Type {file.content_type}")
   s3_url = boto3.client("s3").upload_fileobj(io.BytesIO(contents), bucket, 'shops/'+s3_key,
                             ExtraArgs={'ACL': 'public-read',
                                         'ContentType': file.content_type}
                             )
   s3_url = f'https://{bucket}.s3.amazonaws.com/shops/{s3_key}'
 
-  return { 'data': s3_url }
+  dive_shop = DiveShop.query.get_or_404(id)
+  setattr(dive_shop, 'logo_img', s3_url)
+  db.session.commit()
+
+  return 'ok'
