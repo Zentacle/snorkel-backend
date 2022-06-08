@@ -523,9 +523,9 @@ def user_signup_fake():
   user.id
   return user.get_dict()
 
-@bp.route('/<int:id>/upload', methods=['POST'])
+@bp.route('/profile_pic', methods=['POST'])
 @jwt_required()
-def upload(id):
+def upload():
   if 'file' not in request.files:
     return { 'msg': 'No file included in request' }, 422
   # If the user does not select a file, the browser submits an
@@ -533,17 +533,23 @@ def upload(id):
   file = request.files.get('file')
   if file.filename == '':
       return { 'msg': 'Submitted an empty file' }, 422
+  
+  user = get_current_user()
+
   import uuid
   s3_key = str(get_current_user().id) + '_' + str(uuid.uuid4())
+  if user.username:
+    s3_key = user.username
+
   contents = file.read()
   bucket = os.environ.get('S3_BUCKET_NAME')
-  s3_url = boto3.client("s3").upload_fileobj(io.BytesIO(contents), bucket, 'users/'+s3_key,
+  s3_url = boto3.client("s3").upload_fileobj(io.BytesIO(contents), bucket, 'profile_pic/'+s3_key,
                             ExtraArgs={'ACL': 'public-read',
                                         'ContentType': file.content_type}
                             )
-  s3_url = f'https://{bucket}.s3.amazonaws.com/users/{s3_key}'
+  s3_url = f'https://{bucket}.s3.amazonaws.com/profile_pic/{s3_key}'
 
-  user = User.query.get_or_404(id)
+  user = User.query.get_or_404(user.id)
   setattr(user, 'profile_pic', s3_url)
   db.session.commit()
 

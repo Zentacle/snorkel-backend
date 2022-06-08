@@ -122,7 +122,7 @@ def upload_stamp_image(id):
 
   return { 'msg': 'dive shop successfully updated' }
 
-@bp.route('/<int:id>/upload', methods=['POST'])
+@bp.route('/<int:id>/logo', methods=['POST'])
 @jwt_required()
 def upload(id):
   if 'file' not in request.files:
