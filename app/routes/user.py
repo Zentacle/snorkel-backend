@@ -524,9 +524,9 @@ def user_signup_fake():
   user.id
   return user.get_dict()
 
-@bp.route('/upload', methods=['POST'])
+@bp.route('/<int:id>/upload', methods=['POST'])
 @jwt_required()
-def upload():
+def upload(id):
   if 'file' not in request.files:
     return { 'msg': 'No file included in request' }, 422
   # If the user does not select a file, the browser submits an
@@ -538,11 +538,14 @@ def upload():
   s3_key = str(get_current_user().id) + '_' + str(uuid.uuid4())
   contents = file.read()
   bucket = os.environ.get('S3_BUCKET_NAME')
-  logging.error (f"Content Type {file.content_type}")
   s3_url = boto3.client("s3").upload_fileobj(io.BytesIO(contents), bucket, 'users/'+s3_key,
                             ExtraArgs={'ACL': 'public-read',
                                         'ContentType': file.content_type}
                             )
   s3_url = f'https://{bucket}.s3.amazonaws.com/users/{s3_key}'
 
-  return { 'data': s3_url }
+  user = User.query.get_or_404(id)
+  setattr(user, 'profile_pic', s3_url)
+  db.session.commit()
+
+  return 'ok'
