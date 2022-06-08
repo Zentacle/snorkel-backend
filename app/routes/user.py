@@ -1,5 +1,4 @@
 import os
-import logging
 import boto3
 import io
 from flask import Blueprint, request
