@@ -1,6 +1,4 @@
-from crypt import methods
 import requests
-import logging
 import os
 import boto3
 import io
@@ -122,7 +120,7 @@ def upload_stamp_image(id):
   setattr(dive_shop, 'stamp_uri', data.get('uri'))
   db.session.commit()
 
-  return 'ok'
+  return { 'msg': 'dive shop successfully updated' }
 
 @bp.route('/<int:id>/upload', methods=['POST'])
 @jwt_required()
@@ -148,4 +146,4 @@ def upload(id):
   setattr(dive_shop, 'logo_img', s3_url)
   db.session.commit()
 
-  return 'ok'
+  return { 'msg': 'dive shop successfully updated' }

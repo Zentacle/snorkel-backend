@@ -548,4 +548,4 @@ def upload(id):
   setattr(user, 'profile_pic', s3_url)
   db.session.commit()
 
-  return 'ok'
+  return { 'msg': 'user successfully updated' }
