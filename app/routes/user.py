@@ -21,6 +21,7 @@ from flask_jwt_extended import (
 from app.helpers.create_account import create_account
 from app.helpers.login import login
 from sqlalchemy import or_, func
+from sqlalchemy.orm import joinedload
 from google.oauth2 import id_token
 from google.auth.transport import requests as google_requests
 import bcrypt
@@ -478,7 +479,10 @@ def get_user():
       }, 422
     user = User.query \
       .filter(func.lower(User.username)==username.lower()).first()
-    reviews = Review.query.filter_by(author_id=user.id).order_by(Review.date_dived.desc()).all()
+    reviews = Review.query \
+      .filter_by(author_id=user.id) \
+      .options(joinedload('images')) \
+      .order_by(Review.date_dived.desc()).all()
     if not user:
       return { 'msg': 'User doesn\'t exist' }, 404
     user_data = user.get_dict()
@@ -491,6 +495,10 @@ def get_user():
         review_data['title'] = review.spot.name
       title = review_data['title']
       review_data['title'] = f'#{index+1} - {title}'
+      image_data = []
+      for image in review.images:
+        image_data.append(image.get_dict())
+      review_data['images'] = image_data
       reviews_data.append(review_data)
     user_data['reviews'] = reviews_data
     return { 'data': user_data }
