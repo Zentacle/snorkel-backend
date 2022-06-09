@@ -878,6 +878,7 @@ def nearby_locations():
   """
   startlat = request.args.get('lat')
   startlng = request.args.get('lng')
+  limit = request.args.get('limit') if request.args.get('limit') else 10
   spot_id = None
   if not startlat or not startlng:
     beach_id = request.args.get('beach_id')
@@ -897,13 +898,13 @@ def nearby_locations():
       try:
         spots = Spot.query \
           .filter(Spot.shorediving_data.has(destination_url=spot.shorediving_data.destination_url)) \
-          .limit(10) \
+          .limit(limit) \
           .all()
       except AttributeError as e:
         return { 'msg': str(e) }
     else:
       try:
-        spots = Spot.query.filter(Spot.has(country_id=spot.country_id)).limit(10).all()
+        spots = Spot.query.filter(Spot.has(country_id=spot.country_id)).limit(limit).all()
       except AttributeError as e:
         return { 'msg': str(e) }
     output=[]
@@ -921,7 +922,7 @@ def nearby_locations():
       Spot.is_verified == True,
       Spot.is_deleted.is_not(True),
       Spot.id != spot_id,
-    )).options(joinedload('locality')).order_by(Spot.distance(startlat, startlng)).limit(10)
+    )).options(joinedload('locality')).order_by(Spot.distance(startlat, startlng)).limit(limit)
     results = query.all()
   except OperationalError as e:
     if "no such function: sqrt" in str(e).lower():
@@ -929,7 +930,7 @@ def nearby_locations():
         Spot.is_verified == True,
         Spot.is_deleted.is_not(True),
         Spot.id != spot_id,
-      )).options(joinedload('locality')).order_by(Spot.sqlite3_distance(startlat, startlng)).limit(10)
+      )).options(joinedload('locality')).order_by(Spot.sqlite3_distance(startlat, startlng)).limit(limit)
       results = query.all()
     else:
       return { 'msg': str(e) }, 500

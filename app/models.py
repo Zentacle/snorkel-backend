@@ -333,6 +333,21 @@ class Review(db.Model):
     shorediving_data = db.relationship(
         "ShoreDivingReview", back_populates="review", uselist=False)
 
+    def get_simple_dict(self):
+        keys = [
+            'id',
+            'rating',
+            'text',
+            'date_dived',
+            'date_posted',
+            'activity_type',
+            'title',
+        ]
+        data = {}
+        for key in keys:
+            data[key] = self.get(key)
+        return data
+
     def get_dict(self):
         data = self.__dict__.copy()
         if data.get('_sa_instance_state'):
