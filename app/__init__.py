@@ -378,51 +378,6 @@ def get_country():
   data.sort(reverse=True, key=lambda country:country['num_spots'])
   return { 'data': data }
 
-@app.route("/loc/country/patch", methods=["PATCH"])
-def patch_country():
-  id = request.json.get('id')
-  loc = Country.query.filter_by(id=id).first_or_404()
-  updates = request.json
-  updates.pop('id', None)
-  try:
-    for key in updates.keys():
-      setattr(loc, key, updates.get(key))
-  except ValueError as e:
-    return e, 500
-  db.session.commit()
-  loc.id
-  return loc.get_dict(), 200
-
-@app.route("/loc/area_one/patch", methods=["PATCH"])
-def patch_loc_one():
-  id = request.json.get('id')
-  loc = AreaOne.query.filter_by(id=id).first_or_404()
-  updates = request.json
-  updates.pop('id', None)
-  try:
-    for key in updates.keys():
-      setattr(loc, key, updates.get(key))
-  except ValueError as e:
-    return e, 500
-  db.session.commit()
-  loc.id
-  return loc.get_dict(), 200
-
-@app.route("/loc/area_two/patch", methods=["PATCH"])
-def patch_loc_two():
-  id = request.json.get('id')
-  loc = AreaTwo.query.filter_by(id=id).first_or_404()
-  updates = request.json
-  updates.pop('id', None)
-  try:
-    for key in updates.keys():
-      setattr(loc, key, updates.get(key))
-  except ValueError as e:
-    return e, 500
-  db.session.commit()
-  loc.id
-  return loc.get_dict(), 200
-
 @app.route("/locality/<country>/<area_one>")
 def get_wildcard_locality(country, area_one):
   locality = AreaOne.query \
@@ -604,6 +559,9 @@ app.register_blueprint(spot.bp)
 
 from app.routes import search
 app.register_blueprint(search.bp)
+
+from app.routes import loc
+app.register_blueprint(loc.bp)
 
 with app.test_request_context():
   pass
