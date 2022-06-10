@@ -6,21 +6,14 @@ from flask_caching import Cache
 import os
 import os.path
 import logging
-import secrets
 from app.models import *
-from sqlalchemy.orm import joinedload
-from sqlalchemy import and_, not_, func
-import bcrypt
+from sqlalchemy import and_, not_
 from flask_jwt_extended import *
 from datetime import timezone, timedelta
 from flask_migrate import Migrate
-import dateutil.parser
-from sendgrid import SendGridAPIClient
-from sendgrid.helpers.mail import Mail
 import logging
 import boto3
 from botocore.exceptions import ClientError
-import requests
 from app.scripts.openapi import spec
 
 app = Flask(__name__)
@@ -284,187 +277,6 @@ def create_presigned_post():
     # The response contains the presigned URL and required fields
     return response
 
-@app.route("/search/location")
-def search_location():
-  input = request.args.get('input')
-  params = {
-    'key': os.environ.get('GOOGLE_API_KEY'),
-    'input': input,
-    'inputtype': 'textsearch',
-    'fields': 'name,formatted_address,place_id',
-  }
-  r = requests.get('https://maps.googleapis.com/maps/api/place/textsearch/json', params=params)
-  return r.json()
-
-@app.route("/locality/locality")
-@cache.cached(query_string=True)
-def locality_get():
-  limit = request.args.get('limit') if request.args.get('limit') else 15
-  country_short_name = request.args.get('country')
-  area_one_short_name = request.args.get('area_one')
-  area_two_short_name = request.args.get('area_two')
-  localities = Locality.query
-  if country_short_name:
-    localities = localities.filter(Locality.country.has(short_name=country_short_name))
-  if area_one_short_name:
-    localities = localities.filter(Locality.area_one.has(short_name=area_one_short_name))
-  if area_two_short_name:
-    localities = localities.filter(Locality.area_two.has(short_name=area_two_short_name))
-  localities = localities \
-    .options(joinedload('area_two')) \
-    .options(joinedload('area_one')) \
-    .options(joinedload('country'))
-  if limit != 'none':
-    localities = localities.limit(limit)
-  localities = localities.all()
-  data = []
-  for locality in localities:
-    locality_data = locality.get_dict()
-    if locality_data.get('area_two'):
-      locality_data['area_two'] = locality_data.get('area_two').get_simple_dict()
-    if locality_data.get('area_one'):
-      locality_data['area_one'] = locality_data.get('area_one').get_simple_dict()
-    if locality_data.get('country'):
-      locality_data['country'] = locality_data.get('country').get_simple_dict()
-    data.append(locality_data)
-  #   if 'url' in locality_data and not locality.url:
-  #     locality.url = locality_data['url']
-  # db.session.commit()
-  return { 'data': data }
-
-@app.route("/locality/area_two")
-@cache.cached(query_string=True)
-def get_area_two():
-  limit = request.args.get('limit') if request.args.get('limit') else 25
-  country_short_name = request.args.get('country')
-  area_one_short_name = request.args.get('area_one')
-  localities = AreaTwo.query
-  if country_short_name:
-    localities = localities.filter(AreaTwo.country.has(short_name=country_short_name))
-  if area_one_short_name:
-    localities = localities.filter(AreaTwo.area_one.has(short_name=area_one_short_name))
-  localities = localities \
-    .options(joinedload('area_one')) \
-    .options(joinedload('country'))
-  if limit != 'none':
-    localities = localities.limit(limit)
-  localities = localities.all()
-  data = []
-  for locality in localities:
-    locality_data = locality.get_dict()
-    if locality.area_one:
-      locality_data['area_one'] = locality.area_one.get_simple_dict()
-    if locality.country:
-      locality_data['country'] = locality.country.get_simple_dict()
-    data.append(locality_data)
-  return { 'data': data }
-
-@app.route("/locality/area_one")
-@cache.cached(query_string=True)
-def get_area_one():
-  country_short_name = request.args.get('country')
-  country = Country.query.filter_by(short_name=country_short_name).first()
-  localities = AreaOne.query
-  if country:
-    localities = localities.filter_by(country_id=country.id)
-  localities = localities.options(joinedload('country')) \
-    .all()
-  data = []
-  for locality in localities:
-    locality_data = locality.get_dict()
-    if locality_data.get('country'):
-      locality_data['country'] = locality_data.get('country').get_simple_dict()
-    data.append(locality_data)
-  return { 'data': data }
-
-@app.route("/locality/country")
-@cache.cached()
-def get_country():
-  sq = db.session.query(Spot.country_id, func.count(Spot.id).label('count')).group_by(Spot.country_id).subquery()
-  localities = db.session.query(Country, sq.c.count).join(sq, sq.c.country_id == Country.id).all()
-  data = []
-  for (locality, count) in localities:
-    dict = locality.get_dict()
-    dict['num_spots'] = count
-    data.append(dict)
-  data.sort(reverse=True, key=lambda country:country['num_spots'])
-  return { 'data': data }
-
-@app.route("/loc/country/patch", methods=["PATCH"])
-def patch_country():
-  id = request.json.get('id')
-  loc = Country.query.filter_by(id=id).first_or_404()
-  updates = request.json
-  updates.pop('id', None)
-  try:
-    for key in updates.keys():
-      setattr(loc, key, updates.get(key))
-  except ValueError as e:
-    return e, 500
-  db.session.commit()
-  loc.id
-  return loc.get_dict(), 200
-
-@app.route("/loc/area_one/patch", methods=["PATCH"])
-def patch_loc_one():
-  id = request.json.get('id')
-  loc = AreaOne.query.filter_by(id=id).first_or_404()
-  updates = request.json
-  updates.pop('id', None)
-  try:
-    for key in updates.keys():
-      setattr(loc, key, updates.get(key))
-  except ValueError as e:
-    return e, 500
-  db.session.commit()
-  loc.id
-  return loc.get_dict(), 200
-
-@app.route("/loc/area_two/patch", methods=["PATCH"])
-def patch_loc_two():
-  id = request.json.get('id')
-  loc = AreaTwo.query.filter_by(id=id).first_or_404()
-  updates = request.json
-  updates.pop('id', None)
-  try:
-    for key in updates.keys():
-      setattr(loc, key, updates.get(key))
-  except ValueError as e:
-    return e, 500
-  db.session.commit()
-  loc.id
-  return loc.get_dict(), 200
-
-@app.route("/locality/<country>/<area_one>")
-def get_wildcard_locality(country, area_one):
-  locality = AreaOne.query \
-    .filter(
-      and_(
-        AreaOne.short_name==area_one,
-        AreaOne.country.has(short_name=country)
-      )
-    ).first_or_404()
-  data = []
-  for spot in locality.spots:
-    data.append(spot.get_dict())
-  return { 'data': data }
-
-@app.route("/search/autocomplete")
-def search_autocomplete():
-  search_term = request.args.get('q')
-  spots = Spot.query.filter(
-    Spot.name.ilike('%' + search_term + '%')
-  ).limit(5).all()
-  output = []
-  for spot in spots:
-    spot_data = {
-      'label': spot.name,
-      'type': 'spot',
-      'url': spot.get_url(),
-    }
-    output.append(spot_data)
-  return { 'data': output }
-
 @app.route('/generate-short-names', methods=['GET'])
 def backfill_short_names():
   localities = Locality.query.all()
@@ -547,232 +359,6 @@ def update_usernames():
     'failed': failed,
   }
 
-@app.route("/search/typeahead")
-@cache.cached(query_string=True)
-def get_typeahead():
-  """ Search Typeahead
-  ---
-  get:
-      summary: Typeahead locations for search bar
-      description: Typeahead locations for search bar
-      parameters:
-          - name: query
-            in: query
-            description: query
-            type: string
-            required: true
-          - name: beach_only
-            in: query
-            description: should only return beach spots. ie ?beach_only=True
-            type: string
-            required: false
-      responses:
-          200:
-              description: Returns list of typeahead objects
-              content:
-                application/json:
-                  schema: TypeAheadSchema
-  """
-  query = request.args.get('query')
-  beach_only = request.args.get('beach_only')
-  results = []
-  spots = Spot.query \
-    .filter(Spot.name.ilike('%'+query+'%')) \
-    .filter(Spot.is_deleted.is_not(True)) \
-    .limit(25) \
-    .all()
-  for loc in spots:
-    result = {
-      'id': loc.id,
-      'text': loc.name,
-      'url': loc.get_url(),
-      'type': 'site',
-      'subtext': loc.location_city,
-      'data': {
-        'latitude': loc.latitude,
-        'longitude': loc.longitude,
-        'location_city': loc.location_city,
-      }
-    }
-    results.append(result)
-  if beach_only:
-    return { 'data': results }
-
-  countries = Country.query.filter(Country.name.ilike('%'+query+'%')).limit(10).all()
-  area_ones = AreaOne.query.filter(AreaOne.name.ilike('%'+query+'%')).limit(10).all()
-  area_twos = AreaTwo.query.filter(AreaTwo.name.ilike('%'+query+'%')).limit(10).all()
-  localities = Locality.query.filter(Locality.name.ilike('%'+query+'%')).limit(10).all()
-  for loc in countries:
-    url = loc.get_url()
-    segments = url.split("/")
-    country = segments[2]
-    area_one = None
-    area_two = None
-    locality = None
-    if len(segments) > 3:
-      area_one = segments[3]
-    if len(segments) > 4:
-      area_two = segments[4]
-    if len(segments) > 5:
-      locality = segments[5]
-    result = {
-      'id': loc.id,
-      'text': loc.name,
-      'url': url,
-      'type': 'location',
-      'subtext': loc.name,
-      'data': {
-        'country': country,
-        'area_one': area_one,
-        'area_two': area_two,
-        'locality': locality
-      }
-    }
-    results.append(result)
-  for loc in area_ones:
-    url = loc.get_url(loc.country)
-    segments = url.split("/")
-    country = segments[2]
-    area_one = None
-    area_two = None
-    locality = None
-    if len(segments) > 3:
-      area_one = segments[3]
-    if len(segments) > 4:
-      area_two = segments[4]
-    if len(segments) > 5:
-      locality = segments[5]
-    result = {
-      'id': loc.id,
-      'text': loc.name,
-      'url': url,
-      'type': 'location',
-      'subtext': loc.country.name,
-      'data': {
-        'country': country,
-        'area_one': area_one,
-        'area_two': area_two,
-        'locality': locality
-      }
-    }
-    results.append(result)
-  for loc in area_twos:
-    if loc.country and loc.area_one:
-      url = loc.get_url(loc.country, loc.area_one)
-      segments = url.split("/")
-      country = segments[2]
-      area_one = None
-      area_two = None
-      locality = None
-      if len(segments) > 3:
-        area_one = segments[3]
-      if len(segments) > 4:
-        area_two = segments[4]
-      if len(segments) > 5:
-        locality = segments[5]
-      result = {
-        'id': loc.id,
-        'text': loc.name,
-        'url': url,
-        'type': 'location',
-        'subtext': loc.country.name,
-        'data': {
-          'country': country,
-          'area_one': area_one,
-          'area_two': area_two,
-          'locality': locality
-        }
-      }
-      results.append(result)
-  for loc in localities:
-    if loc.country and loc.area_one and loc.area_two:
-      url = loc.get_url(loc.country, loc.area_one, loc.area_two)
-      segments = url.split("/")
-      country = segments[2]
-      area_one = None
-      area_two = None
-      locality = None
-      if len(segments) > 3:
-        area_one = segments[3]
-      if len(segments) > 4:
-        area_two = segments[4]
-      if len(segments) > 5:
-        locality = segments[5]
-      result = {
-        'id': loc.id,
-        'text': loc.name,
-        'url': url,
-        'type': 'location',
-        'subtext': loc.country.name,
-        'data': {
-          'country': country,
-          'area_one': area_one,
-          'area_two': area_two,
-          'locality': locality
-        }
-      }
-      results.append(result)
-  return { 'data': results }
-
-@app.route('/password/request', methods=['POST'])
-def request_reset_password():
-  email = request.json.get('email')
-  user = User.query.filter(func.lower(User.email)==email.lower()).first_or_404()
-
-  reset_obj = PasswordReset(
-    user_id=user.id,
-    token=secrets.token_urlsafe(),
-  )
-  db.session.add(reset_obj)
-  db.session.commit()
-
-  message = Mail(
-      from_email=('hello@zentacle.com', 'Zentacle'),
-      to_emails=email)
-
-  message.template_id = 'd-61fcfe0f648c4237849621389db5c75c'
-  message.reply_to = 'mayank@zentacle.com'
-  message.dynamic_template_data = {
-      'url': 'https://www.zentacle.com/resetpassword?token='+reset_obj.token,
-  }
-  try:
-      sg = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
-      sg.send(message)
-  except Exception as e:
-      print(e.body)
-
-  return {'msg': 'Password reset sent, check your email for a reset link'}
-
-@app.route('/password/reset', methods=['POST'])
-def reset_password():
-  token = request.json.get('token')
-  password = request.json.get('password')
-
-  reset_obj = PasswordReset.query.filter_by(token=token).first()
-  if reset_obj:
-    if reset_obj.token_expiry < datetime.utcnow():
-      return {'msg': 'Link expired. Try reseting your password again'}, 401
-    user_id = reset_obj.user_id
-    user = User.query.filter_by(id=user_id).first()
-    hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
-    user.password = hashed_password
-    db.session.commit()
-    refresh_token = create_refresh_token(identity=user.id)
-    auth_token = create_access_token(identity=user.id)
-    responseObject = {
-      'status': 'success',
-      'msg': 'Successfully reset password. You are now logged in',
-      'auth_token': auth_token,
-      'refresh_token': refresh_token
-    }
-    resp = make_response(responseObject)
-    set_access_cookies(resp, auth_token)
-    set_refresh_cookies(resp, refresh_token)
-    db.session.delete(reset_obj)
-    db.session.commit()
-    return resp
-  return {'msg': 'No token or password provided'}, 422
-
 from app.routes import shop
 app.register_blueprint(shop.bp)
 
@@ -796,6 +382,18 @@ app.register_blueprint(spots.bp)
 
 from app.routes import spot
 app.register_blueprint(spot.bp)
+
+from app.routes import search
+app.register_blueprint(search.bp)
+
+from app.routes import loc
+app.register_blueprint(loc.bp)
+
+from app.routes import locality
+app.register_blueprint(locality.bp)
+
+from app.routes import password
+app.register_blueprint(password.bp)
 
 with app.test_request_context():
   pass
