@@ -4,7 +4,7 @@ import boto3
 import io
 from flask import Blueprint, request
 from app.models import DiveShop
-from app import db
+from app import db, cache
 from flask_jwt_extended import jwt_required, get_current_user
 
 bp = Blueprint('shop', __name__, url_prefix="/shop")
@@ -149,3 +149,53 @@ def upload(id):
   db.session.commit()
 
   return { 'msg': 'dive shop successfully updated' }
+
+@bp.route('/typeahead')
+@cache.cached(query_string=True)
+def get_typeahead():
+  query = request.args.get('query')
+  results = []
+  dive_shops_by_name = DiveShop.query \
+    .filter(DiveShop.name.ilike('%'+query+'%')) \
+    .limit(25) \
+    .all()
+  
+  dive_shops_by_city = DiveShop.query \
+    .filter(DiveShop.city.ilike('%'+query+'%')) \
+    .limit(25) \
+    .all()
+
+  dive_shops_by_state = DiveShop.query \
+    .filter(DiveShop.state.ilike('%'+query+'%')) \
+    .limit(25) \
+    .all()
+
+  for shop in dive_shops_by_name:
+    result = {
+      'id': shop.id,
+      "text": shop.name,
+      'subtext': shop.city
+    }
+    results.append(result)
+
+  for shop in dive_shops_by_city:
+    result = {
+      'id': shop.id,
+      "text": shop.name,
+      'subtext': shop.city
+    }
+
+    if result not in results:
+      results.append(result)
+
+  for shop in dive_shops_by_state:
+    result = {
+      'id': shop.id,
+      "text": shop.name,
+      'subtext': shop.city
+    }
+
+    if result not in results:
+      results.append(result)
+
+  return { "data": results }
