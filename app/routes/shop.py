@@ -29,6 +29,7 @@ def create_dive_shop():
   user = get_current_user()
 
   url = request.json.get('url')
+  name=request.json.get('name')
   fareharbor_url = request.json.get('fareharbor_url')
   address1 = request.json.get('address1')
   address2 = request.json.get('address2')
@@ -45,6 +46,7 @@ def create_dive_shop():
 
   dive_shop = DiveShop(
     url=url,
+    name=name,
     fareharbor_url=fareharbor_url,
     address1=address1,
     address2=address2,
