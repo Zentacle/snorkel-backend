@@ -171,7 +171,7 @@ def get_typeahead():
     result = {
       'id': shop.id,
       "text": shop.name,
-      'subtext': shop.city
+      'subtext': f'{shop.city}, {shop.state}'
     }
     results.append(result)
 
