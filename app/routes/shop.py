@@ -3,8 +3,9 @@ import os
 import boto3
 import io
 from flask import Blueprint, request
+from sqlalchemy import and_, not_, or_
 from app.models import DiveShop
-from app import db
+from app import db, cache
 from flask_jwt_extended import jwt_required, get_current_user
 
 bp = Blueprint('shop', __name__, url_prefix="/shop")
@@ -29,6 +30,7 @@ def create_dive_shop():
   user = get_current_user()
 
   url = request.json.get('url')
+  name=request.json.get('name')
   fareharbor_url = request.json.get('fareharbor_url')
   address1 = request.json.get('address1')
   address2 = request.json.get('address2')
@@ -45,6 +47,7 @@ def create_dive_shop():
 
   dive_shop = DiveShop(
     url=url,
+    name=name,
     fareharbor_url=fareharbor_url,
     address1=address1,
     address2=address2,
@@ -147,3 +150,29 @@ def upload(id):
   db.session.commit()
 
   return { 'msg': 'dive shop successfully updated' }
+
+@bp.route('/typeahead')
+@cache.cached(query_string=True)
+def get_typeahead():
+  query = request.args.get('query')
+  results = []
+  dive_shops = DiveShop.query \
+    .filter(
+      or_(
+        DiveShop.name.ilike('%'+query+'%'),
+        DiveShop.city.ilike('%'+query+'%'),
+        DiveShop.state.ilike('%'+query+'%')
+      )
+    ) \
+    .limit(25) \
+    .all()
+
+  for shop in dive_shops:
+    result = {
+      'id': shop.id,
+      "text": shop.name,
+      'subtext': f'{shop.city}, {shop.state}'
+    }
+    results.append(result)
+
+  return { "data": results }
