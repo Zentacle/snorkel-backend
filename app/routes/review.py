@@ -94,6 +94,7 @@ def add_review():
   activity_type = request.json.get('activity_type')
   images = request.json.get('images') or []
   buddies = request.json.get('buddy_array') or []
+  dive_shop_id = request.json.get('dive_shop_id')
   date_dived = dateutil.parser.isoparse(request.json.get('date_dived')) \
     if request.json.get('date_dived') \
     else datetime.utcnow()
@@ -152,6 +153,7 @@ def add_review():
     activity_type=activity_type,
     date_dived=date_dived,
     title=title,
+    dive_shop_id=dive_shop_id
   )
 
   for image in images:
@@ -241,8 +243,9 @@ def get_review():
     review = Review.query.filter_by(id=review_id).first()
     spot = review.spot
     data = review.get_dict()
+    dive_shop = review.dive_shop
     data['user'] = review.user.get_dict()
-    return { 'review': data, 'spot': spot.get_dict() }
+    return { 'review': data, 'spot': spot.get_dict(), 'dive_shop': dive_shop.get_dict() }
   else:
     sd_id = request.args.get('sd_review_id')
     if sd_id:
