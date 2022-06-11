@@ -328,7 +328,9 @@ class Review(db.Model):
     water_temp = db.Column(db.Integer)
     max_depth = db.Column(db.Integer)
     difficulty = db.Column(db.String)
+    dive_shop_id = db.Column(db.Integer, db.ForeignKey('dive_shop.id'))
 
+    dive_shop = db.relationship("DiveShop", uselist=False)
     images = db.relationship("Image", backref=db.backref('review', lazy=True))
     shorediving_data = db.relationship(
         "ShoreDivingReview", back_populates="review", uselist=False)
@@ -350,6 +352,7 @@ class Review(db.Model):
 
     def get_dict(self):
         data = self.__dict__.copy()
+        print('dat', data)
         if data.get('_sa_instance_state'):
             data.pop('_sa_instance_state', None)
         if not data.get('title') and self.spot.name:
