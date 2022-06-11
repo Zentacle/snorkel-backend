@@ -352,7 +352,6 @@ class Review(db.Model):
 
     def get_dict(self):
         data = self.__dict__.copy()
-        print('dat', data)
         if data.get('_sa_instance_state'):
             data.pop('_sa_instance_state', None)
         if not data.get('title') and self.spot.name:
