@@ -10,7 +10,8 @@ from app.models import (
   User,
   ShoreDivingData,
   ShoreDivingReview,
-  Image
+  Image,
+  DiveShop
 )
 from app import (
   db,
@@ -181,6 +182,7 @@ def add_review():
     spot.last_review_viz = visibility
   db.session.commit()
 
+  wallet_id = ''
   if request.json.get('include_wallet'):
     request_url = f'{wally_api_base}/wallets/create'
     headers = {
@@ -196,6 +198,8 @@ def add_review():
 
     response = requests.post(request_url, headers=headers, json=payload)
     response.raise_for_status()
+    data = response.json()
+    wallet_id = data.get('id')
 
   message = Mail(
       from_email=('hello@zentacle.com', 'Zentacle'),
@@ -216,6 +220,25 @@ def add_review():
     except Exception as e:
         print(e.body)
   review.id
+
+  if request.json.get('include_wallet'):
+    if dive_shop_id:
+      dive_shop = DiveShop.query.get_or_404(dive_shop_id)
+      if dive_shop.stamp_uri:
+        headers = {
+          'Authorization': f'Bearer {wally_auth_token}',
+          'Content-Type': 'application/json',
+        }
+
+        payload = {
+          "uri": dive_shop.stamp_uri,
+          "walletId": wallet_id
+        }
+
+        nft_request_url = f'{wally_api_base}/nfts/create/from-uri'
+        nft_response = requests.post(nft_request_url, json=payload, headers=headers)
+        nft_response.raise_for_status()
+  
   return { 'review': review.get_dict(), 'spot': spot.get_dict() }, 200
 
 @bp.route("/get")
@@ -243,9 +266,9 @@ def get_review():
     review = Review.query.filter_by(id=review_id).first()
     spot = review.spot
     data = review.get_dict()
-    dive_shop = review.dive_shop
+    dive_shop = review.dive_shop.get_dict()
     data['user'] = review.user.get_dict()
-    return { 'review': data, 'spot': spot.get_dict(), 'dive_shop': dive_shop.get_dict() }
+    return { 'review': data, 'spot': spot.get_dict(), 'dive_shop': dive_shop }
   else:
     sd_id = request.args.get('sd_review_id')
     if sd_id:
