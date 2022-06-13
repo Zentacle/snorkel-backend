@@ -212,7 +212,7 @@ def get_beach_images():
     images = Image.query.filter_by(beach_id=beach_id).all()
     for image in images:
       dictionary = image.get_dict()
-      dictionary['signedurl'] = create_unsigned_url(dictionary['url'], 'reviews', os.environ.get('S3_BUCKET_NAME'))
+      dictionary['signedurl'] = dictionary['url']
       output.append(dictionary)
     return {'data': output}
 
