@@ -1,7 +1,7 @@
 import os
 from flask import Blueprint, request
 from app.models import Review, ShoreDivingReview
-from app import create_unsigned_url, cache, db
+from app import cache, db
 from sqlalchemy.orm import joinedload
 from flask_jwt_extended import jwt_required, get_current_user
 
@@ -96,7 +96,7 @@ def get_reviews():
     signedUrls = []
     for image in review.images:
       image_data.append(image.get_dict())
-      signedUrls.append(create_unsigned_url(image.url, 'reviews', os.environ.get('S3_BUCKET_NAME')))
+      signedUrls.append(image.url)
     data['images'] = image_data
     data['signedUrls'] = signedUrls
     output.append(data)

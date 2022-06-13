@@ -15,7 +15,6 @@ from app.models import (
 from app import (
   db,
   get_summary_reviews_helper,
-  create_unsigned_url,
   fake_users
 )
 from flask_jwt_extended import (
@@ -282,7 +281,7 @@ def get_review():
       signedUrls = []
       for image in review.images:
         image_data.append(image.get_dict())
-        signedUrls.append(create_unsigned_url(image.url, 'reviews', os.environ.get('S3_BUCKET_NAME')))
+        signedUrls.append(image.url)
       data['images'] = image_data
       data['signedUrls'] = signedUrls
       output.append(data)

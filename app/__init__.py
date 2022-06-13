@@ -117,21 +117,6 @@ def get_emails():
     output.append(data)
   return { 'data': output }
 
-"""
-  ?email=mjmayank@gmail.com
-"""
-@app.route('/test', methods=["GET"])
-def get_user_test():
-  email = request.args.get('email')
-  users = User.query.filter_by(email=email).all()
-  output = []
-  for user in users:
-    output.append({
-      'email': user.email,
-      'password': user.password,
-    })
-  return { 'data': output }
-
 @app.route("/refresh")
 @jwt_required(refresh=True)
 def refresh_token():
@@ -194,16 +179,6 @@ fake_users = [
   'Susan Landers',
 ]
 
-@app.route("/imagesurls")
-def get_images():
-    images = Image.query.all()
-    output = []
-    for image in images:
-      dictionary = image.get_dict()
-      dictionary['signedurl'] = create_presigned_url_local('reviews/' + dictionary['url'])
-      output.append(dictionary)
-    return { 'data': output } 
-
 @app.route("/beachimages")
 @cache.cached(query_string=True)
 def get_beach_images():
@@ -224,33 +199,9 @@ def get_review_images():
     images = Image.query.filter_by(review_id=review_id).all()
     for image in images:
       dictionary = image.get_dict()
-      dictionary['signedurl'] = create_presigned_url_local('reviews/' + dictionary['url'])
+      dictionary['signedurl'] = dictionary['url']
       output.append(dictionary)
     return {'data': output}
-
-def create_unsigned_url(filename, folder, bucket):
-  return f'https://www.zentacle.com/image/{folder}/{filename}'
-
-def create_presigned_url_local(filename, expiration=3600):
-    """Generate a presigned URL to share an S3 object
-    :param expiration: Time in seconds for the presigned URL to remain valid
-    :return: Presigned URL as string. If error, returns None.
-    """
-    bucket_name = os.environ.get('S3_BUCKET_NAME')
-    object_name = filename
-    # Generate a presigned URL for the S3 object
-    s3_client = boto3.client('s3',)
-    try:
-        response = s3_client.generate_presigned_url('get_object',
-                                                    Params={'Bucket': bucket_name,
-                                                            'Key': object_name},
-                                                    ExpiresIn=expiration)
-    except ClientError as e:
-        logging.error(e)
-        return None
-
-    # The response contains the presigned URL
-    return {'data': response}
 
 @app.route("/s3-upload")
 def create_presigned_post():
