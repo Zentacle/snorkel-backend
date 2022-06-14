@@ -2,7 +2,7 @@ import os
 import boto3
 import io
 from flask import Blueprint, request
-from app.models import User, Review, DiveShop
+from app.models import User, Review
 from app import db, app, cache
 import jwt
 import json
