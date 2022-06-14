@@ -608,7 +608,6 @@ class DiveShop(db.Model):
             "state": self.state,
             "owner_user_id": self.owner_user_id,
             "stamp_uri": self.stamp_uri,
-            "owner": self.owner and self.owner.get_dict()
         }
 
 
