@@ -16,7 +16,6 @@ from app.models import (
 from app import (
   db,
   get_summary_reviews_helper,
-  create_unsigned_url,
   fake_users
 )
 from flask_jwt_extended import (
@@ -266,7 +265,9 @@ def get_review():
     review = Review.query.filter_by(id=review_id).first()
     spot = review.spot
     data = review.get_dict()
-    dive_shop = review.dive_shop.get_dict()
+    dive_shop = {}
+    if review.dive_shop:
+      dive_shop = review.dive_shop.get_dict()
     data['user'] = review.user.get_dict()
     return { 'review': data, 'spot': spot.get_dict(), 'dive_shop': dive_shop }
   else:
@@ -303,7 +304,7 @@ def get_review():
       signedUrls = []
       for image in review.images:
         image_data.append(image.get_dict())
-        signedUrls.append(create_unsigned_url(image.url, 'reviews', os.environ.get('S3_BUCKET_NAME')))
+        signedUrls.append(image.url)
       data['images'] = image_data
       data['signedUrls'] = signedUrls
       output.append(data)
