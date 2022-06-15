@@ -489,8 +489,11 @@ def get_user():
     reviews_data = []
     for index, review in enumerate(reviews):
       review.spot
+      dive_shop = review.dive_shop
       review_data = review.get_dict()
       review_data['spot'] = review.spot.get_dict()
+      if dive_shop:
+        review_data['dive_shop'] = dive_shop.get_simple_dict()
       if not review_data.get('title'):
         review_data['title'] = review.spot.name
       title = review_data['title']
