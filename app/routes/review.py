@@ -190,7 +190,7 @@ def add_review():
     }
 
     payload = {
-      'id': f'user_{str(user.id + 36)}',
+      'id': f'user_{str(user.id)}',
       'email': user.email, # owner is the current user, so owner email is current user email
       'tags': ['user']
     }
@@ -199,10 +199,6 @@ def add_review():
     response.raise_for_status()
     data = response.json()
     wallet_id = data.get('id')
-
-    print('payload', payload)
-    print('user id', user.id)
-    print('data', data)
 
   message = Mail(
       from_email=('hello@zentacle.com', 'Zentacle'),
@@ -237,14 +233,8 @@ def add_review():
           "uri": dive_shop.stamp_uri,
           "walletId": wallet_id
         }
-
-        print('payload', nft_payload)
-
-        print('headers', headers)
-
         nft_request_url = f'{wally_api_base}/nfts/create/from-uri'
         nft_response = requests.post(nft_request_url, json=nft_payload, headers=headers)
-        print('nft resp', nft_response.json())
         nft_response.raise_for_status()
   
   return { 'review': review.get_dict(), 'spot': spot.get_dict() }, 200
