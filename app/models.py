@@ -131,10 +131,6 @@ class User(db.Model):
         if self.username:
             data['username'] = self.username.lower()
         try:
-            data.pop('email')
-        except KeyError:
-            pass
-        try:
             data.pop('is_fake')
         except KeyError:
             pass
