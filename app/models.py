@@ -124,12 +124,16 @@ class User(db.Model):
     images = db.relationship("Image")
 
     def get_dict(self):
-        data = self.__dict__
+        data = self.__dict__.copy()
         if data.get('_sa_instance_state'):
             data.pop('_sa_instance_state', None)
         data.pop('password', None)
         if self.username:
             data['username'] = self.username.lower()
+        try:
+            data.pop('email', None)
+        except KeyError:
+            pass
         try:
             data.pop('is_fake')
         except KeyError:
