@@ -446,6 +446,8 @@ def get_me():
     user = get_current_user()
     auth_token = create_access_token(identity=user.id)
     resp_data = user.get_dict()
+
+    resp_data['email'] = user.email
     resp_data['access_token'] = auth_token
     resp = make_response(resp_data)
     set_access_cookies(resp, auth_token)
