@@ -124,14 +124,14 @@ class User(db.Model):
     images = db.relationship("Image")
 
     def get_dict(self):
-        data = self.__dict__
+        data = self.__dict__.copy()
         if data.get('_sa_instance_state'):
             data.pop('_sa_instance_state', None)
         data.pop('password', None)
         if self.username:
             data['username'] = self.username.lower()
         try:
-            data.pop('email')
+            data.pop('email', None)
         except KeyError:
             pass
         try:
@@ -608,7 +608,6 @@ class DiveShop(db.Model):
             "state": self.state,
             "owner_user_id": self.owner_user_id,
             "stamp_uri": self.stamp_uri,
-            "owner": self.owner and self.owner.get_dict()
         }
 
 

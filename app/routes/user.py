@@ -446,6 +446,8 @@ def get_me():
     user = get_current_user()
     auth_token = create_access_token(identity=user.id)
     resp_data = user.get_dict()
+
+    resp_data['email'] = user.email
     resp_data['access_token'] = auth_token
     resp = make_response(resp_data)
     set_access_cookies(resp, auth_token)
@@ -489,8 +491,11 @@ def get_user():
     reviews_data = []
     for index, review in enumerate(reviews):
       review.spot
+      dive_shop = review.dive_shop
       review_data = review.get_dict()
       review_data['spot'] = review.spot.get_dict()
+      if dive_shop:
+        review_data['dive_shop'] = dive_shop.get_simple_dict()
       if not review_data.get('title'):
         review_data['title'] = review.spot.name
       title = review_data['title']
