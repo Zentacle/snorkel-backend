@@ -29,6 +29,7 @@ from sendgrid.helpers.mail import Mail
 from sqlalchemy.orm import joinedload
 from sqlalchemy import and_
 from app.helpers.demicrosoft import demicrosoft
+from app.helpers.parse_uddf import parse_uddf
 
 bp = Blueprint('review', __name__, url_prefix="/review")
 wally_api_base = os.environ.get('WALLY_API')
@@ -611,3 +612,11 @@ def add_shore_review():
   db.session.commit()
   review.id
   return { 'msg': 'all done' }, 200
+
+@bp.route("/uddf", methods=["POST"])
+def uddf():
+  files = request.files.getlist('file')
+  f = files[0]
+  content = f.read()
+  content = str(content, 'utf-8')
+  return parse_uddf(content)
