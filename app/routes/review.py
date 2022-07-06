@@ -1,8 +1,8 @@
 import os
 import logging
+from app.helpers.wally_integration import create_wallet, mint_nft
 import boto3
 import io
-import requests
 from flask import Blueprint, request
 from app.models import (
   Review,
@@ -10,7 +10,8 @@ from app.models import (
   User,
   ShoreDivingData,
   ShoreDivingReview,
-  Image
+  Image,
+  DiveShop
 )
 from app import (
   db,
@@ -180,22 +181,6 @@ def add_review():
     spot.last_review_viz = visibility
   db.session.commit()
 
-  if request.json.get('include_wallet'):
-    request_url = f'{wally_api_base}/wallets/create'
-    headers = {
-      'Authorization': f'Bearer {wally_auth_token}',
-      'Content-Type': 'application/json',
-    }
-
-    payload = {
-      'id': f'user_{str(user.id)}',
-      'email': user.email, # owner is the current user, so owner email is current user email
-      'tags': ['user']
-    }
-
-    response = requests.post(request_url, headers=headers, json=payload)
-    response.raise_for_status()
-
   message = Mail(
       from_email=('hello@zentacle.com', 'Zentacle'),
       to_emails='mayank@zentacle.com')
@@ -215,6 +200,18 @@ def add_review():
     except Exception as e:
         print(e.body)
   review.id
+
+  if request.json.get('include_wallet'):
+    create_wallet(user=user)
+    if dive_shop_id:
+      dive_shop = DiveShop.query.get_or_404(dive_shop_id)
+      if dive_shop.stamp_uri:
+        mint_nft(
+          current_review=review,
+          dive_shop=dive_shop,
+          beach=spot, user=user
+        )
+  
   return { 'review': review.get_dict(), 'spot': spot.get_dict() }, 200
 
 @bp.route("/get")
@@ -295,8 +292,8 @@ def get_summary_reviews():
   return {"data": get_summary_reviews_helper(request.args.get('beach_id'))}
 
 @bp.route("/patch", methods=["PATCH"])
+@jwt_required()
 def patch_review():
-  # TODO: Change this function to be auth protected
   """ Patch Review
     ---
     patch:
@@ -389,8 +386,14 @@ def patch_review():
                             type: string
                 description: Not logged in.
   """
-  beach_id = request.json.get('id')
-  spot = Review.query.filter_by(id=beach_id).first_or_404()
+  id = request.json.get('id')
+  beach_id = request.json.get('beach_id')
+  review = Review.query.filter_by(id=id).first_or_404()
+  user = get_current_user()
+
+  if review.author_id != user.id and not user.admin:
+    return {'msg': 'You are not allowed to do that'}, 403
+  
   updates = request.json
   if "date_dived" in updates:
     updates['date_dived'] = dateutil.parser.isoparse(request.json.get('date_dived'))
@@ -398,12 +401,29 @@ def patch_review():
   updates.pop('date_posted', None)
   try:
     for key in updates.keys():
-      setattr(spot, key, updates.get(key))
+      setattr(review, key, updates.get(key))
   except ValueError as e:
     return e, 500
   db.session.commit()
-  spot_data = spot.get_dict()
-  return spot_data, 200
+
+  dive_shop_id = request.json.get('dive_shop_id')
+
+  if dive_shop_id:
+    if request.json.get('include_wallet'):
+      create_wallet(user=user)
+      dive_shop = DiveShop.query.get_or_404(dive_shop_id)
+      spot = Spot.query.filter_by(id=beach_id).first()
+
+      if dive_shop.stamp_uri:
+        mint_nft(
+          current_review=review,
+          dive_shop=dive_shop,
+          beach=spot,
+          user=user,
+        )
+  
+  review_data = review.get_dict()
+  return review_data, 200
 
 @bp.route("/upload", methods=["POST"])
 @jwt_required()

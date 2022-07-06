@@ -1,10 +1,11 @@
 import requests
 import os
+from app.helpers.wally_integration import mint_nft
 import boto3
 import io
 from flask import Blueprint, request
 from sqlalchemy import and_, not_, or_
-from app.models import DiveShop
+from app.models import DiveShop, Review, Spot
 from app import db, cache
 from flask_jwt_extended import jwt_required, get_current_user
 
@@ -176,3 +177,26 @@ def get_typeahead():
     results.append(result)
 
   return { "data": results }
+
+@bp.route('/<int:id>/mint_dive_stamp', methods=["POST"])
+@jwt_required()
+def mint_dive_stamp(id):
+  user = get_current_user()
+  # restrict access
+  dive_shop = DiveShop.query.get_or_404(id).get_dict()
+  if dive_shop.get('owner_user_id') != user.id and not user.admin:
+    return { "msg": "Only shop owner and admin can perform this action" }, 403
+
+  current_review = Review.query.get_or_404(request.json.get('review_id')).get_dict()
+  beach_id = current_review.get('beach_id')
+  beach = Spot.query.get_or_404(beach_id).get_dict()
+  if (dive_shop.get('stamp_uri')):
+    data = mint_nft(current_review=current_review, dive_shop=dive_shop, beach=beach, user=user)
+
+    return {
+      'data': data
+    }
+ 
+  return {
+    'msg': 'This dive shop needs a stamp image uri to be able to mint an nft'
+  }
