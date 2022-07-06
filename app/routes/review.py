@@ -182,9 +182,6 @@ def add_review():
     spot.last_review_viz = visibility
   db.session.commit()
 
-  if request.json.get('include_wallet'):
-    data = create_wallet(user=user)
-
   message = Mail(
       from_email=('hello@zentacle.com', 'Zentacle'),
       to_emails='mayank@zentacle.com')
@@ -206,10 +203,11 @@ def add_review():
   review.id
 
   if request.json.get('include_wallet'):
+    create_wallet(user=user)
     if dive_shop_id:
       dive_shop = DiveShop.query.get_or_404(dive_shop_id)
       if dive_shop.stamp_uri:
-        data = mint_nft(current_review=review, dive_shop=dive_shop, beach=spot, user=user)
+        mint_nft(current_review=review, dive_shop=dive_shop, beach=spot, user=user)
   
   return { 'review': review.get_dict(), 'spot': spot.get_dict() }, 200
 
