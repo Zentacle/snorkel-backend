@@ -1,5 +1,6 @@
 import os
 import logging
+from app.helpers.wally_integration import create_wallet, mint_nft
 import boto3
 import io
 import requests
@@ -181,24 +182,8 @@ def add_review():
     spot.last_review_viz = visibility
   db.session.commit()
 
-  wallet_id = ''
   if request.json.get('include_wallet'):
-    request_url = f'{wally_api_base}/wallets/create'
-    headers = {
-      'Authorization': f'Bearer {wally_auth_token}',
-      'Content-Type': 'application/json',
-    }
-
-    payload = {
-      'id': f'user_{str(user.id)}',
-      'email': user.email, # owner is the current user, so owner email is current user email
-      'tags': ['user']
-    }
-
-    response = requests.post(request_url, headers=headers, json=payload)
-    response.raise_for_status()
-    data = response.json()
-    wallet_id = data.get('id')
+    data = create_wallet(user=user)
 
   message = Mail(
       from_email=('hello@zentacle.com', 'Zentacle'),
@@ -224,18 +209,7 @@ def add_review():
     if dive_shop_id:
       dive_shop = DiveShop.query.get_or_404(dive_shop_id)
       if dive_shop.stamp_uri:
-        headers = {
-          'Authorization': f'Bearer {wally_auth_token}',
-          'Content-Type': 'application/json',
-        }
-
-        nft_payload = {
-          "uri": dive_shop.stamp_uri,
-          "walletId": wallet_id
-        }
-        nft_request_url = f'{wally_api_base}/nfts/create/from-uri'
-        nft_response = requests.post(nft_request_url, json=nft_payload, headers=headers)
-        nft_response.raise_for_status()
+        data = mint_nft(current_review=review, dive_shop=dive_shop, beach=spot, user=user)
   
   return { 'review': review.get_dict(), 'spot': spot.get_dict() }, 200
 
@@ -317,6 +291,7 @@ def get_summary_reviews():
   return {"data": get_summary_reviews_helper(request.args.get('beach_id'))}
 
 @bp.route("/patch", methods=["PATCH"])
+@jwt_required()
 def patch_review():
   # TODO: Change this function to be auth protected
   """ Patch Review
@@ -411,8 +386,10 @@ def patch_review():
                             type: string
                 description: Not logged in.
   """
-  beach_id = request.json.get('id')
-  spot = Review.query.filter_by(id=beach_id).first_or_404()
+  id = request.json.get('id')
+  beach_id = request.json.get('beach_id')
+  review = Review.query.filter_by(id=id).first_or_404()
+  user = get_current_user()
   updates = request.json
   if "date_dived" in updates:
     updates['date_dived'] = dateutil.parser.isoparse(request.json.get('date_dived'))
@@ -420,12 +397,27 @@ def patch_review():
   updates.pop('date_posted', None)
   try:
     for key in updates.keys():
-      setattr(spot, key, updates.get(key))
+      setattr(review, key, updates.get(key))
   except ValueError as e:
     return e, 500
   db.session.commit()
-  spot_data = spot.get_dict()
-  return spot_data, 200
+
+  dive_shop_id = request.json.get('dive_shop_id')
+  print('request', request.json)
+
+  if dive_shop_id:
+    if request.json.get('include_wallet'):
+      create_wallet(user=user)
+      dive_shop = DiveShop.query.get_or_404(dive_shop_id)
+      spot = Spot.query.filter_by(id=beach_id).first()
+
+      print('dive shop', dive_shop.stamp_uri)
+
+      if dive_shop.stamp_uri:
+        data = mint_nft(current_review=review, dive_shop=dive_shop, beach=spot, user=user)
+        print('data', data)
+  review_data = review.get_dict()
+  return review_data, 200
 
 @bp.route("/upload", methods=["POST"])
 @jwt_required()
@@ -680,3 +672,4 @@ def add_shore_review():
   db.session.commit()
   review.id
   return { 'msg': 'all done' }, 200
+  
