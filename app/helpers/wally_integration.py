@@ -10,20 +10,20 @@ def mint_nft(current_review: Review, dive_shop: DiveShop, beach: Spot, user: Use
   payload = {
     'walletId': f'user_{str(user.id)}',
     'metadata': {
-    'image': dive_shop.stamp_uri,
-    'description': 'dive shop name signed via dive shop',
-    'name': beach.name,
-    'attributes': [
-      {
-        'trait_type': 'Dive Shop',
-        'value': dive_shop.name
-      },
+      'image': dive_shop.stamp_uri,
+      'description': 'dive shop name signed via dive shop',
+      'name': beach.name,
+      'attributes': [
         {
-        'trait_type': 'Date Dived',
-        'value': f'{current_review.date_dived}',
-        'display_type': 'date'
-      },
-    ]
+          'trait_type': 'Dive Shop',
+          'value': dive_shop.name
+        },
+        {
+          'trait_type': 'Date Dived',
+          'value': f'{current_review.date_dived}',
+          'display_type': 'date'
+        },
+      ]
     }
   }
 
