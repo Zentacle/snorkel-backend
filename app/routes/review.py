@@ -1,9 +1,8 @@
 import os
 import logging
-from app.helpers.wally_integration import create_wallet, mint_nft, sign_message
+from app.helpers.wally_integration import create_wallet, mint_nft
 import boto3
 import io
-import requests
 from flask import Blueprint, request
 from app.models import (
   Review,
@@ -207,12 +206,11 @@ def add_review():
     if dive_shop_id:
       dive_shop = DiveShop.query.get_or_404(dive_shop_id)
       if dive_shop.stamp_uri:
-        signature_object = sign_message(user=user, dive_shop=dive_shop)
         mint_nft(
           current_review=review,
           dive_shop=dive_shop,
-          beach=spot, user=user,
-          signature=signature_object.get('signature'))
+          beach=spot, user=user
+        )
   
   return { 'review': review.get_dict(), 'spot': spot.get_dict() }, 200
 
@@ -415,7 +413,6 @@ def patch_review():
       create_wallet(user=user)
       dive_shop = DiveShop.query.get_or_404(dive_shop_id)
       spot = Spot.query.filter_by(id=beach_id).first()
-      signature_object = sign_message(user=user, dive_shop=dive_shop)
 
       if dive_shop.stamp_uri:
         mint_nft(
@@ -423,7 +420,7 @@ def patch_review():
           dive_shop=dive_shop,
           beach=spot,
           user=user,
-          signature=signature_object.get('signature'))
+        )
   
   review_data = review.get_dict()
   return review_data, 200

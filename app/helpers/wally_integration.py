@@ -1,5 +1,4 @@
 import os
-import string
 import requests
 
 from app.models import Review, User, DiveShop, Spot
@@ -7,12 +6,14 @@ from app.models import Review, User, DiveShop, Spot
 wally_api_base = os.environ.get('WALLY_API')
 wally_auth_token = os.environ.get('WALLY_AUTH_TOKEN')
 
-def mint_nft(current_review: Review, dive_shop: DiveShop, beach: Spot, user: User, signature: string):
+def mint_nft(current_review: Review, dive_shop: DiveShop, beach: Spot, user: User):
+  signature_object = sign_message(dive_shop=dive_shop)
+ 
   payload = {
     'walletId': f'user_{str(user.id)}',
     'metadata': {
       'image': dive_shop.stamp_uri,
-      'description': signature,
+      'description': signature_object.get('signature'),
       'name': beach.name,
       'attributes': [
         {
@@ -57,8 +58,8 @@ def create_wallet(user: User):
   data = response.json()
   return data
 
-def sign_message(user: User, dive_shop: DiveShop):
-  wallet_id = f'user_{str(user.id)}'
+def sign_message(dive_shop: DiveShop):
+  wallet_id = f'shop_{str(dive_shop.id)}'
   request_url = f'{wally_api_base}/wallet/{wallet_id}/sign-message'
   payload = {
     "message": f'Dive log signed by {dive_shop.name}'
