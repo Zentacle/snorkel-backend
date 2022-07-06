@@ -291,7 +291,6 @@ def get_summary_reviews():
 @bp.route("/patch", methods=["PATCH"])
 @jwt_required()
 def patch_review():
-  # TODO: Change this function to be auth protected
   """ Patch Review
     ---
     patch:
@@ -388,6 +387,10 @@ def patch_review():
   beach_id = request.json.get('beach_id')
   review = Review.query.filter_by(id=id).first_or_404()
   user = get_current_user()
+
+  if review.author_id != user.id and not user.admin:
+    return {'msg': 'You are not allowed to do that'}, 403
+  
   updates = request.json
   if "date_dived" in updates:
     updates['date_dived'] = dateutil.parser.isoparse(request.json.get('date_dived'))
