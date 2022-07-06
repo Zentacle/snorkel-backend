@@ -409,19 +409,22 @@ def patch_review():
   db.session.commit()
 
   dive_shop_id = request.json.get('dive_shop_id')
-  print('request', request.json)
 
   if dive_shop_id:
     if request.json.get('include_wallet'):
       create_wallet(user=user)
       dive_shop = DiveShop.query.get_or_404(dive_shop_id)
       spot = Spot.query.filter_by(id=beach_id).first()
-
-      print('dive shop', dive_shop.stamp_uri)
+      signature_object = sign_message(user=user, dive_shop=dive_shop)
 
       if dive_shop.stamp_uri:
-        data = mint_nft(current_review=review, dive_shop=dive_shop, beach=spot, user=user)
-        print('data', data)
+        mint_nft(
+          current_review=review,
+          dive_shop=dive_shop,
+          beach=spot,
+          user=user,
+          signature=signature_object.get('signature'))
+  
   review_data = review.get_dict()
   return review_data, 200
 
