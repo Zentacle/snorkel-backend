@@ -200,4 +200,3 @@ def mint_dive_stamp(id):
   return {
     'msg': 'This dive shop needs a stamp image uri to be able to mint an nft'
   }
-

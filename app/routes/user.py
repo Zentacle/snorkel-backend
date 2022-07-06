@@ -131,6 +131,7 @@ def user_apple_signup():
   code = request.json.get('code')
   id_token = request.json.get('id_token')
   state = request.json.get('state')
+  audience = request.json.get('audience') if request.json.get('audience') else os.environ.get("APPLE_APP_ID")
   email = None
   
 
@@ -147,7 +148,7 @@ def user_apple_signup():
 
 
   try:
-      token = jwt.decode(id_token, public_key, audience=os.environ.get("APPLE_APP_ID"), algorithms=["RS256"])
+      token = jwt.decode(id_token, public_key, audience=audience, algorithms=["RS256"])
   except jwt.exceptions.ExpiredSignatureError as e:
       raise Exception("That token has expired")
   except jwt.exceptions.InvalidAudienceError as e:

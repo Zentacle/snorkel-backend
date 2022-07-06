@@ -17,7 +17,6 @@ from app.models import (
 from app import (
   db,
   get_summary_reviews_helper,
-  fake_users
 )
 from flask_jwt_extended import (
   jwt_required,
@@ -32,6 +31,7 @@ from sendgrid.helpers.mail import Mail
 from sqlalchemy.orm import joinedload
 from sqlalchemy import and_
 from app.helpers.demicrosoft import demicrosoft
+from app.helpers.parse_uddf import parse_uddf
 
 bp = Blueprint('review', __name__, url_prefix="/review")
 wally_api_base = os.environ.get('WALLY_API')
@@ -502,52 +502,6 @@ def delete_review():
   db.session.commit()
   return {}
 
-@bp.route("/fake", methods=["POST"])
-def submit_fake_review():
-  beach_id = request.json.get('beach_id')
-  import random
-  found_one = False
-  while not found_one:
-    fakename = random.choice(fake_users)
-    user = User.query.filter_by(display_name=fakename).first()
-    if not user:
-      continue
-    review = Review.query.filter(and_(Review.author_id == user.id, Review.beach_id == beach_id)).first()
-    if not review:
-      found_one = True
-
-  visibility = request.json.get('visibility') if request.json.get('visibility') != '' else None
-  text = request.json.get('text')
-  rating = request.json.get('rating')
-  activity_type = request.json.get('activity_type')
-  if not rating:
-    return { 'msg': 'Please select a rating' }, 401
-  if not activity_type:
-    return { 'msg': 'Please select scuba or snorkel' }, 401
-
-  review = Review(
-    author_id=user.id,
-    beach_id=beach_id,
-    visibility=visibility,
-    text=text,
-    rating=rating,
-    activity_type=activity_type,
-  )
-  db.session.add(review)
-
-  spot = Spot.query.filter_by(id=beach_id).first()
-  if not spot.num_reviews:
-    spot.num_reviews = 1
-    spot.rating = rating
-  else:
-    new_rating = str(round(((float(spot.rating) * (spot.num_reviews*1.0)) + rating) / (spot.num_reviews + 1), 2))
-    spot.rating = new_rating
-    spot.num_reviews += 1
-  spot.last_review_date = datetime.utcnow()
-  spot.last_review_viz = visibility
-  db.session.commit()
-  return 'Done', 200
-
 @bp.route("/add/shorediving", methods=["POST"])
 def add_shore_review():
   shorediving_beach_id = request.json.get('beach_id')
@@ -672,4 +626,11 @@ def add_shore_review():
   db.session.commit()
   review.id
   return { 'msg': 'all done' }, 200
-  
+
+@bp.route("/uddf", methods=["POST"])
+def uddf():
+  files = request.files.getlist('file')
+  f = files[0]
+  content = f.read()
+  content = str(content, 'utf-8')
+  return parse_uddf(content)

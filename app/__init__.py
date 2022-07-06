@@ -164,21 +164,6 @@ def get_summary_reviews_helper(beach_id):
 
   return output
 
-fake_users = [
-  'Barbara Moreno',
-  'Mary Lash',
-  'Hiram Lee',
-  'Carmen Flowers',
-  'Emily Arnold',
-  'Jeffrey Smith',
-  'George Stephenson',
-  'Nelda Paschall',
-  'Linda McGinnis',
-  'Eduardo Jones',
-  'Roy Kawamura',
-  'Susan Landers',
-]
-
 @app.route("/beachimages")
 @cache.cached(query_string=True)
 def get_beach_images():
