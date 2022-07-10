@@ -86,7 +86,7 @@ def create_account(
 
   message.template_id = 'd-926fe53d5696480fb65b92af8cd8484e'
   message.dynamic_template_data = {
-      'first_name': first_name,
+      'first_name': display_name,
       'email': email,
   }
   if not os.environ.get('FLASK_ENV') == 'development':
