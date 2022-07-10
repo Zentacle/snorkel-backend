@@ -238,6 +238,9 @@ def get_spots():
       area = Country.query \
         .filter_by(short_name=country_name) \
         .first_or_404()
+  difficulty_filter = request.args.get('difficulty')
+  if difficulty_filter:
+    query = query.filter(Spot.difficulty==difficulty_filter)
   sort_param = request.args.get('sort')
   if sort_param == 'latest':
     query = query.order_by(Spot.last_review_date.desc().nullslast())
