@@ -241,6 +241,9 @@ def get_spots():
   difficulty_filter = request.args.get('difficulty')
   if difficulty_filter:
     query = query.filter(Spot.difficulty==difficulty_filter)
+  access_filter = request.args.get('access')
+  if access_filter:
+    query = query.filter(Spot.tags.any(short_name=access_filter))
   sort_param = request.args.get('sort')
   if sort_param == 'latest':
     query = query.order_by(Spot.last_review_date.desc().nullslast())
