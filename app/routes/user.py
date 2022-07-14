@@ -168,7 +168,7 @@ def user_apple_signup():
   if user_body:
     first_name = user_body.get('name').get('firstName')
     last_name = user_body.get('name').get('lastName')
-    display_name = first_name + last_name
+    display_name = first_name + ' ' + last_name
     email = user_body.get('email')
 
     return create_account(
