@@ -7,13 +7,21 @@ wally_api_base = os.environ.get('WALLY_API')
 wally_auth_token = os.environ.get('WALLY_AUTH_TOKEN')
 
 def mint_nft(current_review: Review, dive_shop: DiveShop, beach: Spot, user: User):
-  signature_object = sign_message(dive_shop=dive_shop)
+  message = f'Dive log signed by {dive_shop.name}'
+  signature_object = sign_message(dive_shop=dive_shop, message=message)
+  description = f"""
+    {message}
+    Signature: {signature_object.get('signature')}
+    {dive_shop.name}'s public address: {signature_object.get('address')}
+
+    Verify the signature here: https://etherscan.io/verifiedSignatures
+  """
  
   payload = {
     'walletId': f'user_{str(user.id)}',
     'metadata': {
       'image': dive_shop.stamp_uri,
-      'description': signature_object.get('signature'),
+      'description': description,
       'name': beach.name,
       'attributes': [
         {
@@ -58,11 +66,11 @@ def create_wallet(user: User):
   data = response.json()
   return data
 
-def sign_message(dive_shop: DiveShop):
+def sign_message(dive_shop: DiveShop, message: str):
   wallet_id = f'shop_{str(dive_shop.id)}'
   request_url = f'{wally_api_base}/wallet/{wallet_id}/sign-message'
   payload = {
-    "message": f'Dive log signed by {dive_shop.name}'
+    "message": message,
   }
   headers = {
     'Authorization': f'Bearer {wally_auth_token}',
