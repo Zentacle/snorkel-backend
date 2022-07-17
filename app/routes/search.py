@@ -9,6 +9,7 @@ from app.models import (
   Locality
 )
 from app import cache
+from sqlalchemy import or_
 
 bp = Blueprint('search', __name__, url_prefix="/search")
 
@@ -70,7 +71,12 @@ def get_typeahead():
   beach_only = request.args.get('beach_only')
   results = []
   spots = Spot.query \
-    .filter(Spot.name.ilike('%'+query+'%')) \
+    .filter(
+      or_(
+        Spot.name.ilike('%'+query+'%'),
+        Spot.location_city.ilike('%'+ query + '%'),
+      )
+    ) \
     .filter(Spot.is_deleted.is_not(True)) \
     .limit(25) \
     .all()
