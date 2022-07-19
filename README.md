@@ -29,13 +29,17 @@ venv\Scripts\activate
 
 #run
 pip install -r requirements.txt
-psql
-`CREATE DATABASE snorkel;`
-#exit out of postgres
-flask db upgrade
 flask run
 ```
 
 You should be able to check if the db works by typing in `psql snorkel` and then typing `\dt` which prints out a list of the tables that were created.
 
-You can then backfill the db with some test data using Postman and importing this collection and running it `https://www.getpostman.com/collections/96c8d497940f948f89b0`.
+If you have a database backup, you can set up with the following command:
+
+```
+$ psql
+`CREATE DATABASE snorkel;`
+# exit out of postgres eg control+D
+$ pg_restore --no-owner -d snorkel <dump filnamename>
+# eg `$ pg_restore --no-owner -d snorkel cef2f6d5-89fc-468a-97fc-f1064fd85140`
+```
