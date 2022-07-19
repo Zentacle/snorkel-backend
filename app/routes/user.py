@@ -1,4 +1,5 @@
 import os
+from app.helpers.wally_integration import fetch_user_wallet
 import boto3
 import io
 from flask import Blueprint, request
@@ -568,3 +569,13 @@ def upload():
   db.session.commit()
 
   return { 'msg': 'user successfully updated' }
+
+@bp.route('/wallet', methods=['GET'])
+@jwt_required()
+def get_user_wallet():
+  user = get_current_user()
+  wallet_data = fetch_user_wallet(user.id)
+
+  return {
+    "data": wallet_data
+  }

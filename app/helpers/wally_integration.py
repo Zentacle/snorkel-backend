@@ -1,4 +1,5 @@
 import os
+from urllib import response
 import requests
 
 from app.models import Review, User, DiveShop, Spot
@@ -77,6 +78,18 @@ def sign_message(dive_shop: DiveShop, message: str):
     'Content-Type': 'application/json',
   }
   response = requests.post(request_url, headers=headers, json=payload)
+  response.raise_for_status()
+  data = response.json()
+  return data
+
+def fetch_user_wallet(id):
+  wallet_id = f'user_{id}'
+  request_url = f'{wally_api_base}/wallet/{wallet_id}'
+  headers = {
+    'Authorization': f'Bearer {wally_auth_token}',
+    'Content-Type': 'application/json',
+  }
+  response = requests.get(request_url, headers=headers);
   response.raise_for_status()
   data = response.json()
   return data
