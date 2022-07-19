@@ -1,5 +1,4 @@
 import os
-from urllib import response
 import requests
 
 from app.models import Review, User, DiveShop, Spot
