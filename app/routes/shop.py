@@ -29,6 +29,8 @@ def fetch_dive_shop(id):
 @jwt_required()
 def create_dive_shop():
   user = get_current_user()
+  if not user.admin:
+    return {'msg': 'You must be an admin to that'}, 403
 
   url = request.json.get('url')
   name=request.json.get('name')
@@ -62,7 +64,6 @@ def create_dive_shop():
     area_one_id=area_one_id,
     area_two_id=area_two_id,
     country_id=country_id,
-    owner_user_id=user.id
   )
 
   request_url = f'{wally_api_base}/wallets/create'
