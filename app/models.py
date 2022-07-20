@@ -558,6 +558,8 @@ class DiveShop(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     padi_store_id = db.Column(db.String)
     name = db.Column(db.String)
+    description = db.Column(db.String)
+    hours = db.Column(db.String)
     url = db.Column(db.String)
     fareharbor_url = db.Column(db.String)
     address1 = db.Column(db.String)

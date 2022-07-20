@@ -35,6 +35,8 @@ def create_dive_shop():
   padi_store_id = request.json.get('padi_store_id')
   url = request.json.get('url')
   name=request.json.get('name')
+  hours = request.json.get('hours')
+  description = request.json.get('description')
   fareharbor_url = request.json.get('fareharbor_url')
   address1 = request.json.get('address1')
   address2 = request.json.get('address2')
@@ -55,6 +57,8 @@ def create_dive_shop():
     name=name,
     padi_store_id=padi_store_id,
     fareharbor_url=fareharbor_url,
+    description=description,
+    hours=hours,
     address1=address1,
     address2=address2,
     country_name=country_name,
