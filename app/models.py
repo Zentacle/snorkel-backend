@@ -556,6 +556,7 @@ class WannaDiveData(db.Model):
 
 class DiveShop(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    padi_store_id = db.Column(db.String)
     name = db.Column(db.String)
     url = db.Column(db.String)
     fareharbor_url = db.Column(db.String)
@@ -564,6 +565,7 @@ class DiveShop(db.Model):
     city = db.Column(db.String)
     state = db.Column(db.String)
     zip = db.Column(db.String)
+    country_name = db.Column(db.String)
     logo_img = db.Column(db.String)
     latitude = db.Column(db.Float)
     longitude = db.Column(db.Float)
