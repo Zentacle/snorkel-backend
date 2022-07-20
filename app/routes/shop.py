@@ -4,7 +4,7 @@ from app.helpers.wally_integration import mint_nft
 import boto3
 import io
 from flask import Blueprint, request
-from sqlalchemy import and_, not_, or_
+from sqlalchemy import and_, not_, or_, exc
 from app.models import DiveShop, Review, Spot
 from app import db, cache
 from flask_jwt_extended import jwt_required, get_current_user
@@ -53,6 +53,8 @@ def create_dive_shop():
   area_one_id = request.json.get('area_one_id')
   area_two_id  = request.json.get('area_two_id')
   country_id = request.json.get('country_id')
+  email = request.json.get('email')
+  phone = request.json.get('phone')
   ignore_wallet = request.json.get('ignore_wallet')
   owner_user_id = None if ignore_wallet else user.id
 
@@ -76,10 +78,16 @@ def create_dive_shop():
     area_one_id=area_one_id,
     area_two_id=area_two_id,
     country_id=country_id,
+    email=email,
+    phone=phone,
     owner_user_id=owner_user_id,
   )
-  db.session.add(dive_shop)
-  db.session.commit()
+
+  try:
+    db.session.add(dive_shop)
+    db.session.commit()
+  except exc.IntegrityError as e:
+    return 'Already exists', 409
 
   if not ignore_wallet:
     request_url = f'{wally_api_base}/wallets'

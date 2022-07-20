@@ -571,6 +571,8 @@ class DiveShop(db.Model):
     logo_img = db.Column(db.String)
     latitude = db.Column(db.Float)
     longitude = db.Column(db.Float)
+    email = db.Column(db.String)
+    phone = db.Column(db.String)
     locality_id = db.Column(
         db.Integer, db.ForeignKey('locality.id'), nullable=True)
     area_two_id = db.Column(
