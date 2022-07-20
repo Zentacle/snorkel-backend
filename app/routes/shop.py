@@ -32,11 +32,13 @@ def create_dive_shop():
   if not user.admin:
     return {'msg': 'You must be an admin to that'}, 403
 
+  padi_store_id = request.json.get('padi_store_id')
   url = request.json.get('url')
   name=request.json.get('name')
   fareharbor_url = request.json.get('fareharbor_url')
   address1 = request.json.get('address1')
   address2 = request.json.get('address2')
+  country_name = request.json.get('country_name')
   city = request.json.get('city')
   state = request.json.get('state')
   zip = request.json.get('zip')
@@ -51,9 +53,11 @@ def create_dive_shop():
   dive_shop = DiveShop(
     url=url,
     name=name,
+    padi_store_id=padi_store_id,
     fareharbor_url=fareharbor_url,
     address1=address1,
     address2=address2,
+    country_name=country_name,
     city=city,
     state=state,
     zip=zip,
@@ -65,15 +69,14 @@ def create_dive_shop():
     area_two_id=area_two_id,
     country_id=country_id,
   )
+  db.session.add(dive_shop)
+  db.session.commit()
 
   request_url = f'{wally_api_base}/wallets/create'
   headers = {
     'Authorization': f'Bearer {wally_auth_token}',
     'Content-Type': 'application/json',
   }
-
-  db.session.add(dive_shop)
-  db.session.commit()
 
   payload = {
     'id': 'shop_' + str(dive_shop.id),
