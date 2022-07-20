@@ -16,7 +16,7 @@ def mint_nft(current_review: Review, dive_shop: DiveShop, beach: Spot, user: Use
 
     Verify the signature here: https://etherscan.io/verifiedSignatures
   """
- 
+
   payload = {
     'walletId': f'user_{str(user.id)}',
     'metadata': {
@@ -49,7 +49,7 @@ def mint_nft(current_review: Review, dive_shop: DiveShop, beach: Spot, user: Use
   return data
 
 def create_wallet(user: User):
-  request_url = f'{wally_api_base}/wallets/create'
+  request_url = f'{wally_api_base}/wallets'
   headers = {
     'Authorization': f'Bearer {wally_auth_token}',
     'Content-Type': 'application/json',

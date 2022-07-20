@@ -53,6 +53,8 @@ def create_dive_shop():
   area_one_id = request.json.get('area_one_id')
   area_two_id  = request.json.get('area_two_id')
   country_id = request.json.get('country_id')
+  ignore_wallet = request.json.get('ignore_wallet')
+  owner_user_id = None if ignore_wallet else user.id
 
   dive_shop = DiveShop(
     url=url,
@@ -74,24 +76,26 @@ def create_dive_shop():
     area_one_id=area_one_id,
     area_two_id=area_two_id,
     country_id=country_id,
+    owner_user_id=owner_user_id,
   )
   db.session.add(dive_shop)
   db.session.commit()
 
-  request_url = f'{wally_api_base}/wallets/create'
-  headers = {
-    'Authorization': f'Bearer {wally_auth_token}',
-    'Content-Type': 'application/json',
-  }
+  if not ignore_wallet:
+    request_url = f'{wally_api_base}/wallets'
+    headers = {
+      'Authorization': f'Bearer {wally_auth_token}',
+      'Content-Type': 'application/json',
+    }
 
-  payload = {
-    'id': 'shop_' + str(dive_shop.id),
-    'email': user.email, # owner is the current user, so owner email is current user email
-    'tags': ['shop']
-  }
+    payload = {
+      'id': 'shop_' + str(dive_shop.id),
+      'email': user.email, # owner is the current user, so owner email is current user email
+      'tags': ['shop']
+    }
 
-  response = requests.post(request_url, headers=headers, json=payload)
-  response.raise_for_status()
+    response = requests.post(request_url, headers=headers, json=payload)
+    response.raise_for_status()
 
   return { 'data': dive_shop.get_dict() }
 
@@ -206,7 +210,7 @@ def mint_dive_stamp(id):
     return {
       'data': data
     }
- 
+
   return {
     'msg': 'This dive shop needs a stamp image uri to be able to mint an nft'
   }
