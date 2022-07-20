@@ -29,9 +29,12 @@ def fetch_dive_shop(id):
 @jwt_required()
 def create_dive_shop():
   user = get_current_user()
+<<<<<<< HEAD
   if not user.admin:
     return {'msg': 'You must be an admin to that'}, 403
 
+=======
+>>>>>>> ceb71f79c4b88c41ae826ae53c3e09b79775c870
   padi_store_id = request.json.get('padi_store_id')
   url = request.json.get('url')
   name=request.json.get('name')
