@@ -241,7 +241,7 @@ def get_spots():
   difficulty_filter = request.args.get('difficulty')
   if difficulty_filter:
     query = query.filter(Spot.difficulty==difficulty_filter)
-  access_filter = request.args.get('access')
+  access_filter = request.args.get('entry')
   if access_filter:
     query = query.filter(Spot.tags.any(short_name=access_filter))
   sort_param = request.args.get('sort')
@@ -361,8 +361,8 @@ def search_spots():
   sort_query = sql.true()
   if difficulty:
     difficulty_query = Spot.difficulty.__eq__(difficulty)
-  # if entry:
-    # entry_query = Spot.difficulty.is_(difficulty)
+  if entry:
+    entry_query = Spot.filter(Spot.tags.any(short_name=entry))
   # if activity:
     # activity_query = Spot.
   spots = Spot.query.filter(
@@ -375,6 +375,7 @@ def search_spots():
       Spot.is_verified.isnot(False),
       Spot.is_deleted.isnot(True)),
       difficulty_query,
+      entry_query,
     ) \
     .offset(offset) \
     .limit(limit) \
