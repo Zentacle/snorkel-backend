@@ -362,7 +362,7 @@ def search_spots():
   if difficulty:
     difficulty_query = Spot.difficulty.__eq__(difficulty)
   if entry:
-    entry_query = Spot.filter(Spot.tags.any(short_name=entry))
+    entry_query = Spot.tags.any(short_name=entry)
   # if activity:
     # activity_query = Spot.
   spots = Spot.query.filter(
