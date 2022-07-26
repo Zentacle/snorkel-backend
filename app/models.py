@@ -600,6 +600,20 @@ class DiveShop(db.Model):
         }
 
     def get_dict(self):
+        full_address = ''
+        if self.address1:
+            full_address += self.address1
+        if self.address2:
+            full_address += ' ' + self.address2
+        if self.city:
+            full_address += ' ' + self.city
+        if self.state:
+            full_address += ', ' + self.state
+        if self.zip:
+            full_address += ' ' + self.zip
+        if self.country_name:
+            full_address += ', ' + self.country_name
+
         return {
             'id': self.id,
             'name': self.name,
@@ -614,6 +628,11 @@ class DiveShop(db.Model):
             "state": self.state,
             "owner_user_id": self.owner_user_id,
             "stamp_uri": self.stamp_uri,
+            "phone": self.phone,
+            "description": self.description,
+            "hours": self.hours,
+            "country_name": self.country_name,
+            "full_address": full_address
         }
 
 
