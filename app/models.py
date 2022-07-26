@@ -600,21 +600,7 @@ class DiveShop(db.Model):
         }
 
     def get_dict(self):
-        full_address = ''
-        if self.address1:
-            full_address += self.address1
-        if self.address2:
-            full_address += ' ' + self.address2
-        if self.city:
-            full_address += ' ' + self.city
-        if self.state:
-            full_address += ', ' + self.state
-        if self.zip:
-            full_address += ' ' + self.zip
-        if self.country_name:
-            full_address += ', ' + self.country_name
-
-        return {
+        shopDict = {
             'id': self.id,
             'name': self.name,
             'url': self.url,
@@ -632,8 +618,38 @@ class DiveShop(db.Model):
             "description": self.description,
             "hours": self.hours,
             "country_name": self.country_name,
-            "full_address": full_address
         }
+
+        shopDict["full_address"] = DiveShop.get_full_address(self.address1,
+        self.address2,
+        self.city,
+        self.state,
+        self.zip,
+        self.country_name)
+        return shopDict
+
+    @classmethod
+    def get_full_address(cls, address1, address2, city, state, zip, country):
+        full_address = ''
+        if address1:
+            full_address += address1
+        if address2:
+            full_address += ' ' + address2
+        if city:
+            full_address += ' ' + city
+        if state:
+            if full_address == "":
+                full_address += state
+            else:
+                full_address += ', ' + state
+        if zip:
+            full_address += ' ' + zip
+        if country:
+            if full_address == "":
+                full_address += country
+            else:
+                full_address += ', ' + country
+        return full_address
 
 
 class PasswordReset(db.Model):
