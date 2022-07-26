@@ -587,7 +587,7 @@ class DiveShop(db.Model):
     owner = db.relationship("User", uselist=False)
 
     def get_simple_dict(self):
-        return {
+        simpleDict = {
             'id': self.id,
             'name': self.name,
             'url': self.url,
@@ -598,6 +598,8 @@ class DiveShop(db.Model):
             'address1': self.address1,
             'address2': self.address2,
         }
+        simpleDict["url_name"] = DiveShop.get_shop_url(self.name)
+        return simpleDict
 
     def get_dict(self):
         shopDict = {
@@ -626,7 +628,12 @@ class DiveShop(db.Model):
         self.state,
         self.zip,
         self.country_name)
+        shopDict["url_name"] = DiveShop.get_shop_url(self.name)
         return shopDict
+
+    @classmethod
+    def get_shop_url(cls, name):
+        return name.replace(" ", "-")
 
     @classmethod
     def get_full_address(cls, address1, address2, city, state, zip, country):
