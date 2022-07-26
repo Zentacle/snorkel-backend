@@ -8,6 +8,7 @@ def login(user):
   if auth_token:
     responseObject = {
       'data': {
+        'type': 'login',
         'status': 'success',
         'message': 'Successfully logged in.',
         'auth_token': auth_token,

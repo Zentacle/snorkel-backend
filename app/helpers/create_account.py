@@ -55,6 +55,7 @@ def create_account(
   refresh_token = create_refresh_token(identity=user.id)
   responseObject = {
     'data': {
+      'type': 'register',
       'status': 'success',
       'message': 'Successfully registered.',
       'auth_token': auth_token,
