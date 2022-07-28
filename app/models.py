@@ -622,18 +622,20 @@ class DiveShop(db.Model):
             "country_name": self.country_name,
         }
 
-        shopDict["full_address"] = DiveShop.get_full_address(self.address1,
-        self.address2,
-        self.city,
-        self.state,
-        self.zip,
-        self.country_name)
+        shopDict["full_address"] = DiveShop.get_full_address(
+            self.address1,
+            self.address2,
+            self.city,
+            self.state,
+            self.zip,
+            self.country_name
+        )
         shopDict["url_name"] = DiveShop.get_shop_url(self.name)
         return shopDict
 
     @classmethod
     def get_shop_url(cls, name):
-        return name.replace(" ", "-")
+        return demicrosoft(name).lower()
 
     @classmethod
     def get_full_address(cls, address1, address2, city, state, zip, country):
@@ -643,7 +645,10 @@ class DiveShop(db.Model):
         if address2:
             full_address += ' ' + address2
         if city:
-            full_address += ' ' + city
+            if full_address == "":
+                full_addres += city
+            else:
+                full_address += ', ' + city
         if state:
             if full_address == "":
                 full_address += state
