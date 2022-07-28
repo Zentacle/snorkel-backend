@@ -587,7 +587,7 @@ class DiveShop(db.Model):
     owner = db.relationship("User", uselist=False)
 
     def get_simple_dict(self):
-        return {
+        simpleDict = {
             'id': self.id,
             'name': self.name,
             'url': self.url,
@@ -598,9 +598,11 @@ class DiveShop(db.Model):
             'address1': self.address1,
             'address2': self.address2,
         }
+        simpleDict["url_name"] = DiveShop.get_shop_url(self.name)
+        return simpleDict
 
     def get_dict(self):
-        return {
+        shopDict = {
             'id': self.id,
             'name': self.name,
             'url': self.url,
@@ -614,7 +616,52 @@ class DiveShop(db.Model):
             "state": self.state,
             "owner_user_id": self.owner_user_id,
             "stamp_uri": self.stamp_uri,
+            "phone": self.phone,
+            "description": self.description,
+            "hours": self.hours,
+            "country_name": self.country_name,
         }
+
+        shopDict["full_address"] = DiveShop.get_full_address(
+            self.address1,
+            self.address2,
+            self.city,
+            self.state,
+            self.zip,
+            self.country_name
+        )
+        shopDict["url_name"] = DiveShop.get_shop_url(self.name)
+        return shopDict
+
+    @classmethod
+    def get_shop_url(cls, name):
+        return demicrosoft(name).lower()
+
+    @classmethod
+    def get_full_address(cls, address1, address2, city, state, zip, country):
+        full_address = ''
+        if address1:
+            full_address += address1
+        if address2:
+            full_address += ' ' + address2
+        if city:
+            if full_address == "":
+                full_addres += city
+            else:
+                full_address += ', ' + city
+        if state:
+            if full_address == "":
+                full_address += state
+            else:
+                full_address += ', ' + state
+        if zip:
+            full_address += ' ' + zip
+        if country:
+            if full_address == "":
+                full_address += country
+            else:
+                full_address += ', ' + country
+        return full_address
 
 
 class PasswordReset(db.Model):
