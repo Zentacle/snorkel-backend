@@ -142,6 +142,7 @@ class User(db.Model):
             data.pop('admin')
         except KeyError:
             pass
+        data['has_pro'] = False
         return data
 
     @hybrid_method
