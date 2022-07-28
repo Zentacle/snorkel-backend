@@ -16,8 +16,12 @@ wally_auth_token = os.environ.get('WALLY_AUTH_TOKEN')
 @bp.route('/get', methods=['GET'])
 def fetch_dive_shops():
   limit = request.args.get('limit')
+  if limit == 'none':
+    limit = None
+  else:
+    limit = limit if limit else 100
   dive_shops = DiveShop.query \
-    .limit(limit if limit else 100) \
+    .limit(limit) \
     .all()
   data = [dive_shop.get_simple_dict() for dive_shop in dive_shops]
   return { 'data': data }
