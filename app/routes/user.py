@@ -18,7 +18,7 @@ from flask_jwt_extended import (
   set_refresh_cookies,
   unset_jwt_cookies
 )
-  
+
 from app.helpers.create_account import create_account
 from app.helpers.login import login
 from sqlalchemy import or_, func
@@ -134,7 +134,7 @@ def user_apple_signup():
   state = request.json.get('state')
   audience = request.json.get('audience') if request.json.get('audience') else os.environ.get("APPLE_APP_ID")
   email = None
-  
+
 
   #https://gist.github.com/davidhariri/b053787aabc9a8a9cc0893244e1549fe
   key_payload = requests.get('https://appleid.apple.com/auth/keys').json()
@@ -344,7 +344,7 @@ def user_login():
   """
   email = request.json.get('email')
   password = request.json.get('password')
-  
+
   user = User.query.filter(or_(func.lower(User.email)==email.lower(), User.username==email)).first()
   if not user:
     return { 'msg': 'Wrong password or user does not exist' }, 400
@@ -456,7 +456,6 @@ def get_me():
     return resp
 
 @bp.route("/get")
-@cache.cached(query_string=True)
 def get_user():
     """ Get User
     ---
@@ -548,7 +547,7 @@ def upload():
   file = request.files.get('file')
   if file.filename == '':
       return { 'msg': 'Submitted an empty file' }, 422
-  
+
   user = get_current_user()
 
   import uuid
