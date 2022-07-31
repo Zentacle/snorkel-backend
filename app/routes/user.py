@@ -168,6 +168,7 @@ def user_apple_signup():
   user_body = request.json.get('user')
   import logging
   logging.error(user_body)
+  logging.error(email)
   if user_body:
     first_name = user_body.get('name').get('firstName') if user_body.get('name').get('firstName') else ''
     last_name = user_body.get('name').get('lastName') if user_body.get('name').get('lastName') else ''
