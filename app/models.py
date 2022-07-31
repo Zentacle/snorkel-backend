@@ -596,10 +596,11 @@ class DiveShop(db.Model):
             "fareharbor_url": self.fareharbor_url,
             "city": self.city,
             "state": self.state,
+            "country_name": self.country_name,
             'address1': self.address1,
             'address2': self.address2,
         }
-        simpleDict["url_name"] = DiveShop.get_shop_url(self.name)
+        simpleDict["url"] = DiveShop.get_shop_url(self)
         return simpleDict
 
     def get_dict(self):
