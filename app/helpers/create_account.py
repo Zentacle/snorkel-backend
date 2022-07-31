@@ -32,14 +32,14 @@ def create_account(
   email = email.lower()
   user = User.query.filter(func.lower(User.email)==email).first()
   if user:
-    return { 'msg': 'An account with this email already exists' }, 400
+    return { 'msg': 'An account with this email already exists' }, 409
   if username:
     username = username.lower()
     if not username.isalnum():
       return { 'msg': 'Usernames can\'t have special characters' }, 422
     user = User.query.filter(func.lower(User.username)==username).first()
     if user:
-      return { 'msg': 'An account with this username already exists' }, 400
+      return { 'msg': 'An account with this username already exists' }, 409
   user = User(
     first_name=first_name,
     last_name=last_name,

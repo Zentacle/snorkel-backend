@@ -1,5 +1,6 @@
 import os
 import logging
+from amplitude import Amplitude, BaseEvent
 from app.helpers.wally_integration import create_wallet, mint_nft
 import boto3
 import io
@@ -112,7 +113,7 @@ def add_review():
     return { 'msg': 'Couldn\'t find that spot' }, 404
 
   if len(buddies) > 0:
-    #verify basic email format         
+    #verify basic email format
     unique_buddies = []
     for email in buddies:
       if not validate_email_format(email):
@@ -126,9 +127,9 @@ def add_review():
       activity = 'dived'
     if len(unique_buddies) == 1:
       text += (f" I {activity} with {len(unique_buddies)} other buddy.")
-    else:  
+    else:
       text += (f" I {activity} with {len(unique_buddies)} other buddies.")
-    
+
     buddy_message = Mail(
       from_email=('hello@zentacle.com', 'Zentacle'),
       to_emails=unique_buddies)
@@ -211,7 +212,10 @@ def add_review():
           dive_shop=dive_shop,
           beach=spot, user=user
         )
-  
+  client = Amplitude(os.environ.get('AMPLITUDE_API_KEY'))
+  event = BaseEvent(event_type="review__submitted", user_id=user.id)
+  client.track(event)
+
   return { 'review': review.get_dict(), 'spot': spot.get_dict() }, 200
 
 @bp.route("/get")
@@ -393,7 +397,7 @@ def patch_review():
 
   if review.author_id != user.id and not user.admin:
     return {'msg': 'You are not allowed to do that'}, 403
-  
+
   updates = request.json
   if "date_dived" in updates:
     updates['date_dived'] = dateutil.parser.isoparse(request.json.get('date_dived'))
@@ -421,7 +425,7 @@ def patch_review():
           beach=spot,
           user=user,
         )
-  
+
   review_data = review.get_dict()
   return review_data, 200
 
@@ -615,7 +619,7 @@ def add_shore_review():
   db.session.add(shorediving_data)
 
   spot = Spot.query.filter_by(id=beach_id).first()
-  
+
   if not spot:
     return { 'msg': 'Couldn\'t find that spot' }, 404
   summary = get_summary_reviews_helper(beach_id)
