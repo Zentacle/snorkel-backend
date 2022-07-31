@@ -561,7 +561,7 @@ class DiveShop(db.Model):
     name = db.Column(db.String)
     description = db.Column(db.String)
     hours = db.Column(db.JSON(none_as_null=True))
-    url = db.Column(db.String)
+    website = db.Column(db.String)
     fareharbor_url = db.Column(db.String)
     address1 = db.Column(db.String)
     address2 = db.Column(db.String)
@@ -591,7 +591,7 @@ class DiveShop(db.Model):
         simpleDict = {
             'id': self.id,
             'name': self.name,
-            'url': self.url,
+            'website': self.website,
             'logo_img': self.logo_img,
             "fareharbor_url": self.fareharbor_url,
             "city": self.city,
@@ -606,7 +606,7 @@ class DiveShop(db.Model):
         shopDict = {
             'id': self.id,
             'name': self.name,
-            'url': self.url,
+            'website': self.website,
             "fareharbor_url": self.fareharbor_url,
             'logo_img': self.logo_img,
             'latitude': self.latitude,
@@ -631,12 +631,14 @@ class DiveShop(db.Model):
             self.zip,
             self.country_name
         )
-        shopDict["url_name"] = DiveShop.get_shop_url(self.name)
+        shopDict["url"] = DiveShop.get_shop_url(self)
         return shopDict
 
     @classmethod
-    def get_shop_url(cls, name):
-        return demicrosoft(name).lower()
+    def get_shop_url(cls, shop):
+        url_name = demicrosoft(shop.name).lower()
+        id = shop.id
+        return f'/shop/{id}/{url_name}'
 
     @classmethod
     def get_full_address(cls, address1, address2, city, state, zip, country):
