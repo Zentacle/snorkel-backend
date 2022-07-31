@@ -174,7 +174,7 @@ def user_apple_signup():
 
     return create_account(
       db,
-      first_name,
+      first_name if first_name else email,
       last_name,
       display_name,
       email,
