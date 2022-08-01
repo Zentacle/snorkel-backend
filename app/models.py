@@ -231,9 +231,9 @@ class Spot(db.Model):
         if data.get('is_deleted'):
             data.pop('is_deleted', None)
         if not data.get('description').strip():
-            data['description'] = f'''{data.get('name')} is a {data.get('rating') if data.get('rating') else 0}-star
-                rated scuba dive and snorkel destination in {data.get('location_city')} which is accessible from
-                shore based on {data.get('num_reviews')} ratings.'''
+            data['description'] = f"{data.get('name')} is a {data.get('rating') if data.get('rating') else 0}-star" \
+                f" rated scuba dive and snorkel destination in {data.get('location_city')} which is accessible from" \
+                f" shore based on {data.get('num_reviews')} ratings."
         if not data.get('difficulty'):
             data['difficulty'] = 'Unrated'
         if data.get('tags'):
