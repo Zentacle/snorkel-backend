@@ -177,8 +177,8 @@ def add_review():
     total += summary[key] * int(key)
   spot.num_reviews = num_reviews
   spot.rating = total/num_reviews
+  spot.last_review_date = datetime.utcnow()
   if visibility and (not spot.last_review_date or date_dived > spot.last_review_date):
-    spot.last_review_date = date_dived
     spot.last_review_viz = visibility
   db.session.commit()
 
