@@ -637,7 +637,7 @@ class DiveShop(db.Model):
         dict["url"] = DiveShop.get_shop_url(self)
         if not self.description:
             name = self.name
-            city = self.city + ', ' + self.country_name
+            city = str(self.city or '') + ', ' + str(self.country_name or '')
             dict['description'] = f'{name} is a scuba dive shop based in {city}. They are a PADI certified dive shop' \
                 'and offer a variety of dive and snorkel related services, gear, and guided tours.'
         return dict
