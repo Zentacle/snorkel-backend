@@ -667,6 +667,27 @@ class DiveShop(db.Model):
                 full_address += ', ' + country
         return full_address
 
+    @hybrid_method
+    def distance(self, latitude, longitude):
+        import math
+        return math.sqrt(
+            (
+                69.1 * (self.latitude - latitude) ** 2
+                + ((69.1 * (self.longitude - longitude)
+                   * math.cos(self.latitude / 57.3)) ** 2)
+            )
+        )
+
+    @distance.expression
+    def distance(self, latitude, longitude):
+        return func.sqrt(
+            (
+                func.pow(69.1 * (self.latitude - latitude), 2)
+                + (func.pow(69.1 * (self.longitude - longitude)
+                   * func.cos(self.latitude / 57.3), 2))
+            )
+        )
+
 
 class PasswordReset(db.Model):
     id = db.Column(db.Integer, primary_key=True)

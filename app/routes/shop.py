@@ -229,3 +229,83 @@ def mint_dive_stamp(id):
   return {
     'msg': 'This dive shop needs a stamp image uri to be able to mint an nft'
   }
+
+@bp.route("/nearby")
+@cache.cached(query_string=True)
+def nearby_locations():
+  """ Nearby Locations
+  ---
+  post:
+      summary: Nearby locations given a specific dive site
+      description: Nearby locations given a specific dive site
+      parameters:
+          - name: beach_id
+            in: body
+            description: beach_id
+            type: integer
+            required: true
+      responses:
+          200:
+              description: Returns list of beach objects
+              content:
+                application/json:
+                  schema: BeachSchema
+          400:
+              content:
+                application/json:
+                  schema:
+                    msg: string
+              description: No lat/lng or other location data found for given location
+  """
+  startlat = request.args.get('lat')
+  startlng = request.args.get('lng')
+  limit = request.args.get('limit') if request.args.get('limit') else 10
+  shop_id = None
+  if not startlat or not startlng:
+    shop_id = request.args.get('shop_id')
+    spot_id = request.args.get('spot_id')
+    if shop_id:
+      shop = DiveShop.query \
+        .filter_by(id=shop_id) \
+        .first_or_404()
+      startlat = shop.latitude
+      startlng = shop.longitude
+      shop_id = shop.id
+    elif spot_id:
+      spot = Spot.query \
+        .filter_by(id=spot_id) \
+        .first_or_404()
+      startlat = spot.latitude
+      startlng = spot.longitude
+      spot_id = spot.id
+    else:
+      return { 'msg': 'Include a lat/lng, spot_id, or a shop_id' }, 422
+
+  if not startlat or not startlng:
+    shops = []
+    try:
+      shops = DiveShop.query.filter(DiveShop.has(country_id=shop.country_id)).limit(limit).all()
+    except AttributeError as e:
+      return { 'msg': str(e) }
+    output=[]
+    for shop in shops:
+      shop_data = shop.get_dict()
+      output.append(shop_data)
+    if len(output):
+      return { 'data': output }
+    else:
+      return { 'msg': 'No lat/lng or country_id for this shop ' }, 422
+
+  results = []
+  try:
+    query = DiveShop.query \
+      .filter(DiveShop.id != shop_id) \
+      .order_by(DiveShop.distance(startlat, startlng)).limit(limit)
+    results = query.all()
+  except Exception as e:
+    return { 'msg': str(e) }, 500
+  data = []
+  for result in results:
+    temp_data = result.get_dict()
+    data.append(temp_data)
+  return { 'data': data }
