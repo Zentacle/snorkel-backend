@@ -357,3 +357,12 @@ with app.test_request_context():
 @app.route("/spec")
 def get_apispec():
     return jsonify(spec.to_dict())
+
+@app.route('/account/credit_balance', methods=['GET'])
+def get_herc():
+  return {
+    "status": 200,
+    "account_number": "000000172220",
+    "credit_balance:": "3069",
+  }
+
