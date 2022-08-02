@@ -578,3 +578,11 @@ def get_user_wallet():
   return {
     "data": wallet_data
   }
+
+@bp.route('/hercules', methods=['GET'])
+def get_herc():
+  return {
+    "status": 200,
+    "account_number": "000000172220",
+    "credit_balance:": "3069",
+  }
