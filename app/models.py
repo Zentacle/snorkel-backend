@@ -605,7 +605,7 @@ class DiveShop(db.Model):
         return simpleDict
 
     def get_dict(self):
-        shopDict = {
+        dict = {
             'id': self.id,
             'name': self.name,
             'website': self.website,
@@ -626,7 +626,7 @@ class DiveShop(db.Model):
             'zip': self.zip,
         }
 
-        shopDict["full_address"] = DiveShop.get_full_address(
+        dict["full_address"] = DiveShop.get_full_address(
             self.address1,
             self.address2,
             self.city,
@@ -634,8 +634,13 @@ class DiveShop(db.Model):
             self.zip,
             self.country_name
         )
-        shopDict["url"] = DiveShop.get_shop_url(self)
-        return shopDict
+        dict["url"] = DiveShop.get_shop_url(self)
+        if not self.description:
+            name = self.name
+            city = self.city + ', ' + self.country_name
+            dict['description'] = f'{name} is a scuba dive shop based in {city}. They are a PADI certified dive shop' \
+                'and offer a variety of dive and snorkel related services, gear, and guided tours.'
+        return dict
 
     @classmethod
     def get_shop_url(cls, shop):
