@@ -599,6 +599,7 @@ class DiveShop(db.Model):
             "country_name": self.country_name,
             'address1': self.address1,
             'address2': self.address2,
+            'zip': self.zip,
         }
         simpleDict["url"] = DiveShop.get_shop_url(self)
         return simpleDict
@@ -622,6 +623,7 @@ class DiveShop(db.Model):
             "description": self.description,
             "hours": self.hours,
             "country_name": self.country_name,
+            'zip': self.zip,
         }
 
         shopDict["full_address"] = DiveShop.get_full_address(

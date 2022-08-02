@@ -263,7 +263,7 @@ def nearby_locations():
   shop_id = None
   if not startlat or not startlng:
     shop_id = request.args.get('shop_id')
-    spot_id = request.args.get('spot_id')
+    beach_id = request.args.get('beach_id')
     if shop_id:
       shop = DiveShop.query \
         .filter_by(id=shop_id) \
@@ -271,15 +271,15 @@ def nearby_locations():
       startlat = shop.latitude
       startlng = shop.longitude
       shop_id = shop.id
-    elif spot_id:
+    elif beach_id:
       spot = Spot.query \
-        .filter_by(id=spot_id) \
+        .filter_by(id=beach_id) \
         .first_or_404()
       startlat = spot.latitude
       startlng = spot.longitude
-      spot_id = spot.id
+      beach_id = spot.id
     else:
-      return { 'msg': 'Include a lat/lng, spot_id, or a shop_id' }, 422
+      return { 'msg': 'Include a lat/lng, beach_id, or a shop_id' }, 422
 
   if not startlat or not startlng:
     shops = []
