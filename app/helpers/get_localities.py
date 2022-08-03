@@ -27,6 +27,7 @@ def get_localities(address_components):
     country = Country(
       name=country_name,
       short_name=country_short_name,
+      url=f'/loc/{country_short_name}',
     )
   area_1 = AreaOne.query.filter_by(name=area_1_name).first()
   if not area_1 and area_1_name:
@@ -34,18 +35,22 @@ def get_localities(address_components):
       name=area_1_name,
       country=country,
       short_name=area_1_short_name,
+      url=f'/loc/{country_short_name}/{area_1_short_name}',
     )
   area_2 = AreaTwo.query.filter_by(google_name=area_2_name).first()
   if not area_2 and area_2_name:
+    area_1_short_name = area_1_short_name or '_'
     area_2 = AreaTwo(
       google_name=area_2_name,
       name=area_2_name,
       area_one=area_1,
       country=country,
       short_name=area_2_short_name,
+      url=f'/loc/{country_short_name}/{area_1_short_name}/{area_2_short_name}',
     )
   locality = Locality.query.filter_by(google_name=locality_name).first()
   if not locality and locality_name:
+    area_2_short_name = area_2_short_name or '_'
     locality = Locality(
       google_name=locality_name,
       name=locality_name,
@@ -53,5 +58,6 @@ def get_localities(address_components):
       area_one=area_1,
       area_two=area_2,
       country=country,
+      url=f'/loc/{country_short_name}/{area_1_short_name}/{area_2_short_name}/{locality_short_name}',
     )
   return (locality, area_2, area_1, country)

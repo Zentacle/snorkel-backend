@@ -1,4 +1,5 @@
 from flask import Blueprint, request
+from app.helpers.merge_area_one import merge_area_one
 from app.models import (
   Country,
   AreaOne,
@@ -119,3 +120,12 @@ def get_wildcard_locality(country, area_one):
   for spot in locality.spots:
     data.append(spot.get_dict())
   return { 'data': data }
+
+@bp.route("/merge/a2/<stable_id>/<remove_id>")
+def merge_a2(stable_id, remove_id):
+  stable = AreaOne.query.filter_by(id=stable_id).first_or_404()
+  remove = AreaOne.query.filter_by(id=remove_id).first_or_404()
+  if stable.short_name != remove.short_name or stable.name != remove.name:
+    return { 'status': 'objects didnt match' }
+  results = merge_area_one(stable_id, remove_id)
+  return { 'status': results }
