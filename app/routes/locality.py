@@ -128,4 +128,8 @@ def merge_a2(stable_id, remove_id):
   if stable.short_name != remove.short_name or stable.name != remove.name:
     return { 'status': 'objects didnt match' }
   results = merge_area_one(stable_id, remove_id)
+  country = Country.query.filter_by(id=stable.country_id).first_or_404()
+  country_short_name = country.short_name
+  area_1_short_name = stable.short_name
+  stable.url = f'/loc/{country_short_name}/{area_1_short_name}',
   return { 'status': results }
