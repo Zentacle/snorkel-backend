@@ -125,7 +125,7 @@ def get_wildcard_locality(country, area_one):
 def merge_a2(stable_id, remove_id):
   stable = AreaOne.query.filter_by(id=stable_id).first_or_404()
   remove = AreaOne.query.filter_by(id=remove_id).first_or_404()
-  if stable.short_name != remove.short_name or stable.name != remove.name:
+  if stable.short_name != remove.short_name or stable.country_id != remove.country_id:
     return { 'status': 'objects didnt match' }
   results = merge_area_one(stable_id, remove_id)
   country = Country.query.filter_by(id=stable.country_id).first_or_404()
