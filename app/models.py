@@ -464,6 +464,7 @@ class AreaTwo(db.Model):
 
 class AreaOne(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    google_name = db.Column(db.String)
     name = db.Column(db.String, nullable=False)
     short_name = db.Column(db.String, nullable=False)
     country_id = db.Column(db.Integer, db.ForeignKey('country.id'))
@@ -492,6 +493,7 @@ class AreaOne(db.Model):
         if country:
             data['url'] = self.get_url(country)
         elif self.country:
+            data['country'] = self.country.get_dict()
             data['url'] = self.get_url(self.country)
         return data
 

@@ -131,5 +131,18 @@ def merge_a2(stable_id, remove_id):
   country = Country.query.filter_by(id=stable.country_id).first_or_404()
   country_short_name = country.short_name
   area_1_short_name = stable.short_name
-  stable.url = f'/loc/{country_short_name}/{area_1_short_name}',
+  stable.url = f'/loc/{country_short_name}/{area_1_short_name}'
+  db.session.commit()
   return { 'status': results }
+
+@bp.route("/generate_urls")
+def gen_urls():
+  area_ones = AreaOne.query.options(joinedload('country')).all()
+  results = []
+  for area_one in area_ones:
+    result = area_one.get_dict()
+    result['url'] = area_one.get_url(area_one.country)
+    results.append(result)
+    area_one.url = area_one.get_url(area_one.country)
+  db.session.commit()
+  return { 'data': results }
