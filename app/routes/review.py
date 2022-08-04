@@ -213,7 +213,8 @@ def add_review():
           beach=spot, user=user
         )
   client = Amplitude(os.environ.get('AMPLITUDE_API_KEY'))
-  event = BaseEvent(event_type="review__submitted", user_id=user.id)
+  user_id=user.id
+  event = BaseEvent(event_type="review__submitted", user_id=f'{user_id}')
   client.track(event)
 
   return { 'review': review.get_dict(), 'spot': spot.get_dict() }, 200

@@ -1,6 +1,5 @@
 from __future__ import print_function
 from flask import Flask, request, jsonify
-from flask.helpers import make_response
 from flask_cors import CORS
 from flask_caching import Cache
 import os
@@ -15,6 +14,7 @@ import logging
 import boto3
 from botocore.exceptions import ClientError
 from app.scripts.openapi import spec
+from amplitude import Amplitude, BaseEvent
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('FLASK_SECRET_KEY')
@@ -75,7 +75,10 @@ def refresh_expiring_jwts(response):
 
 @app.route("/")
 def home_view():
-  return "Hello world"
+  client = Amplitude(os.environ.get('AMPLITUDE_API_KEY'))
+  event = BaseEvent(event_type="health_check", user_id="1")
+  client.track(event)
+  return "Ok"
 
 @app.route("/db")
 def db_create():
