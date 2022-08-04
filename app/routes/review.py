@@ -214,6 +214,7 @@ def add_review():
         )
   client = Amplitude(os.environ.get('AMPLITUDE_API_KEY'))
   user_id=user.id
+  client.configuration.min_id_length = 1
   event = BaseEvent(event_type="review__submitted", user_id=f'{user_id}')
   client.track(event)
 

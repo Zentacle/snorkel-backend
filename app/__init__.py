@@ -76,6 +76,7 @@ def refresh_expiring_jwts(response):
 @app.route("/")
 def home_view():
   client = Amplitude(os.environ.get('AMPLITUDE_API_KEY'))
+  client.configuration.min_id_length = 1
   event = BaseEvent(event_type="health_check", user_id="1")
   client.track(event)
   return "Ok"
