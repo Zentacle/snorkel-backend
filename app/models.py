@@ -469,7 +469,7 @@ class AreaOne(db.Model):
     short_name = db.Column(db.String, nullable=False)
     country_id = db.Column(db.Integer, db.ForeignKey('country.id'))
     description = db.Column(db.String)
-    url = db.Column(db.String, unique=True)
+    url = db.Column(db.String, unique=True, nullable=False)
     map_image_url = db.Column(db.String)
 
     area_twos = db.relationship('AreaTwo', backref='area_one', lazy=True)
