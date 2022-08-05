@@ -1,5 +1,6 @@
 from app.models import *
 from .demicrosoft import demicrosoft
+from sqlalchemy import and_
 
 def get_localities(address_components):
   locality_name = None
@@ -29,7 +30,13 @@ def get_localities(address_components):
       short_name=country_short_name,
       url=f'/loc/{country_short_name}',
     )
-  area_1 = AreaOne.query.filter_by(name=area_1_name).first()
+  area_1 = AreaOne.query \
+    .filter(
+      and_(
+        AreaOne.short_name==area_1_short_name,
+        AreaOne.country.has(short_name=country.short_name)
+    ))\
+    .first()
   if not area_1 and area_1_name:
     area_1 = AreaOne(
       name=area_1_name,
