@@ -1,6 +1,8 @@
 from app.models import *
+from amplitude import Amplitude, BaseEvent
 from flask_jwt_extended import create_access_token, create_refresh_token, set_access_cookies, set_refresh_cookies
 from flask.helpers import make_response
+import os
 
 def login(user):
   auth_token = create_access_token(identity=user.id)
@@ -16,6 +18,12 @@ def login(user):
       },
       'user': user.get_dict()
     }
+    client = Amplitude(os.environ.get('AMPLITUDE_API_KEY'))
+    user_id=user.id
+    client.configuration.min_id_length = 1
+    event = BaseEvent(event_type="login_success", user_id=f'{user_id}')
+    client.track(event)
+
     resp = make_response(responseObject)
     set_access_cookies(resp, auth_token)
     set_refresh_cookies(resp, refresh_token)

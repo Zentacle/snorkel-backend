@@ -1,4 +1,5 @@
 from app.models import *
+from amplitude import Amplitude, BaseEvent
 from flask_jwt_extended import create_access_token, create_refresh_token, set_access_cookies, set_refresh_cookies
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
@@ -51,6 +52,13 @@ def create_account(
   )
   db.session.add(user)
   db.session.commit()
+
+  client = Amplitude(os.environ.get('AMPLITUDE_API_KEY'))
+  user_id=user.id
+  client.configuration.min_id_length = 1
+  event = BaseEvent(event_type="register_success", user_id=f'{user_id}')
+  client.track(event)
+
   auth_token = create_access_token(identity=user.id)
   refresh_token = create_refresh_token(identity=user.id)
   responseObject = {

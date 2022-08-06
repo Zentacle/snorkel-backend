@@ -1,4 +1,5 @@
 import os
+from amplitude import Amplitude, BaseEvent
 from flask import Blueprint, request
 from app.models import User, DivePartnerAd
 from sqlalchemy import or_, sql
@@ -22,7 +23,7 @@ def add_buddy():
 
   buddy = DivePartnerAd(
     user_id=user_id,
-    area_one_id=area_one_id, 
+    area_one_id=area_one_id,
     area_two_id=area_two_id,
     country_id=country_id,
     locality_id=locality_id,
@@ -83,6 +84,20 @@ def connect_buddy():
       'request_username': current_user.username,
       'request_email': current_user.email,
   }
+
+  client = Amplitude(os.environ.get('AMPLITUDE_API_KEY'))
+  user_id = current_user.id
+  buddy_id = user.id
+  client.configuration.min_id_length = 1
+  event = BaseEvent(
+    event_type="buddy__message",
+    user_id=f'{user_id}',
+    event_properties={
+      'buddy_id': buddy_id,
+    }
+  )
+  client.track(event)
+
   try:
       sg = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
       sg.send(message)
