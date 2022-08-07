@@ -104,4 +104,20 @@ def create_account(
         sg.send(message)
     except Exception as e:
         print(e.body)
+  data = {
+    "contacts": [
+        {
+            "email": email,
+            "custom_fields": {
+                "first_name": first_name,
+                "last_name": last_name,
+            }
+        }
+    ],
+    "list_ids": ['49e5fa45-3112-4a99-ba4b-9e5a8d18af3c']
+  }
+
+  sg.client.marketing.contacts.put(
+      request_body=data
+  )
   return resp
