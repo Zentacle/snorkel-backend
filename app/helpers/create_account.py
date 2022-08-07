@@ -117,7 +117,7 @@ def create_account(
     "list_ids": ['49e5fa45-3112-4a99-ba4b-9e5a8d18af3c']
   }
 
-  sg.client.marketing.contacts.put(
-      request_body=data
-  )
+  # sg.client.marketing.contacts.put(
+  #     request_body=data
+  # )
   return resp
