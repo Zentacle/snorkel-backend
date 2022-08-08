@@ -123,6 +123,7 @@ def send_recent_reviews():
   reviews = Review.query \
     .options(joinedload('user')) \
     .options(joinedload('spot')) \
+    .filter(Review.text.is_not(None)) \
     .order_by(Review.date_posted.desc()).limit(10).all()
   one_star = '''
     <img style='height: 16px;width: auto;margin: 0 4px;' src='https://www.zentacle.com/_next/image?url=%2Ffullstar.png&w=64&q=75' />
