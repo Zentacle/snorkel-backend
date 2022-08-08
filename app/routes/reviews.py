@@ -1,8 +1,10 @@
 import os
+import datetime
 from flask import Blueprint, request
 from app.models import Review, ShoreDivingReview
 from app import cache, db
 from sqlalchemy.orm import joinedload
+from sqlalchemy import func
 from flask_jwt_extended import jwt_required, get_current_user
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
@@ -120,11 +122,13 @@ def delete_shore_diving_ids():
 
 @bp.route("/recentemail")
 def send_recent_reviews():
+  date = datetime.datetime.now() - datetime.timedelta(days=7)
   reviews = Review.query \
     .options(joinedload('user')) \
     .options(joinedload('spot')) \
     .filter(Review.text.is_not(None)) \
-    .order_by(Review.date_posted.desc()).limit(10).all()
+    .filter(Review.date_posted > datetime.date.strftime(date, "%m-%d-%Y")) \
+    .order_by(func.length(Review.text).desc()).limit(20).all()
   one_star = '''
     <img style='height: 16px;width: auto;margin: 0 4px;' src='https://www.zentacle.com/_next/image?url=%2Ffullstar.png&w=64&q=75' />
   '''
