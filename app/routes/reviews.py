@@ -123,11 +123,12 @@ def delete_shore_diving_ids():
 @bp.route("/recentemail")
 def send_recent_reviews():
   date = datetime.datetime.now() - datetime.timedelta(days=7)
+  date_str=datetime.date.strftime(date, "%m-%d-%Y") if not request.args.get('date') else request.args.get('date')
   reviews = Review.query \
     .options(joinedload('user')) \
     .options(joinedload('spot')) \
     .filter(Review.text.is_not(None)) \
-    .filter(Review.date_posted > datetime.date.strftime(date, "%m-%d-%Y")) \
+    .filter(Review.date_posted > date_str) \
     .order_by(func.length(Review.text).desc()).limit(20).all()
   one_star = '''
     <img style='height: 16px;width: auto;margin: 0 4px;' src='https://www.zentacle.com/_next/image?url=%2Ffullstar.png&w=64&q=75' />
