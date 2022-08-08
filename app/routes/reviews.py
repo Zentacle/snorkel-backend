@@ -147,7 +147,7 @@ def send_recent_reviews():
     city_location=review.spot.location_city
     profile_pic=review.user.profile_pic
     display_name=review.user.display_name
-    formatted_date='August 7th'
+    formatted_date=datetime.date.strftime(date, "%B %d")
     hero_img=review.spot.hero_img
     text=review.text
     beach_url=f'https://www.zentacle.com{review.spot.get_url()}'
