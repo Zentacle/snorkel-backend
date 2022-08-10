@@ -299,6 +299,41 @@ def update_usernames():
     'failed': failed,
   }
 
+@app.route("/spec")
+def get_apispec():
+    return jsonify(spec.to_dict())
+
+@app.route('/account/credit_balance', methods=['GET'])
+def get_herc():
+  return {
+    "status": 200,
+    "account_number": "000000172220",
+    "credit_balance:": "3069",
+  }
+
+@app.route("/subscription-webhook", methods=['POST'])
+def subscription_webhook():
+  event = request.json.get('event')
+  event_type = event.get('type')
+  user_id = int(event.get('app_user_id'))
+  user = User.query.filter_by(id=user_id).first_or_404()
+
+  if (
+    event_type == 'INITIAL_PURCHASE'
+    or event_type == 'RENEWAL'
+    or event_type == 'UNCANCELLATION'
+    ):
+    setattr(user, 'has_pro', True)
+  elif (
+    event_type == 'CANCELLATION'
+    or event_type == 'EXPIRATION'
+    or event_type == 'SUBSCRIPTION_PAUSED'
+  ):
+    setattr(user, 'has_pro', False)
+  db.session.commit()
+
+  return 'OK'
+
 from app.routes import shop
 app.register_blueprint(shop.bp)
 
@@ -357,16 +392,3 @@ with app.test_request_context():
     # spec.path(view=upload_file)
     # spec.path(view=get_recent_reviews)
     # ...
-
-@app.route("/spec")
-def get_apispec():
-    return jsonify(spec.to_dict())
-
-@app.route('/account/credit_balance', methods=['GET'])
-def get_herc():
-  return {
-    "status": 200,
-    "account_number": "000000172220",
-    "credit_balance:": "3069",
-  }
-
