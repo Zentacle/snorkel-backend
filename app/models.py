@@ -493,7 +493,6 @@ class AreaOne(db.Model):
         if country:
             data['url'] = self.get_url(country)
         elif self.country:
-            data['country'] = self.country.get_dict()
             data['url'] = self.get_url(self.country)
         return data
 

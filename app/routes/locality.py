@@ -89,6 +89,8 @@ def get_area_one():
   data = []
   for locality in localities:
     locality_data = locality.get_dict()
+    if locality_data.get('country'):
+      locality_data['country'] = locality_data.get('country').get_simple_dict()
     data.append(locality_data)
   return { 'data': data }
 
