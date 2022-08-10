@@ -115,6 +115,7 @@ class User(db.Model):
     bio = db.Column(db.String)
     latitude = db.Column(db.Float)
     longitude = db.Column(db.Float)
+    has_pro = db.Column(db.Boolean, default=False)
 
     reviews = db.relationship(
         "Review",
@@ -142,7 +143,6 @@ class User(db.Model):
             data.pop('admin')
         except KeyError:
             pass
-        data['has_pro'] = False
         return data
 
     @hybrid_method
