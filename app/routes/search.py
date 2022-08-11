@@ -156,59 +156,58 @@ def get_typeahead():
     }
     results.append(result)
   for loc in area_twos:
-    if loc.country and loc.area_one:
-      url = loc.get_url(loc.country, loc.area_one)
-      segments = url.split("/")
-      country = segments[2]
-      area_one = None
-      area_two = None
-      locality = None
-      if len(segments) > 3:
-        area_one = segments[3]
-      if len(segments) > 4:
-        area_two = segments[4]
-      if len(segments) > 5:
-        locality = segments[5]
-      result = {
-        'id': loc.id,
-        'text': loc.name,
-        'url': url,
-        'type': 'location',
-        'subtext': loc.country.name,
-        'data': {
-          'country': country,
-          'area_one': area_one,
-          'area_two': area_two,
-          'locality': locality
-        }
+    url = loc.get_url(loc.country, loc.area_one)
+    segments = url.split("/")
+    country = segments[2]
+    area_one = None
+    area_two = None
+    locality = None
+    if len(segments) > 3:
+      area_one = segments[3]
+    if len(segments) > 4:
+      area_two = segments[4]
+    if len(segments) > 5:
+      locality = segments[5]
+    result = {
+      'id': loc.id,
+      'text': loc.name,
+      'url': url,
+      'type': 'location',
+      'subtext': loc.country.name,
+      'data': {
+        'country': country,
+        'area_one': area_one,
+        'area_two': area_two,
+        'locality': locality
       }
-      results.append(result)
+    }
+    results.append(result)
   for loc in localities:
-    if loc.country and loc.area_one and loc.area_two:
-      url = loc.get_url(loc.country, loc.area_one, loc.area_two)
-      segments = url.split("/")
-      country = segments[2]
-      area_one = None
-      area_two = None
-      locality = None
-      if len(segments) > 3:
-        area_one = segments[3]
-      if len(segments) > 4:
-        area_two = segments[4]
-      if len(segments) > 5:
-        locality = segments[5]
-      result = {
-        'id': loc.id,
-        'text': loc.name,
-        'url': url,
-        'type': 'location',
-        'subtext': loc.country.name,
-        'data': {
-          'country': country,
-          'area_one': area_one,
-          'area_two': area_two,
-          'locality': locality
-        }
+    url = loc.get_url(loc.country, loc.area_one, loc.area_two)
+    segments = url.split("/")
+    country = segments[2]
+    area_one = None
+    area_two = None
+    locality = None
+    if len(segments) > 3:
+      area_one = segments[3]
+    if len(segments) > 4:
+      area_two = segments[4]
+    if len(segments) > 5:
+      locality = segments[5]
+    result = {
+      'id': loc.id,
+      'text': loc.name,
+      'url': url,
+      'type': 'location',
+      'subtext': loc.country.name,
+      'data': {
+        'country': country,
+        'area_one': area_one,
+        'area_two': area_two,
+        'locality': locality
       }
-      results.append(result)
+    }
+    results.append(result)
+  results.reverse()
   return { 'data': results }
