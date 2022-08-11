@@ -203,15 +203,18 @@ def add_review():
   review.id
 
   if request.json.get('include_wallet'):
-    create_wallet(user=user)
-    if dive_shop_id:
-      dive_shop = DiveShop.query.get_or_404(dive_shop_id)
-      if dive_shop.stamp_uri:
-        mint_nft(
-          current_review=review,
-          dive_shop=dive_shop,
-          beach=spot, user=user
-        )
+    try:
+      create_wallet(user=user)
+      if dive_shop_id:
+        dive_shop = DiveShop.query.get_or_404(dive_shop_id)
+        if dive_shop.stamp_uri:
+          mint_nft(
+            current_review=review,
+            dive_shop=dive_shop,
+            beach=spot, user=user
+          )
+    except e:
+      logging.error(e)
   client = Amplitude(os.environ.get('AMPLITUDE_API_KEY'))
   user_id=user.id
   client.configuration.min_id_length = 1
