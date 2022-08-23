@@ -44,7 +44,6 @@ def mint_nft(current_review: Review, dive_shop: DiveShop, beach: Spot, user: Use
   }
 
   response = requests.post(request_url, headers=headers, json=payload)
-  response.raise_for_status()
   data = response.json()
   return data
 
@@ -62,7 +61,6 @@ def create_wallet(user: User):
   }
 
   response = requests.post(request_url, headers=headers, json=payload)
-  response.raise_for_status()
   data = response.json()
   return data
 
@@ -77,7 +75,6 @@ def sign_message(dive_shop: DiveShop, message: str):
     'Content-Type': 'application/json',
   }
   response = requests.post(request_url, headers=headers, json=payload)
-  response.raise_for_status()
   data = response.json()
   return data
 
@@ -89,6 +86,5 @@ def fetch_user_wallet(id):
     'Content-Type': 'application/json',
   }
   response = requests.get(request_url, headers=headers);
-  response.raise_for_status()
   data = response.json()
   return data
