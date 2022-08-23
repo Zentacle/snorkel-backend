@@ -96,6 +96,7 @@ def add_review():
   images = request.json.get('images') or []
   buddies = request.json.get('buddy_array') or []
   dive_shop_id = request.json.get('dive_shop_id')
+  is_private = request.json.get('is_private') or False
   date_dived = dateutil.parser.isoparse(request.json.get('date_dived')) \
     if request.json.get('date_dived') \
     else datetime.utcnow()
@@ -154,7 +155,8 @@ def add_review():
     activity_type=activity_type,
     date_dived=date_dived,
     title=title,
-    dive_shop_id=dive_shop_id
+    dive_shop_id=dive_shop_id,
+    is_private=is_private
   )
 
   for image in images:
