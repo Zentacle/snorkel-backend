@@ -330,6 +330,7 @@ class Review(db.Model):
     max_depth = db.Column(db.Integer)
     difficulty = db.Column(db.String)
     dive_shop_id = db.Column(db.Integer, db.ForeignKey('dive_shop.id'))
+    is_private = db.Column(db.Boolean, nullable=True, default=False)
 
     dive_shop = db.relationship("DiveShop", uselist=False)
     images = db.relationship("Image", backref=db.backref('review', lazy=True))
@@ -345,6 +346,7 @@ class Review(db.Model):
             'date_posted',
             'activity_type',
             'title',
+            'is_private'
         ]
         data = {}
         for key in keys:
