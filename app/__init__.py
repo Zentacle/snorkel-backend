@@ -360,20 +360,21 @@ def stripe_webhook():
   if event.type == 'checkout.session.completed':
       object = event.data.object
       client_reference_id = object.get('client_reference_id')
-      subscription = object.get('subscription')
-      revenuecat_api_key = os.environ.get('REVENUECAT_API_KEY')
-      response = request.post(
-        'https://api.revenuecat.com/v1/receipts',
-        headers={
-          'X-Platform': 'stripe',
-          'Authorization': f'Bearer {revenuecat_api_key}',
-        },
-        json={
-          "app_user_id": client_reference_id,
-          "fetch_token": subscription,
-        }
-      )
-      return response
+      if client_reference_id:
+        subscription = object.get('subscription')
+        revenuecat_api_key = os.environ.get('REVENUECAT_API_KEY')
+        response = request.post(
+          'https://api.revenuecat.com/v1/receipts',
+          headers={
+            'X-Platform': 'stripe',
+            'Authorization': f'Bearer {revenuecat_api_key}',
+          },
+          json={
+            "app_user_id": client_reference_id,
+            "fetch_token": subscription,
+          }
+        )
+        return response
   return jsonify(success=True)
 
 from app.routes import shop
