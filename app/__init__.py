@@ -378,7 +378,7 @@ def stripe_webhook():
         if response.ok:
           return jsonify(success=True)
         else:
-          return 'Error', response.status_code
+          return jsonify(response.json), response.status_code
   return jsonify(success=True)
 
 from app.routes import shop
