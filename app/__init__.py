@@ -5,6 +5,7 @@ from flask_caching import Cache
 import os
 import os.path
 import logging
+import requests
 from app.models import *
 from sqlalchemy import and_, not_
 from flask_jwt_extended import *
@@ -363,7 +364,7 @@ def stripe_webhook():
       if client_reference_id:
         subscription = object.get('subscription')
         revenuecat_api_key = os.environ.get('REVENUECAT_API_KEY')
-        response = request.post(
+        response = requests.post(
           'https://api.revenuecat.com/v1/receipts',
           headers={
             'X-Platform': 'stripe',
