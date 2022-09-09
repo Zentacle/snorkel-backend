@@ -1,5 +1,5 @@
 from __future__ import print_function
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, redirect
 from flask_cors import CORS
 from flask_caching import Cache
 import os
@@ -325,6 +325,55 @@ def subscription_webhook():
   db.session.commit()
 
   return 'OK'
+
+@app.route("/payment-link")
+def payment():
+  try:
+      email = request.args.get('email')
+      user = User.query.filter_by(email=email).first()
+      user_id = user.id if user else None
+      return redirect(
+        f'https://buy.stripe.com/test_6oE28Xan4djWehqfZ1?prefilled_email={email}&client_reference_id={user_id}',
+        code=302
+      )
+  except Exception as e:
+      raise Exception("Unable to create payment intent")
+
+@app.route('/stripe-webhook', methods=['POST'])
+def stripe_webhook():
+  import stripe
+  event = None
+  payload = request.data
+  sig_header = request.headers['STRIPE_SIGNATURE']
+
+  try:
+      event = stripe.Webhook.construct_event(
+          payload, sig_header, os.environ.get('STRIPE_ENDPOINT_SECRET')
+      )
+  except ValueError as e:
+      # Invalid payload
+      raise e
+  except stripe.error.SignatureVerificationError as e:
+      # Invalid signature
+      raise e
+  if event.type == 'checkout.session.completed':
+      object = event.data.object
+      client_reference_id = object.get('client_reference_id')
+      subscription = object.get('subscription')
+      revenuecat_api_key = os.environ.get('REVENUECAT_API_KEY')
+      response = request.post(
+        'https://api.revenuecat.com/v1/receipts',
+        headers={
+          'X-Platform': 'stripe',
+          'Authorization': f'Bearer {revenuecat_api_key}',
+        },
+        json={
+          "app_user_id": client_reference_id,
+          "fetch_token": subscription,
+        }
+      )
+      return response
+  return jsonify(success=True)
 
 from app.routes import shop
 app.register_blueprint(shop.bp)

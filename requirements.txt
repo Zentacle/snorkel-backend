@@ -2,6 +2,7 @@ alembic==1.6.5
 amplitude-analytics==1.0.0
 apispec==5.1.1
 apispec-webframeworks==0.5.2
+autopep8==1.6.0
 bcrypt==3.2.0
 boto3==1.18.8
 botocore==1.21.8
@@ -32,6 +33,7 @@ newrelic==7.16.0.178
 psycopg2-binary==2.9.1
 pyasn1==0.4.8
 pyasn1-modules==0.2.8
+pycodestyle==2.8.0
 pycparser==2.20
 PyJWT==2.1.0
 python-dateutil==2.8.2
@@ -45,6 +47,7 @@ sendgrid==6.7.0
 six==1.16.0
 SQLAlchemy==1.4.18
 starkbank-ecdsa==1.1.1
-stripe==2.58.0
+stripe==4.1.0
+toml==0.10.2
 urllib3==1.26.5
 Werkzeug==2.0.1

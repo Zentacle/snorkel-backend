@@ -611,6 +611,7 @@ class DiveShop(db.Model):
         dict = {
             'id': self.id,
             'name': self.name,
+            'email': self.email,
             'website': self.website,
             "fareharbor_url": self.fareharbor_url,
             'logo_img': self.logo_img,
