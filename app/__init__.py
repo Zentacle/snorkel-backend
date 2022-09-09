@@ -332,8 +332,9 @@ def payment():
       email = request.args.get('email')
       user = User.query.filter_by(email=email).first()
       user_id = user.id if user else None
+      payment_link = os.environ.get('STRIPE_PAYMENT_LINK')
       return redirect(
-        f'https://buy.stripe.com/test_6oE28Xan4djWehqfZ1?prefilled_email={email}&client_reference_id={user_id}',
+        f'{payment_link}?prefilled_email={email}&client_reference_id={user_id}',
         code=302
       )
   except Exception as e:
