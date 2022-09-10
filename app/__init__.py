@@ -381,6 +381,28 @@ def stripe_webhook():
           return jsonify(response.json()), response.status_code
   return jsonify(success=True)
 
+@app.route('/subsurface')
+def subsurface():
+  username = request.args.get('username')
+  password = request.args.get('password')
+  import requests
+
+  url = f'https://cloud.subsurface-divelog.org/user/{username}/dives.html_files/file.js'
+
+  import base64
+  message_bytes = f'{username}:{password}'.encode()
+  base64_bytes = base64.b64encode(message_bytes)
+  auth_token = base64_bytes.decode('ascii')
+  payload={}
+  headers = {
+    'Authorization': f'Basic {auth_token}'
+  }
+
+  response = requests.request("GET", url, headers=headers, data=payload)
+
+  import json
+  return jsonify(json.loads(response.text[6:])[0])
+
 from app.routes import shop
 app.register_blueprint(shop.bp)
 
