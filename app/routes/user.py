@@ -478,7 +478,7 @@ def get_user():
     """
     username = request.args.get('username')
     user_id = request.args.get('user_id')
-    if username == 'null':
+    if username == 'null' or username == 'undefined':
       username = None
     user = get_current_user()
     if not username and not user_id:
