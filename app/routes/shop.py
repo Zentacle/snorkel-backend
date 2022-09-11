@@ -261,6 +261,8 @@ def nearby_locations():
   startlng = request.args.get('lng')
   limit = request.args.get('limit') if request.args.get('limit') else 10
   shop_id = None
+
+  # If not start lat/lng, get lat/lng from shop/spot object
   if not startlat or not startlng:
     shop_id = request.args.get('shop_id')
     beach_id = request.args.get('beach_id')
@@ -281,20 +283,9 @@ def nearby_locations():
     else:
       return { 'msg': 'Include a lat/lng, beach_id, or a shop_id' }, 422
 
+  # If there still isn't a lat/lng, return empty array
   if not startlat or not startlng:
-    shops = []
-    try:
-      shops = DiveShop.query.filter(DiveShop.has(country_id=shop.country_id)).limit(limit).all()
-    except AttributeError as e:
-      return { 'msg': str(e) }
-    output=[]
-    for shop in shops:
-      shop_data = shop.get_dict()
-      output.append(shop_data)
-    if len(output):
-      return { 'data': output }
-    else:
-      return { 'msg': 'No lat/lng or country_id for this shop ' }, 422
+    return { 'data': [] }
 
   results = []
   try:
