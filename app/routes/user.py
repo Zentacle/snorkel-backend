@@ -494,6 +494,7 @@ def get_user():
         .filter(User.id==user_id).first()
     if not user:
       return { 'msg': 'User doesn\'t exist' }, 404
+
     reviews = Review.query \
       .filter_by(author_id=user.id) \
       .options(joinedload('images')) \
