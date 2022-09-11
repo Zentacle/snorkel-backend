@@ -511,7 +511,7 @@ def get_user():
       if not review_data.get('title'):
         review_data['title'] = review.spot.name
       title = review_data['title']
-      review_data['title'] = f'#{index+1} - {title}'
+      review_data['title'] = f'#{len(reviews) - index} - {title}'
       image_data = []
       for image in review.images:
         image_data.append(image.get_dict())
