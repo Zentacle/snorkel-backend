@@ -456,6 +456,7 @@ def get_me():
     return resp
 
 @bp.route("/get")
+@jwt_required(optional=True)
 def get_user():
     """ Get User
     ---
@@ -477,23 +478,26 @@ def get_user():
     """
     username = request.args.get('username')
     user_id = request.args.get('user_id')
+    if username == 'null':
+      username = None
+    user = get_current_user()
     if not username and not user_id:
-      return {
-        'msg': 'Include a username or user id in the request. If you are trying to get the logged in user, use /user/me'
-      }, 422
-    user = None
+      if not user:
+        return {
+          'msg': 'Include a username or user id in the request. If you are trying to get the logged in user, use /user/me'
+        }, 422
     if username:
       user = User.query \
         .filter(func.lower(User.username)==username.lower()).first()
-    if not user:
+    if not user and user_id:
       user = User.query \
         .filter(User.id==user_id).first()
+    if not user:
+      return { 'msg': 'User doesn\'t exist' }, 404
     reviews = Review.query \
       .filter_by(author_id=user.id) \
       .options(joinedload('images')) \
       .order_by(Review.date_dived.desc()).all()
-    if not user:
-      return { 'msg': 'User doesn\'t exist' }, 404
     user_data = user.get_dict()
     reviews_data = []
     for index, review in enumerate(reviews):
