@@ -16,6 +16,7 @@ import boto3
 from botocore.exceptions import ClientError
 from app.scripts.openapi import spec
 from amplitude import Amplitude, BaseEvent
+from sendgrid import SendGridAPIClient
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('FLASK_SECRET_KEY')
@@ -315,8 +316,27 @@ def subscription_webhook():
     event_type == 'INITIAL_PURCHASE'
     or event_type == 'RENEWAL'
     or event_type == 'UNCANCELLATION'
-    ):
+  ):
     setattr(user, 'has_pro', True)
+    sg = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
+    data = {
+      "contacts": [
+          {
+              "email": user.email,
+              "custom_fields": {
+                  "e2_T": 'True',
+              }
+          }
+      ]
+    }
+
+    try:
+      response = sg.client.marketing.contacts.put(
+          request_body=data
+      )
+      return response.body
+    except Exception as e:
+      return e.body, 500
   elif (
     event_type == 'CANCELLATION'
     or event_type == 'EXPIRATION'
