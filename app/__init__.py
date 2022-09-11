@@ -327,7 +327,8 @@ def subscription_webhook():
                   "e2_T": 'True',
               }
           }
-      ]
+      ],
+      "list_ids": ['3d67ca05-8e79-4a44-9bce-a6004b58024e']
     }
 
     try:
