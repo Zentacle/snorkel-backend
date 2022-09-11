@@ -476,12 +476,18 @@ def get_user():
                     schema: UserSchema
     """
     username = request.args.get('username')
-    if not username:
+    user_id = request.args.get('user_id')
+    if not username and not user_id:
       return {
-        'msg': 'Include a username in the request. If you are trying to get the logged in user, use /user/me'
+        'msg': 'Include a username or user id in the request. If you are trying to get the logged in user, use /user/me'
       }, 422
-    user = User.query \
-      .filter(func.lower(User.username)==username.lower()).first()
+    user = None
+    if username:
+      user = User.query \
+        .filter(func.lower(User.username)==username.lower()).first()
+    if not user:
+      user = User.query \
+        .filter(User.id==user_id).first()
     reviews = Review.query \
       .filter_by(author_id=user.id) \
       .options(joinedload('images')) \
