@@ -18,6 +18,7 @@ def create_account(
   profile_pic=None,
   username=None,
   unencrypted_password=None,
+  app_name=None,
 ):
   password = bcrypt.hashpw(unencrypted_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8') \
     if unencrypted_password \
@@ -56,7 +57,7 @@ def create_account(
   client = Amplitude(os.environ.get('AMPLITUDE_API_KEY'))
   user_id=user.id
   client.configuration.min_id_length = 1
-  event = BaseEvent(event_type="register_success", user_id=f'{user_id}')
+  event = BaseEvent(event_type="register_success", user_id=f'{user_id}', event_properties={ 'app': app_name })
   client.track(event)
 
   auth_token = create_access_token(identity=user.id)
@@ -97,6 +98,7 @@ def create_account(
   message.dynamic_template_data = {
       'first_name': display_name,
       'email': email,
+      'app': app_name,
   }
   if not os.environ.get('FLASK_ENV') == 'development':
     try:

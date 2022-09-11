@@ -90,6 +90,7 @@ def user_signup():
   username = request.json.get('username')
   profile_pic = request.json.get('profile_pic')
   unencrypted_password = request.json.get('password')
+  app_name = request.json.get('app')
   display_name = first_name + ' ' + last_name
 
   resp = create_account(
@@ -101,6 +102,7 @@ def user_signup():
     profile_pic=profile_pic,
     username=username,
     unencrypted_password=unencrypted_password,
+    app_name=app_name,
   )
   return resp
 
@@ -133,6 +135,7 @@ def user_apple_signup():
   id_token = request.json.get('id_token')
   state = request.json.get('state')
   audience = request.json.get('audience') if request.json.get('audience') else os.environ.get("APPLE_APP_ID")
+  app_name = request.json.get('app')
   email = None
 
 
@@ -178,6 +181,7 @@ def user_apple_signup():
       last_name,
       display_name,
       email,
+      app_name,
     )
 
   return { "msg": "user doesn't exist and didn't get a user object"}, 422
@@ -211,6 +215,7 @@ def user_google_signup():
   """
   token = request.json.get('credential')
   app.logger.error(request.json.get('credential'))
+  app_name = request.json.get('app')
   userid = None
   try:
     # Specify the CLIENT_ID of the app that accesses the backend:
@@ -241,6 +246,7 @@ def user_google_signup():
       display_name,
       email,
       profile_pic,
+      app_name,
     )
     return resp
   except ValueError:
