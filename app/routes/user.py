@@ -177,11 +177,11 @@ def user_apple_signup():
 
     return create_account(
       db,
-      first_name,
-      last_name,
-      display_name,
-      email,
-      app_name,
+      first_name=first_name,
+      last_name=last_name,
+      display_name=display_name,
+      email=email,
+      app_name=app_name,
     )
 
   return { "msg": "user doesn't exist and didn't get a user object"}, 422
