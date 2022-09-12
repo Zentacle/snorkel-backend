@@ -17,6 +17,8 @@ from botocore.exceptions import ClientError
 from app.scripts.openapi import spec
 from amplitude import Amplitude, BaseEvent
 from sendgrid import SendGridAPIClient
+from werkzeug.exceptions import HTTPException
+import json
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('FLASK_SECRET_KEY')
@@ -74,6 +76,20 @@ def refresh_expiring_jwts(response):
     except (RuntimeError, KeyError):
         # Case where there is not a valid JWT. Just return the original respone
         return response
+
+@app.errorhandler(HTTPException)
+def handle_exception(e):
+    """Return JSON instead of HTML for HTTP errors."""
+    # start with the correct headers and status code from the error
+    response = e.get_response()
+    # replace the body with JSON
+    response.data = json.dumps({
+        "code": e.code,
+        "name": e.name,
+        "msg": e.description,
+    })
+    response.content_type = "application/json"
+    return response
 
 @app.route("/")
 def home_view():

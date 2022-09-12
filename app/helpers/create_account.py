@@ -1,3 +1,4 @@
+from flask import abort
 from app.models import *
 from amplitude import Amplitude, BaseEvent
 from flask_jwt_extended import create_access_token, create_refresh_token, set_access_cookies, set_refresh_cookies
@@ -27,9 +28,9 @@ def create_account(
   if not validate_email_format(email):
     return { 'msg': 'Please enter a valid email' }, 401
   if not email:
-    return { 'msg': 'Please enter an email' }, 422
+    abort(422, 'Please enter an email')
   if not first_name:
-    return { 'msg': 'Please enter a name' }, 422
+    abort(422, 'Please enter a name')
 
   email = email.lower()
   user = User.query.filter(func.lower(User.email)==email).first()
