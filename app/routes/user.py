@@ -241,12 +241,12 @@ def user_google_signup():
     profile_pic = idinfo.get('picture')
     resp = create_account(
       db,
-      first_name,
-      last_name,
-      display_name,
-      email,
-      profile_pic,
-      app_name,
+      first_name=first_name,
+      last_name=last_name,
+      display_name=display_name,
+      email=email,
+      profile_pic=profile_pic,
+      app_name=app_name,
     )
     return resp
   except ValueError:
