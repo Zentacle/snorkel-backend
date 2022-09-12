@@ -8,7 +8,6 @@ from sqlalchemy import func
 from app.helpers.validate_email_format import validate_email_format
 import os
 import bcrypt
-import newrelic
 
 def create_account(
   db,
@@ -28,10 +27,8 @@ def create_account(
   if not validate_email_format(email):
     return { 'msg': 'Please enter a valid email' }, 401
   if not email:
-    newrelic.agent.notice_error()
     return { 'msg': 'Please enter an email' }, 422
   if not first_name:
-    newrelic.agent.notice_error()
     return { 'msg': 'Please enter a name' }, 422
 
   email = email.lower()
@@ -44,7 +41,6 @@ def create_account(
       return { 'msg': 'Usernames can\'t have special characters' }, 422
     user = User.query.filter(func.lower(User.username)==username).first()
     if user:
-      newrelic.agent.notice_error()
       return { 'msg': 'An account with this username already exists' }, 409
   user = User(
     first_name=first_name,
