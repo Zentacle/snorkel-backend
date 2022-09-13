@@ -494,7 +494,7 @@ def get_user():
       user = User.query \
         .filter(User.id==user_id).first()
     if not user:
-      abort(404, 'User doesn\'t exist')
+      abort(404, f'User username={username}, user_id={user_id} doesn\'t exist')
 
     reviews = Review.query \
       .filter_by(author_id=user.id) \
