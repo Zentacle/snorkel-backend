@@ -26,7 +26,7 @@ def create_account(
     else None
 
   if not validate_email_format(email):
-    return { 'msg': 'Please enter a valid email' }, 401
+    abort(422, 'Please enter a valid email')
   if not email:
     abort(422, 'Please enter an email')
   if not first_name:
@@ -35,14 +35,14 @@ def create_account(
   email = email.lower()
   user = User.query.filter(func.lower(User.email)==email).first()
   if user:
-    return { 'msg': 'An account with this email already exists' }, 409
+    abort(409, 'An account with this email already exists')
   if username:
     username = username.lower()
     if not username.isalnum():
-      return { 'msg': 'Usernames can\'t have special characters' }, 422
+      abort(422, 'Usernames can\'t have special characters')
     user = User.query.filter(func.lower(User.username)==username).first()
     if user:
-      return { 'msg': 'An account with this username already exists' }, 409
+      abort(409, 'An account with this username already exists')
   user = User(
     first_name=first_name,
     last_name=last_name,

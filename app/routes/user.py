@@ -2,7 +2,7 @@ import os
 from app.helpers.wally_integration import fetch_user_wallet
 import boto3
 import io
-from flask import Blueprint, request
+from flask import Blueprint, request, abort
 from app.models import User, Review
 from app import db, app, cache
 import jwt
@@ -184,7 +184,7 @@ def user_apple_signup():
       app_name=app_name,
     )
 
-  return { "msg": "user doesn't exist and didn't get a user object"}, 422
+  abort(422, "user doesn't exist and didn't get a user object")
 
 
 @bp.route("/google_register", methods=["POST"])
@@ -353,11 +353,11 @@ def user_login():
 
   user = User.query.filter(or_(func.lower(User.email)==email.lower(), User.username==email)).first()
   if not user:
-    return { 'msg': 'Wrong password or user does not exist' }, 400
+    abort(400, 'Wrong password or user does not exist')
   if bcrypt.checkpw(password.encode('utf-8'), user.password.encode('utf-8')):
     return login(user)
   else:
-    return { 'msg': 'Wrong password or user does not exist' }, 400
+    abort(400, 'Wrong password or user does not exist')
 
 @bp.route("/logout")
 def logout():
@@ -410,14 +410,11 @@ def patch_user():
     for key in updates.keys():
       if key == 'username':
         username = updates.get(key).lower()
+        same_username_user = User.query.filter_by(username=username).first()
         if not username.isalnum():
-          return {
-            'msg': 'Usernames can\'t have special characters'
-          }, 422
-        if User.query.filter_by(username=username).first():
-          return {
-            'msg': 'Someone already has that username'
-          }, 401
+          abort(422, 'Usernames can\'t have special characters')
+        if same_username_user and user.id != same_username_user.id:
+          abort(401, 'Someone already has that username')
         setattr(user, key, username.lower())
       else:
         setattr(user, key, updates.get(key))
@@ -489,9 +486,7 @@ def get_user():
     user = get_current_user()
     if not username and not user_id:
       if not user:
-        return {
-          'msg': 'Include a username or user id in the request. If you are trying to get the logged in user, use /user/me'
-        }, 422
+        abort(422, 'Include a username or user id in the request. If you are trying to get the logged in user, use /user/me')
     if username:
       user = User.query \
         .filter(func.lower(User.username)==username.lower()).first()
@@ -499,7 +494,7 @@ def get_user():
       user = User.query \
         .filter(User.id==user_id).first()
     if not user:
-      return { 'msg': 'User doesn\'t exist' }, 404
+      abort(404, 'User doesn\'t exist')
 
     reviews = Review.query \
       .filter_by(author_id=user.id) \
@@ -558,12 +553,12 @@ def user_signup_fake():
 @jwt_required()
 def upload():
   if 'file' not in request.files:
-    return { 'msg': 'No file included in request' }, 422
+    abort(422, 'No file included in request')
   # If the user does not select a file, the browser submits an
   # empty file without a filename.
   file = request.files.get('file')
   if file.filename == '':
-      return { 'msg': 'Submitted an empty file' }, 422
+    abort(422, 'Submitted an empty file')
 
   user = get_current_user()
 

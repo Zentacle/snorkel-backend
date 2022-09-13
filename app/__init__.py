@@ -1,5 +1,5 @@
 from __future__ import print_function
-from flask import Flask, request, jsonify, redirect
+from flask import Flask, request, jsonify, redirect, abort
 from flask_cors import CORS
 from flask_caching import Cache
 import os
@@ -263,7 +263,7 @@ def set_country():
   elif destination_url:
     spots = Spot.query.filter(Spot.shorediving_data.has(destination_url=destination_url)).all()
   else:
-    return 'No destination or region', 401
+    abort(401, 'No destination or region')
   if country_short_name:
     country = Country.query.filter_by(short_name=country_short_name).first()
     country_id = country.id

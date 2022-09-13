@@ -1,6 +1,6 @@
 import os
 import secrets
-from flask import Blueprint, request
+from flask import Blueprint, request, abort
 from app.models import User, PasswordReset
 from app import db
 from flask_jwt_extended import (
@@ -55,7 +55,7 @@ def reset_password():
   reset_obj = PasswordReset.query.filter_by(token=token).first()
   if reset_obj:
     if reset_obj.token_expiry < datetime.utcnow():
-      return {'msg': 'Link expired. Try reseting your password again'}, 401
+      abort(401, 'Link expired. Try reseting your password again')
     user_id = reset_obj.user_id
     user = User.query.filter_by(id=user_id).first()
     hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
@@ -75,4 +75,4 @@ def reset_password():
     db.session.delete(reset_obj)
     db.session.commit()
     return resp
-  return {'msg': 'No token or password provided'}, 422
+  abort(422, 'No token or password provided')

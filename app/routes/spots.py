@@ -1,5 +1,5 @@
 import os
-from flask import Blueprint, request
+from flask import Blueprint, request, abort
 from app.models import (
    Review,
    Spot,
@@ -890,7 +890,7 @@ def nearby_locations():
   if not startlat or not startlng:
     beach_id = request.args.get('beach_id')
     if not beach_id:
-      return { 'msg': 'Include a lat/lng or a beach_id' }, 422
+      abort(422, 'Include a lat/lng or a beach_id')
     spot = Spot.query \
       .options(joinedload(Spot.shorediving_data)) \
       .filter_by(id=beach_id) \
@@ -921,7 +921,7 @@ def nearby_locations():
     if len(output):
       return { 'data': output }
     else:
-      return { 'msg': 'No lat/lng, country_id, or sd_data for this spot ' }, 400
+      abort(400, 'No lat/lng, country_id, or sd_data for this spot')
 
   results = []
   try:
@@ -1043,11 +1043,11 @@ def backfill_shorediving_to_existing():
 
   spot = Spot.query.filter_by(name=name).first_or_404()
   if spot.area_two_id != area_two_id:
-    return 'Couldnt find a spot in the correct region with this name', 401
+    abort(401, 'Couldnt find a spot in the correct region with this name')
 
   sd_spot = ShoreDivingData.query.filter_by(id=id).first()
   if sd_spot:
-    return 'Already exists', 402
+    abort(402, 'Already exists')
 
   sd_data = ShoreDivingData(
     id=id,

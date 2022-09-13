@@ -4,7 +4,7 @@ from amplitude import Amplitude, BaseEvent
 from app.helpers.wally_integration import create_wallet, mint_nft
 import boto3
 import io
-from flask import Blueprint, request
+from flask import Blueprint, request, abort
 from app.models import (
   Review,
   Spot,
@@ -101,9 +101,9 @@ def add_review():
     if request.json.get('date_dived') \
     else datetime.utcnow()
   if not rating:
-    return { 'msg': 'Please select a rating' }, 401
+    abort(422, 'Please select a rating')
   if not activity_type:
-    return { 'msg': 'Please select scuba or snorkel' }, 401
+    abort(422, 'Please select scuba or snorkel')
 
   if sd_id and not beach_id:
     sd_data = ShoreDivingData.query.filter_by(id=sd_id).first_or_404()
@@ -111,14 +111,14 @@ def add_review():
 
   spot = Spot.query.filter_by(id=beach_id).first()
   if not spot:
-    return { 'msg': 'Couldn\'t find that spot' }, 404
+    abort(422, 'Couldn\'t find that spot')
 
   if len(buddies) > 0:
     #verify basic email format
     unique_buddies = []
     for email in buddies:
       if not validate_email_format(email):
-        return { 'msg': 'Please correct buddy email format' }, 401
+        abort(401, 'Please correct buddy email format')
       if not email.lower() in unique_buddies:
           unique_buddies.append(email.lower())
 
@@ -403,7 +403,7 @@ def patch_review():
   user = get_current_user()
 
   if review.author_id != user.id and not user.admin:
-    return {'msg': 'You are not allowed to do that'}, 403
+    abort(403, 'You are not allowed to do that')
 
   updates = request.json
   if "date_dived" in updates:
@@ -457,7 +457,7 @@ def upload_file():
     """
     # check if the post request has the file part
     if 'file' not in request.files:
-        return { 'msg': 'No file included in request' }, 422
+        abort(422, 'No file included in request')
     files = request.files.getlist('file')
     s3_url = ''
     file_urls = []
@@ -465,7 +465,7 @@ def upload_file():
         # If the user does not select a file, the browser submits an
         # empty file without a filename.
         if file.filename == '':
-            return { 'msg': 'Submitted an empty file' }, 422
+            abort(422, 'Submitted an empty file')
         import uuid
         s3_key = str(get_current_user().id) + '_' + str(uuid.uuid4())
         contents = file.read()
@@ -491,7 +491,7 @@ def delete_review():
     .options(joinedload(Review.images)) \
     .first_or_404()
   if review.author_id != user.id and not user.admin:
-    return {'msg': 'You are not allowed to do that'}, 403
+    abort(403, 'You are not allowed to do that')
   beach_id = review.beach_id
   for image in review.images:
     if not keep_images:
@@ -557,9 +557,9 @@ def add_shore_review():
     if request.json.get('date_dived') \
     else datetime.utcnow()
   if not rating:
-    return { 'msg': 'Please select a rating' }, 401
+    abort(401, 'Please select a rating')
   if not activity_type:
-    return { 'msg': 'Please select scuba or snorkel' }, 401
+    abort(401, 'Please select scuba or snorkel')
 
   shorediving_data = ShoreDivingReview.query.filter_by(shorediving_id=shorediving_id).first()
   if shorediving_data:
