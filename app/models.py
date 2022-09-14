@@ -661,7 +661,7 @@ class DiveShop(db.Model):
             full_address += ' ' + address2
         if city:
             if full_address == "":
-                full_addres += city
+                full_address += city
             else:
                 full_address += ', ' + city
         if state:
