@@ -9,6 +9,7 @@ from sqlalchemy import func
 from app.helpers.validate_email_format import validate_email_format
 import os
 import bcrypt
+import newrelic.agent
 
 def create_account(
   db,
@@ -21,6 +22,7 @@ def create_account(
   unencrypted_password=None,
   app_name=None,
 ):
+  newrelic.agent.capture_request_params()
   password = bcrypt.hashpw(unencrypted_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8') \
     if unencrypted_password \
     else None

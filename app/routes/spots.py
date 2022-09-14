@@ -26,6 +26,7 @@ from sqlalchemy.exc import OperationalError
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
 from app.helpers.get_localities import get_localities
+import newrelic.agent
 
 bp = Blueprint('spots', __name__, url_prefix="/spots")
 
@@ -89,6 +90,7 @@ def get_spots():
                           type: string
               description: Wrong password.
   """
+  newrelic.agent.capture_request_params()
   is_shorediving = False
   area = None
   spot = None
