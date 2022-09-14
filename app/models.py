@@ -417,7 +417,8 @@ class Locality(db.Model):
         return self.short_name.lower() if self.short_name else demicrosoft(self.name).lower()
 
     def get_url(self, country, area_one, area_two):
-        return '/loc/' + country.short_name + '/' + area_one.short_name + '/' + (area_two.short_name if area_two else '_') + '/' + self.get_short_name()
+        area_one_short_name = area_one.short_name if area_one else '_'
+        return '/loc/' + country.short_name + '/' + area_one_short_name + '/' + (area_two.short_name if area_two else '_') + '/' + self.get_short_name()
 
 # County - Doesn't always exist
 
