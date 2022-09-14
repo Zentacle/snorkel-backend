@@ -10,6 +10,7 @@ from app.models import (
 )
 from app import cache
 from sqlalchemy import or_
+import newrelic.agent
 
 bp = Blueprint('search', __name__, url_prefix="/search")
 
@@ -67,6 +68,7 @@ def get_typeahead():
                 application/json:
                   schema: TypeAheadSchema
   """
+  newrelic.agent.capture_request_params()
   query = request.args.get('query')
   beach_only = request.args.get('beach_only')
   results = []
