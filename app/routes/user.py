@@ -249,8 +249,8 @@ def user_google_signup():
       app_name=app_name,
     )
     return resp
-  except ValueError:
-    return { 'data': token }, 401
+  except ValueError as e:
+    abort(401, e.body)
     # Invalid token
     pass
   return { 'data': userid, 'token': token }
