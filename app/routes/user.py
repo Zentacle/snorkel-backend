@@ -147,7 +147,7 @@ def user_apple_signup():
     if key.get('kid') == token_headers.get('kid'):
       jwk = key
   if not jwk:
-    return 'No matching key found', 500
+    abort(500, 'No matching key found')
   public_key = RSAAlgorithm.from_jwk(json.dumps(jwk))
 
 
