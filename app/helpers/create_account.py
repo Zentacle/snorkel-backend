@@ -96,7 +96,7 @@ def create_account(
       print(e.body)
 
   if not os.environ.get('FLASK_ENV') == 'development':
-      requests.post('https://hooks.slack.com/services/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', json={
+      requests.post(os.environ.get('SLACK_WEBHOOK'), json={
           'text': f'New user registered: {display_name} ({email}) ({app_name})',
       })
 
