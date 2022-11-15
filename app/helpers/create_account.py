@@ -10,6 +10,7 @@ from app.helpers.validate_email_format import validate_email_format
 import os
 import bcrypt
 import newrelic.agent
+import requests
 
 def create_account(
   db,
@@ -79,48 +80,38 @@ def create_account(
   set_access_cookies(resp, auth_token)
   set_refresh_cookies(resp, refresh_token)
 
-  message = Mail(
-    from_email=('hello@zentacle.com', 'Zentacle'),
-    to_emails=email)
-  message.reply_to = 'mayank@zentacle.com'
-
-  message.template_id = 'd-9aeec0123b324082b53095ce06987e27'
-  message.dynamic_template_data = {
-      'first_name': first_name
-  }
   try:
+      message = Mail(
+        from_email=('hello@zentacle.com', 'Zentacle'),
+        to_emails=email)
+      message.reply_to = 'mayank@zentacle.com'
+
+      message.template_id = 'd-9aeec0123b324082b53095ce06987e27'
+      message.dynamic_template_data = {
+          'first_name': first_name
+      }
       sg = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
       sg.send(message)
   except Exception as e:
       print(e.body)
-  message = Mail(
-      from_email=('hello@zentacle.com', 'Zentacle'),
-      to_emails='mayank@zentacle.com')
 
-  message.template_id = 'd-926fe53d5696480fb65b92af8cd8484e'
-  message.dynamic_template_data = {
-      'first_name': display_name,
-      'email': email,
-      'app': app_name,
-  }
   if not os.environ.get('FLASK_ENV') == 'development':
-    try:
-        sg = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
-        sg.send(message)
-    except Exception as e:
-        print(e.body)
-  data = {
-    "contacts": [
-        {
-            "email": email,
-            "first_name": first_name,
-            "last_name": last_name,
-        }
-    ],
-    "list_ids": ['49e5fa45-3112-4a99-ba4b-9e5a8d18af3c']
-  }
+      requests.post('https://hooks.slack.com/services/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', json={
+          'text': f'New user registered: {display_name} ({email}) ({app_name})',
+      })
 
   try:
+    # Add to sendgrid contacts
+    data = {
+      "contacts": [
+          {
+              "email": email,
+              "first_name": first_name,
+              "last_name": last_name,
+          }
+      ],
+      "list_ids": ['49e5fa45-3112-4a99-ba4b-9e5a8d18af3c']
+    }
     response = sg.client.marketing.contacts.put(
         request_body=data
     )
