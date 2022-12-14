@@ -18,7 +18,7 @@ from sendgrid.helpers.mail import Mail
 
 bp = Blueprint('password', __name__, url_prefix="/password")
 
-@bp.route('/password/request', methods=['POST'])
+@bp.route('/request', methods=['POST'])
 def request_reset_password():
   email = request.json.get('email')
   user = User.query.filter(func.lower(User.email)==email.lower()).first_or_404()
@@ -47,7 +47,7 @@ def request_reset_password():
 
   return {'msg': 'Password reset sent, check your email for a reset link'}
 
-@bp.route('/password/reset', methods=['POST'])
+@bp.route('/reset', methods=['POST'])
 def reset_password():
   token = request.json.get('token')
   password = request.json.get('password')
