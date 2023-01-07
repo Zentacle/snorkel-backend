@@ -1,7 +1,7 @@
 import os
 import datetime
 from flask import Blueprint, request
-from app.models import Review, ShoreDivingReview
+from app.models import Review, ShoreDivingReview, Spot
 from app import cache, db
 from sqlalchemy.orm import joinedload
 from sqlalchemy import func
@@ -25,9 +25,21 @@ def get_recent_reviews():
                 application/json:
                   schema: ReviewSchema
   """
+  limit = request.args.get('limit') if request.args.get('limit') else 25
+  offset = request.args.get('offset') if request.args.get('offset') else 0
+  latitude = request.args.get('latitude')
+  longitude = request.args.get('longitude')
   reviews = Review.query \
-    .options(joinedload('spot')) \
-    .order_by(Review.date_posted.desc()).limit(25).all()
+    .options(joinedload('spot'))
+  if request.args.get('type') == 'nearby' and latitude:
+    nearby_spots = db.session.query(Spot.id) \
+      .filter(Spot.distance(latitude, longitude) < 50).subquery()
+    reviews = reviews.filter(Review.beach_id.in_(nearby_spots))
+
+  reviews = reviews.order_by(Review.date_posted.desc()) \
+    .limit(limit) \
+    .offset(offset) \
+    .all()
   data = []
   for review in reviews:
     spot = review.spot
