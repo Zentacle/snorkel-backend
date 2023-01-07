@@ -418,8 +418,10 @@ def patch_user():
           abort(401, 'Someone already has that username')
         setattr(user, key, username.lower())
       if key == 'latitude':
+        latitude = updates.get('latitude')
+        longitude = updates.get('longitude')
         r = requests.get('https://maps.googleapis.com/maps/api/geocode/json', params = {
-          'latlng': f'{updates.latitude},{updates.longitude}',
+          'latlng': f'{latitude},{longitude}',
           'key': os.environ.get('GOOGLE_API_KEY')
         })
         response = r.json()
