@@ -617,7 +617,7 @@ def geocode():
         User.hometown.is_(None),
         User.latitude.isnot(None),
       )
-    ).all()
+    ).limit(10).all()
     results = []
     for spot in spots:
       latitude = spot.latitude
