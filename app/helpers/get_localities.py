@@ -13,6 +13,7 @@ def format_localities(address_components):
       formatted_output['area_2'] = component
     if 'country' in component.get('types'):
       formatted_output['country'] = component
+  return formatted_output
 
 def get_localities(address_components):
   locality_name = None
