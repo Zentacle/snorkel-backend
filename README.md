@@ -5,7 +5,7 @@ export FLASK_APP='app'
 export FLASK_DEBUG='True'
 export DATABASE_URL='postgresql://localhost:5432/snorkel'
 export SENDGRID_API_KEY=''
-export AWS_ACCESS_KEY_ID=''
+export AWS_ACCESS_KEY_ID='
 export AWS_SECRET_ACCESS_KEY=''
 export GOOGLE_CLIENT_ID=''
 export GOOGLE_API_KEY=''
@@ -23,8 +23,9 @@ source env/bin/activate
 source environment.env
 
 #Windows
-assign environment variable to windows' system properties environment variables
-don't need environment.env file
+#assign environment variable to windows' system properties environment variables
+#don't need environment.env file
+#Install WSL to simulate linux shell on windows: https://learn.microsoft.com/en-us/windows/wsl/install
 venv\Scripts\activate
 
 #run
