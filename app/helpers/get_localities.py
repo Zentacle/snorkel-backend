@@ -2,6 +2,18 @@ from app.models import *
 from .demicrosoft import demicrosoft
 from sqlalchemy import and_
 
+def format_localities(address_components):
+  formatted_output = {}
+  for component in address_components:
+    if 'locality' in component.get('types'):
+      formatted_output['locality'] = component
+    if 'administrative_area_level_1' in component.get('types'):
+      formatted_output['area_1'] = component
+    if 'administrative_area_level_2' in component.get('types'):
+      formatted_output['area_2'] = component
+    if 'country' in component.get('types'):
+      formatted_output['country'] = component
+
 def get_localities(address_components):
   locality_name = None
   area_1_name = None

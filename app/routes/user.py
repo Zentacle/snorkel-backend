@@ -21,6 +21,7 @@ from flask_jwt_extended import (
 
 from app.helpers.create_account import create_account
 from app.helpers.login import login
+from app.helpers.get_localities import format_localities
 from sqlalchemy import or_, func
 from sqlalchemy.orm import joinedload
 from google.oauth2 import id_token
@@ -416,6 +417,19 @@ def patch_user():
         if same_username_user and user.id != same_username_user.id:
           abort(401, 'Someone already has that username')
         setattr(user, key, username.lower())
+      if key == 'latitude':
+        r = requests.get('https://maps.googleapis.com/maps/api/geocode/json', params = {
+          'latlng': f'{updates.latitude},{updates.longitude}',
+          'key': os.environ.get('GOOGLE_API_KEY')
+        })
+        response = r.json()
+        if response.get('status') == 'OK':
+          address_components = response.get('results')[0].get('address_components')
+          components = format_localities(address_components)
+          city_name = components.get('locality').get('long_name')
+          state_name = components.get('area_1').get('short_name')
+          hometown = f'{city_name}, {state_name}'
+          setattr(user, 'hometown', hometown)
       else:
         setattr(user, key, updates.get(key))
   except ValueError as e:
