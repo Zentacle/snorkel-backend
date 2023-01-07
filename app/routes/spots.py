@@ -653,7 +653,7 @@ def add_spot():
         'url': 'https://www.zentacle.com'+spot.get_url(),
         'approve_url': 'https://www.zentacle.com/api/spots/approve?id='+spot.id,
     }
-    if not os.environ.get('FLASK_ENV') == 'development':
+    if not os.environ.get('FLASK_DEBUG'):
       try:
           sg = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
           sg.send(message)
@@ -670,7 +670,7 @@ def add_spot():
         'first_name': user.first_name,
         'url': 'https://www.zentacle.com'+spot.get_url(),
     }
-    if not os.environ.get('FLASK_ENV') == 'development':
+    if not os.environ.get('FLASK_DEBUG'):
       try:
           sg = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
           sg.send(message)

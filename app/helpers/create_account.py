@@ -95,7 +95,7 @@ def create_account(
   except Exception as e:
       print(e.body)
 
-  if not os.environ.get('FLASK_ENV') == 'development':
+  if not os.environ.get('FLASK_DEBUG'):
       requests.post(os.environ.get('SLACK_WEBHOOK'), json={
           'text': f'New user registered: {display_name} ({email}) ({app_name})',
       })

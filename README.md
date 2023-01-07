@@ -2,7 +2,7 @@ Not included in the github is the environment variables file. You will need to g
 
 ```
 export FLASK_APP='app'
-export FLASK_ENV='development'
+export FLASK_DEBUG='True'
 export DATABASE_URL='postgresql://localhost:5432/snorkel'
 export SENDGRID_API_KEY=''
 export AWS_ACCESS_KEY_ID=''
