@@ -434,6 +434,11 @@ def patch_user():
             state_name = components.get('area_1').get('short_name')
             hometown = f'{city_name}, {state_name}'
             setattr(user, 'hometown', hometown)
+          elif components.get('area_1') and components.get('country'):
+            city_name = components.get('area_1').get('long_name')
+            country_name = components.get('country').get('short_name')
+            hometown = f'{city_name}, {country_name}'
+            setattr(spot, 'hometown', hometown)
       else:
         setattr(user, key, updates.get(key))
   except ValueError as e:
@@ -634,6 +639,11 @@ def geocode():
           city_name = components.get('locality').get('long_name')
           state_name = components.get('area_1').get('short_name')
           hometown = f'{city_name}, {state_name}'
+          setattr(spot, 'hometown', hometown)
+        elif components.get('area_1') and components.get('country'):
+          city_name = components.get('area_1').get('long_name')
+          country_name = components.get('country').get('short_name')
+          hometown = f'{city_name}, {country_name}'
           setattr(spot, 'hometown', hometown)
       db.session.commit()
       spot.id
