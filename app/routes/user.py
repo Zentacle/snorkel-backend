@@ -606,3 +606,35 @@ def get_user_wallet():
   return {
     "data": wallet_data
   }
+
+@bp.route("/geocode")
+def geocode():
+    from sqlalchemy import and_
+    spots = User.query.filter(
+      and_(
+        User.hometown.is_(None),
+        User.latitude.isnot(None),
+      )
+    ).all()
+    results = []
+    for spot in spots:
+      latitude = spot.latitude
+      longitude = spot.longitude
+      r = requests.get('https://maps.googleapis.com/maps/api/geocode/json', params = {
+        'latlng': f'{latitude},{longitude}',
+        'key': os.environ.get('GOOGLE_API_KEY')
+      })
+      response = r.json()
+      if response.get('status') == 'OK':
+        address_components = response.get('results')[0].get('address_components')
+        components = format_localities(address_components)
+        city_name = components.get('locality').get('long_name')
+        state_name = components.get('area_1').get('short_name')
+        hometown = f'{city_name}, {state_name}'
+        setattr(spot, 'hometown', hometown)
+      db.session.commit()
+      spot.id
+      results.append(spot.get_dict())
+    return {
+      'data': results
+    }
