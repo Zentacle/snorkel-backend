@@ -128,6 +128,8 @@ class User(db.Model):
         data = self.__dict__.copy()
         if data.get('_sa_instance_state'):
             data.pop('_sa_instance_state', None)
+        if not data.get('bio'):
+            data['bio'] = 'Looking for a dive buddy!'
         data.pop('password', None)
         if self.username:
             data['username'] = self.username.lower()
@@ -141,6 +143,14 @@ class User(db.Model):
             pass
         try:
             data.pop('admin')
+        except KeyError:
+            pass
+        try:
+            data.pop('latitude')
+        except KeyError:
+            pass
+        try:
+            data.pop('longitude')
         except KeyError:
             pass
         return data

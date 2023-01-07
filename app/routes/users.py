@@ -11,10 +11,7 @@ def users_nearby():
   longitude = request.args.get('longitude')
   query = User.query \
     .filter(
-      and_(
-        User.latitude.is_not(None),
-        User.bio.is_not(None),
-      )
+        User.latitude.is_not(None)
     ) \
     .order_by(User.distance(latitude, longitude)).limit(10)
   results = query.all()
