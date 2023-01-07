@@ -418,6 +418,7 @@ def patch_user():
           abort(401, 'Someone already has that username')
         setattr(user, key, username.lower())
       if key == 'latitude':
+        setattr(user, key, updates.get(key))
         latitude = updates.get('latitude')
         longitude = updates.get('longitude')
         r = requests.get('https://maps.googleapis.com/maps/api/geocode/json', params = {
@@ -428,10 +429,11 @@ def patch_user():
         if response.get('status') == 'OK':
           address_components = response.get('results')[0].get('address_components')
           components = format_localities(address_components)
-          city_name = components.get('locality').get('long_name')
-          state_name = components.get('area_1').get('short_name')
-          hometown = f'{city_name}, {state_name}'
-          setattr(user, 'hometown', hometown)
+          if components.get('locality') and components.get('area_1'):
+            city_name = components.get('locality').get('long_name')
+            state_name = components.get('area_1').get('short_name')
+            hometown = f'{city_name}, {state_name}'
+            setattr(user, 'hometown', hometown)
       else:
         setattr(user, key, updates.get(key))
   except ValueError as e:
@@ -628,10 +630,11 @@ def geocode():
       if response.get('status') == 'OK':
         address_components = response.get('results')[0].get('address_components')
         components = format_localities(address_components)
-        city_name = components.get('locality').get('long_name')
-        state_name = components.get('area_1').get('short_name')
-        hometown = f'{city_name}, {state_name}'
-        setattr(spot, 'hometown', hometown)
+        if components.get('locality') and components.get('area_1'):
+          city_name = components.get('locality').get('long_name')
+          state_name = components.get('area_1').get('short_name')
+          hometown = f'{city_name}, {state_name}'
+          setattr(spot, 'hometown', hometown)
       db.session.commit()
       spot.id
       results.append(spot.get_dict())
