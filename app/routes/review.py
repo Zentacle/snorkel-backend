@@ -196,7 +196,7 @@ def add_review():
       'text': text,
       'url': 'https://www.zentacle.com'+spot.get_url(),
   }
-  if not os.environ.get('FLASK_ENV') == 'development':
+  if not os.environ.get('FLASK_DEBUG'):
     try:
         sg = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
         sg.send(message)

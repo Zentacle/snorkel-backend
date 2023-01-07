@@ -23,7 +23,7 @@ import json
 app = Flask(__name__)
 app.secret_key = os.environ.get('FLASK_SECRET_KEY')
 SQLALCHEMY_DATABASE_URI = (os.environ.get('DATABASE_URL').replace("://", "ql://", 1)
-  if not os.environ.get('FLASK_ENV') == 'development'
+  if not os.environ.get('FLASK_DEBUG')
   else os.environ.get('DATABASE_URL'))
 app.config["SQLALCHEMY_DATABASE_URI"] = SQLALCHEMY_DATABASE_URI
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
@@ -41,7 +41,7 @@ if __name__ != '__main__':
   # logging.basicConfig()
   # logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
 app.config["JWT_COOKIE_SECURE"] = (True
-  if not os.environ.get('FLASK_ENV') == 'development'
+  if not os.environ.get('FLASK_DEBUG')
   else False
 )
 
