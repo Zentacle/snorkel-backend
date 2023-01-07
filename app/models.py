@@ -386,7 +386,7 @@ class Image(db.Model):
 
     def get_dict(self):
         return {
-            'url': f'https://www.zentacle.com/image/reviews/{self.url}',
+            'url': self.url,
             'id': self.id,
             'review_id': self.review_id,
             'caption': self.caption,

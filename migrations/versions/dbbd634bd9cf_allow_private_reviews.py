@@ -1,4 +1,4 @@
-"""empty message
+"""Allow private reviews
 
 Revision ID: dbbd634bd9cf
 Revises: a099cf06c2c4
