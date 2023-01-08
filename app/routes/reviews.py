@@ -30,7 +30,8 @@ def get_recent_reviews():
   latitude = request.args.get('latitude')
   longitude = request.args.get('longitude')
   reviews = Review.query \
-    .options(joinedload('spot'))
+    .options(joinedload('spot')) \
+    .options(joinedload('user'))
   if request.args.get('type') == 'nearby' and latitude:
     nearby_spots = db.session.query(Spot.id) \
       .filter(Spot.distance(latitude, longitude) < 50).subquery()
@@ -42,9 +43,9 @@ def get_recent_reviews():
     .all()
   data = []
   for review in reviews:
-    spot = review.spot
     review_data = review.get_dict()
-    review_data['spot'] = spot.get_dict()
+    review_data['spot'] = review.spot.get_dict()
+    review_data['user'] = review.user.get_dict()
     data.append(review_data)
   return { 'data': data }
 
