@@ -34,7 +34,9 @@ def get_recent_reviews():
     .options(joinedload('user'))
   if request.args.get('type') == 'nearby' and latitude:
     nearby_spots = db.session.query(Spot.id) \
-      .filter(Spot.distance(latitude, longitude) < 50).subquery()
+      .filter(Spot.distance(latitude, longitude) < 50) \
+      .filter(Spot.is_deleted.is_not(True)) \
+      .subquery()
     reviews = reviews.filter(Review.beach_id.in_(nearby_spots))
 
   reviews = reviews.order_by(Review.date_posted.desc()) \

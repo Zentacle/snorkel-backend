@@ -130,6 +130,8 @@ class User(db.Model):
             data.pop('_sa_instance_state', None)
         if not data.get('bio'):
             data['bio'] = 'Looking for a dive buddy!'
+        if not data.get('profile_pic'):
+            data['profile_pic'] = 'https://www.zentacle.com/images/profile_pic/placeholder'
         data.pop('password', None)
         if self.username:
             data['username'] = self.username.lower()
