@@ -57,7 +57,12 @@ def get_localities(address_components):
       short_name=area_1_short_name,
       url=f'/loc/{country_short_name}/{area_1_short_name}',
     )
-  area_2 = AreaTwo.query.filter_by(google_name=area_2_name).first()
+  area_2 = AreaTwo.query.filter(
+    and_(
+      AreaTwo.google_name==area_2_name,
+      AreaTwo.area_one.has(short_name=area_1_short_name),
+    )
+  ).first()
   if not area_2 and area_2_name:
     area_1_short_name = area_1_short_name or '_'
     area_2 = AreaTwo(
@@ -68,7 +73,12 @@ def get_localities(address_components):
       short_name=area_2_short_name,
       url=f'/loc/{country_short_name}/{area_1_short_name}/{area_2_short_name}',
     )
-  locality = Locality.query.filter_by(google_name=locality_name).first()
+  locality = Locality.query.filter(
+    and_(
+      Locality.google_name==locality_name,
+      Locality.area_one.has(short_name=area_1_short_name),
+    )
+  ).first()
   if not locality and locality_name:
     area_2_short_name = area_2_short_name or '_'
     locality = Locality(
