@@ -116,6 +116,7 @@ class User(db.Model):
     latitude = db.Column(db.Float)
     longitude = db.Column(db.Float)
     has_pro = db.Column(db.Boolean, default=False)
+    push_token = db.Column(db.String)
 
     reviews = db.relationship(
         "Review",
@@ -135,26 +136,37 @@ class User(db.Model):
         data.pop('password', None)
         if self.username:
             data['username'] = self.username.lower()
+
         try:
             data.pop('email', None)
         except KeyError:
             pass
+
         try:
             data.pop('is_fake')
         except KeyError:
             pass
+
         try:
             data.pop('admin')
         except KeyError:
             pass
+
         try:
             data.pop('latitude')
         except KeyError:
             pass
+
         try:
             data.pop('longitude')
         except KeyError:
             pass
+
+        try:
+            data.pop('push_token')
+        except KeyError:
+            pass
+
         return data
 
     @hybrid_method

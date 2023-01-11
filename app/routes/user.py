@@ -614,12 +614,15 @@ def get_user_wallet():
     "data": wallet_data
   }
 
-@bp.route('/register_token', methods=['POST'])
+@bp.route('/push_token', methods=['POST'])
 @jwt_required()
 def register_token():
   token = request.json.get('token')
-  print(token)
+  user = get_current_user()
+  setattr(user, 'push_token', token)
+  db.session.commit()
+  user.id
 
   return {
-    "data": token
+    "data": user.get_dict()
   }
