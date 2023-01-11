@@ -626,3 +626,45 @@ def register_token():
   return {
     "data": user.get_dict()
   }
+
+@bp.route('/send_push', methods=['GET'])
+def send_push():
+    response = boto3.client('pinpoint').send_messages(
+        ApplicationId='268df0f0464b49609f26f711a800aecd',
+        MessageRequest={
+            'Addresses': {
+                'c9945b21c48814da09d8f84a7e6968d60e1d15ad93f1f0ca8524794ca896e8e1': {
+                    'ChannelType': 'APNS_SANDBOX',
+                }
+            },
+            'MessageConfiguration': {
+                'APNSMessage': {
+                    'APNSPushType': 'alert',
+                    'Action': 'OPEN_APP', # | 'DEEP_LINK' | 'URL',
+                    'Badge': 1,
+                    'Body': 'Testing',
+                    # 'Category': 'string',
+                    # 'CollapseId': 'string',
+                    # 'Data': {
+                    #     'string': 'string'
+                    # },
+                    # 'MediaUrl': 'string',
+                    # 'PreferredAuthenticationMethod': 'string',
+                    # 'Priority': 'string',
+                    # 'RawContent': 'string',
+                    # 'SilentPush': True | False,
+                    # 'Sound': 'string',
+                    # 'Substitutions': {
+                    #     'string': [
+                    #         'string',
+                    #     ]
+                    # },
+                    # 'ThreadId': 'string',
+                    #'TimeToLive': 123,
+                    'Title': 'Test Title',
+                    # 'Url': 'string'
+                },
+            }
+        }
+    )
+    return response
