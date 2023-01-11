@@ -613,3 +613,13 @@ def get_user_wallet():
   return {
     "data": wallet_data
   }
+
+@bp.route('/register_token', methods=['POST'])
+@jwt_required()
+def register_token():
+  token = request.json.get('token')
+  print(token)
+
+  return {
+    "data": token
+  }
