@@ -112,7 +112,7 @@ def create_dive_shop():
 
     response = requests.post(request_url, headers=headers, json=payload)
     if response.status_code >= 300:
-      logging.error(response)
+      logging.error('Error creating dive shop wallet', response.status_code, response.text)
 
   return { 'data': dive_shop.get_dict() }
 
