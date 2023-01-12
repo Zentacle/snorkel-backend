@@ -213,3 +213,32 @@ def get_typeahead():
     results.append(result)
   results.reverse()
   return { 'data': results }
+
+@bp.route("/typeahead/nearby")
+@cache.cached(query_string=True)
+def get_typeahead_nearby():
+  return { 'data': [{
+      "data": {
+        "latitude": 46.49721666666667,
+        "location_city": "Switzerland, Graubuenden - Tessin",
+        "longitude": 9.640966666666667
+      },
+      "id": 8783,
+      "subtext": "Switzerland, Graubuenden - Tessin",
+      "text": "Lai da Marmorera-Bushaltestelle",
+      "type": "site",
+      "url": "/Beach/8783/lai-da-marmorera-bushaltestelle"
+    },
+    {
+      "data": {
+        "latitude": 54.486666666666665,
+        "location_city": "Germany, Hamburg Schleswig-Holstein",
+        "longitude": 10.068333333333333
+      },
+      "id": 9914,
+      "subtext": "Germany, Hamburg Schleswig-Holstein",
+      "text": "Torpedo test WW II",
+      "type": "site",
+      "url": "/Beach/9914/torpedo-test-ww-ii"
+    }
+  ]}
