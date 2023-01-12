@@ -300,3 +300,19 @@ def nearby_locations():
     temp_data = result.get_dict()
     data.append(temp_data)
   return { 'data': data }
+
+@bp.route('/typeahead/nearby')
+@cache.cached(query_string=True)
+def get_typeahea_nearby():
+  return { "data": [
+    {
+      "id": 37,
+      "subtext": "Kihei, HI",
+      "text": "Maui Dreams"
+    },
+    {
+      "id": 114,
+      "subtext": "Kihei, Maui, Hawaii",
+      "text": "Prodiver Maui"
+    },
+  ] }
