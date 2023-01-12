@@ -8,6 +8,7 @@ from sqlalchemy import and_, not_, or_, exc
 from app.models import DiveShop, Review, Spot
 from app import db, cache
 from flask_jwt_extended import jwt_required, get_current_user
+import logging
 
 bp = Blueprint('shop', __name__, url_prefix="/shop")
 wally_api_base = os.environ.get('WALLY_API')
@@ -42,7 +43,7 @@ def create_dive_shop():
 
 
   padi_store_id = request.json.get('padi_store_id')
-  url = request.json.get('url')
+  website = request.json.get('website')
   name=request.json.get('name')
   hours = request.json.get('hours')
   description = request.json.get('description')
@@ -66,7 +67,7 @@ def create_dive_shop():
   owner_user_id = None if ignore_wallet else user.id
 
   dive_shop = DiveShop(
-    url=url,
+    website=website,
     name=name,
     padi_store_id=padi_store_id,
     fareharbor_url=fareharbor_url,
@@ -97,7 +98,7 @@ def create_dive_shop():
     return 'Already exists', 409
 
   if not ignore_wallet:
-    request_url = f'{wally_api_base}/wallets'
+    request_url = f'{wally_api_base}/wallet'
     headers = {
       'Authorization': f'Bearer {wally_auth_token}',
       'Content-Type': 'application/json',
@@ -110,7 +111,8 @@ def create_dive_shop():
     }
 
     response = requests.post(request_url, headers=headers, json=payload)
-    response.raise_for_status()
+    if response.status_code >= 300:
+      logging.error(response)
 
   return { 'data': dive_shop.get_dict() }
 
