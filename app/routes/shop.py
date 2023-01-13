@@ -299,7 +299,7 @@ def nearby_locations():
     return { 'msg': str(e) }, 500
   data = []
   for result in results:
-    temp_data = result.get_dict()
+    temp_data = result.get_simple_dict()
     data.append(temp_data)
   return { 'data': data }
 
