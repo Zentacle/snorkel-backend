@@ -406,8 +406,12 @@ def patch_review():
     abort(403, 'You are not allowed to do that')
 
   updates = request.json
+  did_add_dive_shop = False
   if "date_dived" in updates:
     updates['date_dived'] = dateutil.parser.isoparse(request.json.get('date_dived'))
+  if 'dive_shop_id' in updates and not review.dive_shop_id:
+    did_add_dive_shop = True
+
   updates.pop('id', None)
   updates.pop('date_posted', None)
   try:
@@ -416,10 +420,11 @@ def patch_review():
   except ValueError as e:
     return e, 500
   db.session.commit()
+  review.id
 
   dive_shop_id = request.json.get('dive_shop_id')
 
-  if dive_shop_id:
+  if did_add_dive_shop:
     if request.json.get('include_wallet'):
       create_wallet(user=user)
       dive_shop = DiveShop.query.get_or_404(dive_shop_id)
