@@ -26,6 +26,7 @@ from sqlalchemy.exc import OperationalError
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
 from app.helpers.get_localities import get_localities
+from app.helpers.get_nearby_spots import get_nearby_spots
 import newrelic.agent
 
 bp = Blueprint('spots', __name__, url_prefix="/spots")
@@ -926,26 +927,7 @@ def nearby_locations():
     else:
       abort(400, 'No lat/lng, country_id, or sd_data for this spot')
 
-  results = []
-  try:
-    query = Spot.query.filter(and_(
-      Spot.is_verified == True,
-      Spot.is_deleted.is_not(True),
-      Spot.id != spot_id,
-    )).options(joinedload('locality')).order_by(Spot.distance(startlat, startlng)).limit(limit)
-    results = query.all()
-  except OperationalError as e:
-    if "no such function: sqrt" in str(e).lower():
-      query = Spot.query.filter(and_(
-        Spot.is_verified == True,
-        Spot.is_deleted.is_not(True),
-        Spot.id != spot_id,
-      )).options(joinedload('locality')).order_by(Spot.sqlite3_distance(startlat, startlng)).limit(limit)
-      results = query.all()
-    else:
-      raise e
-  except Exception as e:
-    raise e
+  results = get_nearby_spots(startlat, startlng, limit, spot_id)
   data = []
   for result in results:
     temp_data = result.get_dict()

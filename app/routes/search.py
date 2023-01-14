@@ -1,6 +1,10 @@
 import requests
 import os
 from flask import Blueprint, request
+import newrelic.agent
+from sqlalchemy import or_
+
+from app import cache
 from app.models import (
   Spot,
   Country,
@@ -8,9 +12,8 @@ from app.models import (
   AreaTwo,
   Locality
 )
-from app import cache
-from sqlalchemy import or_
-import newrelic.agent
+from app.helpers.get_nearby_spots import get_nearby_spots
+from app.helpers.typeahead_from_spot import typeahead_from_spot
 
 bp = Blueprint('search', __name__, url_prefix="/search")
 
@@ -82,19 +85,8 @@ def get_typeahead():
     .filter(Spot.is_deleted.is_not(True)) \
     .limit(25) \
     .all()
-  for loc in spots:
-    result = {
-      'id': loc.id,
-      'text': loc.name,
-      'url': loc.get_url(),
-      'type': 'site',
-      'subtext': loc.location_city,
-      'data': {
-        'latitude': loc.latitude,
-        'longitude': loc.longitude,
-        'location_city': loc.location_city,
-      }
-    }
+  for spot in spots:
+    result = typeahead_from_spot(spot)
     results.append(result)
   if beach_only:
     return { 'data': results }
@@ -217,28 +209,12 @@ def get_typeahead():
 @bp.route("/typeahead/nearby")
 @cache.cached(query_string=True)
 def get_typeahead_nearby():
-  return { 'data': [{
-      "data": {
-        "latitude": 46.49721666666667,
-        "location_city": "Switzerland, Graubuenden - Tessin",
-        "longitude": 9.640966666666667
-      },
-      "id": 8783,
-      "subtext": "Switzerland, Graubuenden - Tessin",
-      "text": "Lai da Marmorera-Bushaltestelle",
-      "type": "site",
-      "url": "/Beach/8783/lai-da-marmorera-bushaltestelle"
-    },
-    {
-      "data": {
-        "latitude": 54.486666666666665,
-        "location_city": "Germany, Hamburg Schleswig-Holstein",
-        "longitude": 10.068333333333333
-      },
-      "id": 9914,
-      "subtext": "Germany, Hamburg Schleswig-Holstein",
-      "text": "Torpedo test WW II",
-      "type": "site",
-      "url": "/Beach/9914/torpedo-test-ww-ii"
-    }
-  ]}
+  latitude = request.args.get('latitude')
+  longitude = request.args.get('longitude')
+  if not latitude:
+    return { 'data': [] }
+  limit = request.args.get('limit')
+  results = get_nearby_spots(latitude, longitude, limit, None)
+  return {
+    'data': list(map(typeahead_from_spot, results))
+  }

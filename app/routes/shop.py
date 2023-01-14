@@ -15,6 +15,7 @@ bp = Blueprint('shop', __name__, url_prefix="/shop")
 wally_api_base = os.environ.get('WALLY_API')
 wally_auth_token = os.environ.get('WALLY_AUTH_TOKEN')
 
+
 @bp.route('/get', methods=['GET'])
 def fetch_dive_shops():
   limit = request.args.get('limit')
@@ -26,14 +27,16 @@ def fetch_dive_shops():
     .limit(limit) \
     .all()
   data = [dive_shop.get_simple_dict() for dive_shop in dive_shops]
-  return { 'data': data }
+  return {'data': data}
+
 
 @bp.route('<int:id>', methods=['GET'])
 @bp.route('/get/<int:id>', methods=['GET'])
 def fetch_dive_shop(id):
   dive_shop = DiveShop.query.get_or_404(id)
   data = dive_shop.get_dict()
-  return { 'data': data }
+  return {'data': data}
+
 
 @bp.route('/create', methods=['POST'])
 @jwt_required()
@@ -43,10 +46,9 @@ def create_dive_shop():
   if not user.admin:
     abort(403, 'You must be an admin to that')
 
-
   padi_store_id = request.json.get('padi_store_id')
   website = request.json.get('website')
-  name=request.json.get('name')
+  name = request.json.get('name')
   hours = request.json.get('hours')
   description = request.json.get('description')
   fareharbor_url = request.json.get('fareharbor_url')
@@ -61,7 +63,7 @@ def create_dive_shop():
   longitude = request.json.get('longitude')
   locality_id = request.json.get('locality_id')
   area_one_id = request.json.get('area_one_id')
-  area_two_id  = request.json.get('area_two_id')
+  area_two_id = request.json.get('area_two_id')
   country_id = request.json.get('country_id')
   email = request.json.get('email')
   phone = request.json.get('phone')
@@ -108,15 +110,17 @@ def create_dive_shop():
 
     payload = {
       'id': 'shop_' + str(dive_shop.id),
-      'email': user.email, # owner is the current user, so owner email is current user email
+      'email': user.email,  # owner is the current user, so owner email is current user email
       'tags': ['shop']
     }
 
     response = requests.post(request_url, headers=headers, json=payload)
     if response.status_code >= 300:
-      logging.error('Error creating dive shop wallet', response.status_code, response.text)
+      logging.error('Error creating dive shop wallet',
+                    response.status_code, response.text)
 
-  return { 'data': dive_shop.get_dict() }
+  return {'data': dive_shop.get_dict()}
+
 
 @bp.route('/patch/<int:id>', methods=['PATCH'])
 @jwt_required()
@@ -134,7 +138,8 @@ def update_dive_shop(id):
   db.session.commit()
   data = dive_shop.get_dict()
 
-  return { 'data': data }
+  return {'data': data}
+
 
 @bp.route('/<int:id>/stamp_image', methods=['POST'])
 @jwt_required()
@@ -146,7 +151,8 @@ def upload_stamp_image(id):
     'Authorization': f'Bearer {wally_auth_token}'
   }
 
-  response = requests.post(request_url, headers=headers, data={}, files=request.files)
+  response = requests.post(request_url, headers=headers,
+                           data={}, files=request.files)
   response.raise_for_status()
   data = response.json()
 
@@ -154,7 +160,8 @@ def upload_stamp_image(id):
   setattr(dive_shop, 'stamp_uri', data.get('uri'))
   db.session.commit()
 
-  return { 'msg': 'dive shop successfully updated' }
+  return {'msg': 'dive shop successfully updated'}
+
 
 @bp.route('/<int:id>/logo', methods=['POST'])
 @jwt_required()
@@ -180,7 +187,8 @@ def upload(id):
   setattr(dive_shop, 'logo_img', s3_url)
   db.session.commit()
 
-  return { 'msg': 'dive shop successfully updated' }
+  return {'msg': 'dive shop successfully updated'}
+
 
 @bp.route('/typeahead')
 @cache.cached(query_string=True)
@@ -206,7 +214,8 @@ def get_typeahead():
     }
     results.append(result)
 
-  return { "data": results }
+  return {"data": results}
+
 
 @bp.route('/<int:id>/mint_dive_stamp', methods=["POST"])
 @jwt_required()
@@ -217,11 +226,13 @@ def mint_dive_stamp(id):
   if dive_shop.get('owner_user_id') != user.id and not user.admin:
     abort(403, 'Only shop owner and admin can perform this action')
 
-  current_review = Review.query.get_or_404(request.json.get('review_id')).get_dict()
+  current_review = Review.query.get_or_404(
+      request.json.get('review_id')).get_dict()
   beach_id = current_review.get('beach_id')
   beach = Spot.query.get_or_404(beach_id).get_dict()
   if (dive_shop.get('stamp_uri')):
-    data = mint_nft(current_review=current_review, dive_shop=dive_shop, beach=beach, user=user)
+    data = mint_nft(current_review=current_review,
+                    dive_shop=dive_shop, beach=beach, user=user)
 
     return {
       'data': data
@@ -230,6 +241,7 @@ def mint_dive_stamp(id):
   return {
     'msg': 'This dive shop needs a stamp image uri to be able to mint an nft'
   }
+
 
 @bp.route("/nearby")
 @cache.cached(query_string=True)
@@ -286,7 +298,7 @@ def nearby_locations():
 
   # If there still isn't a lat/lng, return empty array
   if not startlat or not startlng:
-    return { 'data': [] }
+    return {'data': []}
 
   results = []
   try:
@@ -296,25 +308,26 @@ def nearby_locations():
     results = query.all()
   except Exception as e:
     newrelic.agent.record_exception(e)
-    return { 'msg': str(e) }, 500
+    return {'msg': str(e)}, 500
   data = []
   for result in results:
     temp_data = result.get_simple_dict()
     data.append(temp_data)
-  return { 'data': data }
+  return {'data': data}
+
 
 @bp.route('/typeahead/nearby')
 @cache.cached(query_string=True)
 def get_typeahea_nearby():
-  return { "data": [
-    {
-      "id": 37,
-      "subtext": "Kihei, HI",
-      "text": "Maui Dreams"
-    },
-    {
-      "id": 114,
-      "subtext": "Kihei, Maui, Hawaii",
-      "text": "Prodiver Maui"
-    },
-  ] }
+  latitude = request.args.get('latitude')
+  longitude = request.args.get('longitude')
+  limit = request.args.get('limit')
+  results = []
+  try:
+    query = DiveShop.query \
+      .order_by(DiveShop.distance(latitude, longitude)).limit(limit)
+    results = query.all()
+  except Exception as e:
+    newrelic.agent.record_exception(e)
+    return { 'msg': str(e) }, 500
+  return { "data": list(map(lambda x: x.get_simple_dict(), results)) }
