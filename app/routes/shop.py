@@ -194,7 +194,7 @@ def upload(id):
 @cache.cached(query_string=True)
 def get_typeahead():
   query = request.args.get('query')
-  results = []
+  limit = limit if request.args.get('limit') else 25
   dive_shops = DiveShop.query \
     .filter(
       or_(
@@ -203,18 +203,10 @@ def get_typeahead():
         DiveShop.state.ilike('%'+query+'%')
       )
     ) \
-    .limit(25) \
+    .limit(limit) \
     .all()
 
-  for shop in dive_shops:
-    result = {
-      'id': shop.id,
-      "text": shop.name,
-      'subtext': f'{shop.city}, {shop.state}'
-    }
-    results.append(result)
-
-  return {"data": results}
+  return {"data": list(map(lambda x: x.get_typeahead_dict(), dive_shops))}
 
 
 @bp.route('/<int:id>/mint_dive_stamp', methods=["POST"])
@@ -330,4 +322,4 @@ def get_typeahea_nearby():
   except Exception as e:
     newrelic.agent.record_exception(e)
     return { 'msg': str(e) }, 500
-  return { "data": list(map(lambda x: x.get_simple_dict(), results)) }
+  return { "data": list(map(lambda x: x.get_typeahead_dict(), results)) }

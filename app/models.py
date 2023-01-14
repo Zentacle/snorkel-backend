@@ -615,6 +615,13 @@ class DiveShop(db.Model):
     stamp_uri = db.Column(db.String, nullable=True)
     owner = db.relationship("User", uselist=False)
 
+    def get_typeahead_dict(self):
+        return {
+            'id': self.id,
+            'text': self.name,
+            'subtext': f'{self.city}, {self.state}',
+        }
+
     def get_simple_dict(self):
         simpleDict = {
             'id': self.id,
