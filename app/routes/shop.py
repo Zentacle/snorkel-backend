@@ -194,7 +194,7 @@ def upload(id):
 @cache.cached(query_string=True)
 def get_typeahead():
   query = request.args.get('query')
-  limit = limit if request.args.get('limit') else 25
+  limit = request.args.get('limit') if request.args.get('limit') else 25
   dive_shops = DiveShop.query \
     .filter(
       or_(
@@ -313,7 +313,7 @@ def nearby_locations():
 def get_typeahea_nearby():
   latitude = request.args.get('latitude')
   longitude = request.args.get('longitude')
-  limit = request.args.get('limit')
+  limit = request.args.get('limit') if request.args.get('limit') else 25
   results = []
   try:
     query = DiveShop.query \
