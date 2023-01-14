@@ -47,9 +47,8 @@ def get_tides():
     .json()
   return resp
 
-@bp.route("/geocode")
+@bp.route("/geocode/<int:beach_id>")
 def geocode():
-    beach_id = request.args.get('id')
     spot = Spot.query.filter_by(id=beach_id).first_or_404()
     if not spot.latitude or not spot.longitude:
       return { 'msg': 'no lat/lng' }, 422
