@@ -37,7 +37,7 @@ def get_localities(address_components):
       country_name = component.get('long_name')
       country_short_name = demicrosoft(component.get('short_name').lower())
   country = Country.query.filter_by(short_name=country_short_name).first()
-  if not country:
+  if not country and country_name:
     country = Country(
       name=country_name,
       short_name=country_short_name,
