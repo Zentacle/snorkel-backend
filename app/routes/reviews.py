@@ -4,7 +4,7 @@ from flask import Blueprint, request
 from app.models import Review, ShoreDivingReview, Spot
 from app import cache, db
 from sqlalchemy.orm import joinedload
-from sqlalchemy import func
+from sqlalchemy import func, and_
 from flask_jwt_extended import jwt_required, get_current_user
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
@@ -37,7 +37,10 @@ def get_recent_reviews():
       .filter(Spot.distance(latitude, longitude) < 50) \
       .filter(Spot.is_deleted.is_not(True)) \
       .subquery()
-    reviews = reviews.filter(Review.beach_id.in_(nearby_spots))
+    reviews = reviews.filter(and_(
+      Review.beach_id.in_(nearby_spots),
+      Review.is_private.is_not(True)
+    ))
 
   reviews = reviews.order_by(Review.date_posted.desc()) \
     .limit(limit) \
