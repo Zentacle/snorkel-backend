@@ -27,6 +27,7 @@ def fetch_dive_shops():
   data = [dive_shop.get_simple_dict() for dive_shop in dive_shops]
   return { 'data': data }
 
+@bp.route('<int:id>', methods=['GET'])
 @bp.route('/get/<int:id>', methods=['GET'])
 def fetch_dive_shop(id):
   dive_shop = DiveShop.query.get_or_404(id)
