@@ -293,7 +293,7 @@ def user_finish_signup():
   user_id = request.json.get('user_id')
   user = User.query.filter_by(id=user_id).first()
   if user.password:
-    return { 'msg': 'This user has already registered a password' }, 401
+    abort(401, "This user has already registered a password")
   unencrypted_password = request.json.get('password')
   password = bcrypt.hashpw(unencrypted_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
   user.password = password
@@ -407,42 +407,39 @@ def patch_user():
     updates.pop('email', None)
 
   updates.pop('id', None)
-  try:
-    for key in updates.keys():
-      if key == 'username':
-        username = updates.get(key).lower()
-        same_username_user = User.query.filter_by(username=username).first()
-        if not username.isalnum():
-          abort(422, 'Usernames can\'t have special characters')
-        if same_username_user and user.id != same_username_user.id:
-          abort(401, 'Someone already has that username')
-        setattr(user, key, username.lower())
-      if key == 'latitude':
-        setattr(user, key, updates.get(key))
-        latitude = updates.get('latitude')
-        longitude = updates.get('longitude')
-        r = requests.get('https://maps.googleapis.com/maps/api/geocode/json', params = {
-          'latlng': f'{latitude},{longitude}',
-          'key': os.environ.get('GOOGLE_API_KEY')
-        })
-        response = r.json()
-        if response.get('status') == 'OK':
-          address_components = response.get('results')[0].get('address_components')
-          components = format_localities(address_components)
-          if components.get('locality') and components.get('area_1'):
-            city_name = components.get('locality').get('long_name')
-            state_name = components.get('area_1').get('short_name')
-            hometown = f'{city_name}, {state_name}'
-            setattr(user, 'hometown', hometown)
-          elif components.get('area_1') and components.get('country'):
-            city_name = components.get('area_1').get('long_name')
-            country_name = components.get('country').get('short_name')
-            hometown = f'{city_name}, {country_name}'
-            setattr(spot, 'hometown', hometown)
-      else:
-        setattr(user, key, updates.get(key))
-  except ValueError as e:
-    return e, 500
+  for key in updates.keys():
+    if key == 'username':
+      username = updates.get(key).lower()
+      same_username_user = User.query.filter_by(username=username).first()
+      if not username.isalnum():
+        abort(422, 'Usernames can\'t have special characters')
+      if same_username_user and user.id != same_username_user.id:
+        abort(401, 'Someone already has that username')
+      setattr(user, key, username.lower())
+    if key == 'latitude':
+      setattr(user, key, updates.get(key))
+      latitude = updates.get('latitude')
+      longitude = updates.get('longitude')
+      r = requests.get('https://maps.googleapis.com/maps/api/geocode/json', params = {
+        'latlng': f'{latitude},{longitude}',
+        'key': os.environ.get('GOOGLE_API_KEY')
+      })
+      response = r.json()
+      if response.get('status') == 'OK':
+        address_components = response.get('results')[0].get('address_components')
+        components = format_localities(address_components)
+        if components.get('locality') and components.get('area_1'):
+          city_name = components.get('locality').get('long_name')
+          state_name = components.get('area_1').get('short_name')
+          hometown = f'{city_name}, {state_name}'
+          setattr(user, 'hometown', hometown)
+        elif components.get('area_1') and components.get('country'):
+          city_name = components.get('area_1').get('long_name')
+          country_name = components.get('country').get('short_name')
+          hometown = f'{city_name}, {country_name}'
+          setattr(spot, 'hometown', hometown)
+    else:
+      setattr(user, key, updates.get(key))
   db.session.commit()
   user.id
   return user.get_dict(), 200
@@ -543,34 +540,6 @@ def get_user():
       reviews_data.append(review_data)
     user_data['reviews'] = reviews_data
     return { 'data': user_data }
-
-@bp.route("/register/fake", methods=["POST"])
-def user_signup_fake():
-  display_name = request.json.get('display_name')
-  username = display_name.replace(" ", "_").lower()
-  first_name = display_name.split(' ')[0]
-  last_name = display_name.split(' ')[1]
-  email = username + '@zentacle.com'
-  unencrypted_password = 'password'
-  password = bcrypt.hashpw(unencrypted_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
-
-  user = User.query.filter_by(display_name=display_name).first()
-  if user:
-    return { 'msg': 'A fake account with this name already exists' }, 400
-
-  user = User(
-    first_name=first_name,
-    last_name=last_name,
-    display_name=display_name,
-    email=email,
-    password=password,
-    username=username,
-    is_fake=True,
-  )
-  db.session.add(user)
-  db.session.commit()
-  user.id
-  return user.get_dict()
 
 @bp.route('/profile_pic', methods=['POST'])
 @jwt_required()

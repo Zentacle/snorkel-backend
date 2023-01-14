@@ -1,6 +1,6 @@
 import os
 import datetime
-from flask import Blueprint, request
+from flask import Blueprint, request, abort
 from app.models import Review, ShoreDivingReview, Spot
 from app import cache, db
 from sqlalchemy.orm import joinedload
@@ -129,7 +129,7 @@ def get_reviews():
 def delete_shore_diving_ids():
   user = get_current_user()
   if not user.admin:
-    return {'msg': 'You must be an admin to that'}, 403
+    abort(403, 'You must be an admin to that')
   id = request.json.get('id')
   sd_review = ShoreDivingReview.query.filter_by(shorediving_id=id).first_or_404()
   review = sd_review.review

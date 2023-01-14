@@ -407,7 +407,7 @@ def add_spot_script():
   sd_data = ShoreDivingData.query.filter_by(id=id).first()
   if sd_data:
     if sd_data.name:
-      return 'Already exists', 404
+      abort(409, 'Already exists')
     else:
       sd_data.name=name
       sd_data.name_url=name_url
@@ -462,7 +462,7 @@ def add_spot_wdscript():
 
   sd_data = WannaDiveData.query.filter_by(url=url).first()
   if sd_data:
-    return 'Already exists', 400
+    abort(409, 'Already exists')
 
   full_description = description + '\n\n' + directions
   if alternative:
@@ -504,7 +504,7 @@ def add_spot_tags():
   url = request.args.get('url')
   sd_data = WannaDiveData.query.filter_by(url=url).first()
   if sd_data:
-    return 'Already exists', 400
+    abort(400, 'Already exists')
 
   spot = sd_data.spot
 
@@ -591,11 +591,11 @@ def add_spot():
   is_verified = True if user and user.admin else False
 
   if not name or not location_city:
-    return { 'msg': 'Please enter a name and location' }, 404
+    abort(422, 'Please enter a name and location')
 
   spot = Spot.query.filter(and_(Spot.name==name, Spot.location_city==location_city)).first()
   if spot:
-    return { 'msg': 'Spot already exists' }, 409
+    abort(409, 'Spot already exists')
 
   locality, area_2, area_1, country, latitude, longitude = None, None, None, None, None, None
   if place_id and not location_google:
@@ -658,6 +658,7 @@ def add_spot():
           sg = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
           sg.send(message)
       except Exception as e:
+          newrelic.agent.record_exception(e)
           print(e.body)
   if user:
     message = Mail(
@@ -682,7 +683,7 @@ def add_spot():
 @jwt_required()
 def approve_spot():
   if not get_current_user().admin:
-    return { 'msg': "Only admins can do that" }, 401
+    abort(401, 'Only admins can do that')
   beach_id = request.args.get('id')
   spot = Spot.query.filter_by(id=beach_id).first_or_404()
   if spot.is_verified:
@@ -708,6 +709,7 @@ def approve_spot():
         sg = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
         sg.send(message)
     except Exception as e:
+        newrelic.agent.record_exception(e)
         print(e.body)
   spot_data = spot.get_dict()
   spot_data['submitter'] = {}
@@ -744,48 +746,45 @@ def patch_spot():
                 description: Not logged in.
   """
   if not get_current_user().admin:
-    return { 'msg': "Only admins can do that" }, 401
+    abort(401, 'Only admins can do that')
   beach_id = request.json.get('id')
   spot = Spot.query.filter_by(id=beach_id).first_or_404()
   updates = request.json
   updates.pop('id', None)
-  try:
-    for key in updates.keys():
-      setattr(spot, key, updates.get(key))
-      if key == 'google_place_id':
-        place_id = updates.get(key)
-        if place_id == 'na':
-          continue
-        r = requests.get('https://maps.googleapis.com/maps/api/place/details/json', params = {
-          'place_id': place_id,
-          'fields': 'name,geometry,url,address_components',
-          'key': os.environ.get('GOOGLE_API_KEY')
-        })
-        response = r.json()
-        if response.get('status') == 'OK':
-          if not updates.get('latitude') or not updates.get('longitude'):
-            latitude = response.get('result').get('geometry').get('location').get('lat')
-            longitude = response.get('result').get('geometry').get('location').get('lng')
-            url = response.get('result').get('url')
-            spot.latitude = latitude
-            spot.longitude = longitude
-            spot.location_google = url
-          address_components = response.get('result').get('address_components')
-          locality, area_2, area_1, country = get_localities(address_components)
-          spot.locality = locality
-          spot.area_one = area_1
-          spot.area_two = area_2
-          spot.country = country
-          db.session.add(spot)
-          db.session.commit()
-        spot.id
-    if updates.get('latitude') and updates.get('longitude'):
-      latitude = updates.get('latitude')
-      longitude = updates.get('longitude')
-      spot.location_google = 'http://maps.google.com/maps?q={latitude},{longitude}' \
-        .format(latitude=latitude, longitude=longitude)
-  except ValueError as e:
-    return e, 500
+  for key in updates.keys():
+    setattr(spot, key, updates.get(key))
+    if key == 'google_place_id':
+      place_id = updates.get(key)
+      if place_id == 'na':
+        continue
+      r = requests.get('https://maps.googleapis.com/maps/api/place/details/json', params = {
+        'place_id': place_id,
+        'fields': 'name,geometry,url,address_components',
+        'key': os.environ.get('GOOGLE_API_KEY')
+      })
+      response = r.json()
+      if response.get('status') == 'OK':
+        if not updates.get('latitude') or not updates.get('longitude'):
+          latitude = response.get('result').get('geometry').get('location').get('lat')
+          longitude = response.get('result').get('geometry').get('location').get('lng')
+          url = response.get('result').get('url')
+          spot.latitude = latitude
+          spot.longitude = longitude
+          spot.location_google = url
+        address_components = response.get('result').get('address_components')
+        locality, area_2, area_1, country = get_localities(address_components)
+        spot.locality = locality
+        spot.area_one = area_1
+        spot.area_two = area_2
+        spot.country = country
+        db.session.add(spot)
+        db.session.commit()
+      spot.id
+  if updates.get('latitude') and updates.get('longitude'):
+    latitude = updates.get('latitude')
+    longitude = updates.get('longitude')
+    spot.location_google = 'http://maps.google.com/maps?q={latitude},{longitude}' \
+      .format(latitude=latitude, longitude=longitude)
   db.session.commit()
   spot.id
   spot_data = spot.get_dict()
@@ -910,11 +909,13 @@ def nearby_locations():
           .limit(limit) \
           .all()
       except AttributeError as e:
+        newrelic.agent.record_exception(e)
         return { 'msg': str(e) }
     else:
       try:
         spots = Spot.query.filter(Spot.has(country_id=spot.country_id)).limit(limit).all()
       except AttributeError as e:
+        newrelic.agent.record_exception(e)
         return { 'msg': str(e) }
     output=[]
     for spot in spots:
@@ -942,9 +943,9 @@ def nearby_locations():
       )).options(joinedload('locality')).order_by(Spot.sqlite3_distance(startlat, startlng)).limit(limit)
       results = query.all()
     else:
-      return { 'msg': str(e) }, 500
+      raise e
   except Exception as e:
-    return { 'msg': str(e) }, 500
+    raise e
   data = []
   for result in results:
     temp_data = result.get_dict()
@@ -1013,7 +1014,7 @@ def add_shorediving_pic():
   if not shorediving.spot.hero_img:
     shorediving.spot.hero_img = 'https://'+os.environ.get('S3_BUCKET_NAME')+'.s3.amazonaws.com/' + pic_url
   else:
-    return 'Already has one', 401
+    abort(401, 'Location already has a hero image')
   db.session.commit()
   shorediving.spot.id
   return { 'data': shorediving.spot.get_dict() }

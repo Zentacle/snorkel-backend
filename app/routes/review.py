@@ -414,11 +414,8 @@ def patch_review():
 
   updates.pop('id', None)
   updates.pop('date_posted', None)
-  try:
-    for key in updates.keys():
-      setattr(review, key, updates.get(key))
-  except ValueError as e:
-    return e, 500
+  for key in updates.keys():
+    setattr(review, key, updates.get(key))
   db.session.commit()
   review.id
 
@@ -536,7 +533,7 @@ def add_shore_review():
 
   beach = ShoreDivingData.query.filter_by(id=shorediving_beach_id).first()
   if not beach:
-    return 'beach doesnt exist', 403
+    abort(403, 'beach doesnt exist')
   beach_id = beach.spot_id
 
   display_name = request.json.get('reviewer_name')
@@ -562,14 +559,14 @@ def add_shore_review():
     if request.json.get('date_dived') \
     else datetime.utcnow()
   if not rating:
-    abort(401, 'Please select a rating')
+    abort(422, 'Please select a rating')
   if not activity_type:
-    abort(401, 'Please select scuba or snorkel')
+    abort(422, 'Please select scuba or snorkel')
 
   shorediving_data = ShoreDivingReview.query.filter_by(shorediving_id=shorediving_id).first()
   if shorediving_data:
     if shorediving_data.entry:
-      return 'already exists', 401
+      abort(409, 'Shorediving entry already exists')
     else:
       shorediving_data.entry=request.json.get('entry')
       shorediving_data.bottom=request.json.get('bottom')
@@ -630,10 +627,8 @@ def add_shore_review():
   db.session.add(review)
   db.session.add(shorediving_data)
 
-  spot = Spot.query.filter_by(id=beach_id).first()
+  spot = Spot.query.filter_by(id=beach_id).first_or_404()
 
-  if not spot:
-    return { 'msg': 'Couldn\'t find that spot' }, 404
   summary = get_summary_reviews_helper(beach_id)
   num_reviews = 0.0
   total = 0.0

@@ -15,11 +15,8 @@ def patch_country():
   loc = Country.query.filter_by(id=id).first_or_404()
   updates = request.json
   updates.pop('id', None)
-  try:
-    for key in updates.keys():
-      setattr(loc, key, updates.get(key))
-  except ValueError as e:
-    return e, 500
+  for key in updates.keys():
+    setattr(loc, key, updates.get(key))
   db.session.commit()
   loc.id
   return loc.get_dict(), 200
@@ -30,11 +27,8 @@ def patch_loc_one():
   loc = AreaOne.query.filter_by(id=id).first_or_404()
   updates = request.json
   updates.pop('id', None)
-  try:
-    for key in updates.keys():
-      setattr(loc, key, updates.get(key))
-  except ValueError as e:
-    return e, 500
+  for key in updates.keys():
+    setattr(loc, key, updates.get(key))
   db.session.commit()
   loc.id
   return loc.get_dict(), 200
@@ -45,11 +39,8 @@ def patch_loc_two():
   loc = AreaTwo.query.filter_by(id=id).first_or_404()
   updates = request.json
   updates.pop('id', None)
-  try:
-    for key in updates.keys():
-      setattr(loc, key, updates.get(key))
-  except ValueError as e:
-    return e, 500
+  for key in updates.keys():
+    setattr(loc, key, updates.get(key))
   db.session.commit()
   loc.id
   return loc.get_dict(), 200
@@ -60,11 +51,8 @@ def patch_locality():
   loc = Locality.query.filter_by(id=id).first_or_404()
   updates = request.json
   updates.pop('id', None)
-  try:
-    for key in updates.keys():
-      setattr(loc, key, updates.get(key))
-  except ValueError as e:
-    return e, 500
+  for key in updates.keys():
+    setattr(loc, key, updates.get(key))
   db.session.commit()
   loc.id
   return loc.get_dict(), 200

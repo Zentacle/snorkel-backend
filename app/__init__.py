@@ -109,7 +109,7 @@ def db_create():
 def delete():
   user = get_current_user()
   if not user.admin:
-    return {'msg': 'You must be an admin to that'}, 403
+    abort(403, 'You must be an admin to that')
   email = request.args.get('email')
   user = User.query.filter_by(email=email).first()
   db.session.delete(user)
@@ -120,7 +120,7 @@ def delete():
 @jwt_required()
 def get_emails():
   if not get_current_user().admin:
-    return "Not allowed", 401
+    abort(403, 'You must be an admin to that')
   users = User.query \
     .filter(
       and_(
@@ -353,7 +353,7 @@ def subscription_webhook():
       )
       return response.body
     except Exception as e:
-      return e.body, 500
+      raise e
   elif (
     event_type == 'CANCELLATION'
     or event_type == 'EXPIRATION'

@@ -1,5 +1,5 @@
 import os
-from flask import Blueprint, request
+from flask import Blueprint, request, abort
 from app.models import Spot
 from app import db, cache, get_summary_reviews_helper
 import requests
@@ -51,7 +51,7 @@ def get_tides():
 def geocode(beach_id):
     spot = Spot.query.filter_by(id=beach_id).first_or_404()
     if not spot.latitude or not spot.longitude:
-      return { 'msg': 'no lat/lng' }, 422
+      abort(422, 'no lat/lng')
     r = requests.get('https://maps.googleapis.com/maps/api/geocode/json', params = {
       'latlng': f'{spot.latitude},{spot.longitude}',
       'key': os.environ.get('GOOGLE_API_KEY')

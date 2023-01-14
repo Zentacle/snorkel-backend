@@ -3,12 +3,13 @@ import os
 from app.helpers.wally_integration import mint_nft
 import boto3
 import io
-from flask import Blueprint, request
-from sqlalchemy import and_, not_, or_, exc
+from flask import Blueprint, request, abort
+from sqlalchemy import or_, exc
 from app.models import DiveShop, Review, Spot
 from app import db, cache
 from flask_jwt_extended import jwt_required, get_current_user
 import logging
+import newrelic.agent
 
 bp = Blueprint('shop', __name__, url_prefix="/shop")
 wally_api_base = os.environ.get('WALLY_API')
@@ -40,7 +41,7 @@ def create_dive_shop():
   user = get_current_user()
 
   if not user.admin:
-    return {'msg': 'You must be an admin to that'}, 403
+    abort(403, 'You must be an admin to that')
 
 
   padi_store_id = request.json.get('padi_store_id')
@@ -96,7 +97,7 @@ def create_dive_shop():
     db.session.add(dive_shop)
     db.session.commit()
   except exc.IntegrityError as e:
-    return 'Already exists', 409
+    abort(409, 'Dive shop already exists')
 
   if not ignore_wallet:
     request_url = f'{wally_api_base}/wallet'
@@ -125,14 +126,11 @@ def update_dive_shop(id):
 
   # restrict access to patching a dive log
   if dive_shop.owner_user_id != user.id and not user.admin:
-    return { "msg": "Only shop owner and admin can perform this action" }, 403
+    abort(403, 'Only shop owner and admin can perform this action')
 
   updates = request.json
-  try:
-    for key in updates.keys():
-      setattr(dive_shop, key, updates.get(key))
-  except ValueError as e:
-    return e, 500
+  for key in updates.keys():
+    setattr(dive_shop, key, updates.get(key))
   db.session.commit()
   data = dive_shop.get_dict()
 
@@ -142,7 +140,7 @@ def update_dive_shop(id):
 @jwt_required()
 def upload_stamp_image(id):
   if 'file' not in request.files:
-    return { 'msg': 'No file included in request' }, 422
+    abort(422, 'No file included in request')
   request_url = f'{wally_api_base}/files/upload'
   headers = {
     'Authorization': f'Bearer {wally_auth_token}'
@@ -162,12 +160,12 @@ def upload_stamp_image(id):
 @jwt_required()
 def upload(id):
   if 'file' not in request.files:
-    return { 'msg': 'No file included in request' }, 422
+    abort(422, 'No file included in request')
   # If the user does not select a file, the browser submits an
   # empty file without a filename.
   file = request.files.get('file')
   if file.filename == '':
-      return { 'msg': 'Submitted an empty file' }, 422
+    abort(422, 'Submitted an empty file')
   import uuid
   s3_key = str(get_current_user().id) + '_' + str(uuid.uuid4())
   contents = file.read()
@@ -217,7 +215,7 @@ def mint_dive_stamp(id):
   # restrict access
   dive_shop = DiveShop.query.get_or_404(id).get_dict()
   if dive_shop.get('owner_user_id') != user.id and not user.admin:
-    return { "msg": "Only shop owner and admin can perform this action" }, 403
+    abort(403, 'Only shop owner and admin can perform this action')
 
   current_review = Review.query.get_or_404(request.json.get('review_id')).get_dict()
   beach_id = current_review.get('beach_id')
@@ -284,7 +282,7 @@ def nearby_locations():
       startlng = spot.longitude
       beach_id = spot.id
     else:
-      return { 'msg': 'Include a lat/lng, beach_id, or a shop_id' }, 422
+      abort(422, 'Include a lat/lng, beach_id, or a shop_id')
 
   # If there still isn't a lat/lng, return empty array
   if not startlat or not startlng:
@@ -297,6 +295,7 @@ def nearby_locations():
       .order_by(DiveShop.distance(startlat, startlng)).limit(limit)
     results = query.all()
   except Exception as e:
+    newrelic.agent.record_exception(e)
     return { 'msg': str(e) }, 500
   data = []
   for result in results:
