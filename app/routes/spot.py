@@ -60,11 +60,12 @@ def geocode(beach_id):
     if response.get('status') == 'OK':
       address_components = response.get('results')[0].get('address_components')
       locality, area_2, area_1, country = get_localities(address_components)
-      spot.locality = locality
-      spot.area_one = area_1
-      spot.area_two = area_2
-      spot.country = country
-      db.session.add(spot)
-      db.session.commit()
-      spot.id
+      if country:
+        spot.locality = locality
+        spot.area_one = area_1
+        spot.area_two = area_2
+        spot.country = country
+        db.session.add(spot)
+        db.session.commit()
+        spot.id
     return spot.get_dict()
