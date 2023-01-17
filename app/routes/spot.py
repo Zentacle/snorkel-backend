@@ -51,7 +51,8 @@ def get_tides():
 def geocode(beach_id):
     spot = Spot.query.filter_by(id=beach_id).first_or_404()
     if not spot.latitude or not spot.longitude:
-      abort(422, 'no lat/lng')
+      return spot.get_dict()
+      # abort(422, 'no lat/lng')
     r = requests.get('https://maps.googleapis.com/maps/api/geocode/json', params = {
       'latlng': f'{spot.latitude},{spot.longitude}',
       'key': os.environ.get('GOOGLE_API_KEY')
