@@ -8,6 +8,7 @@ from sqlalchemy import or_, exc
 from app.models import DiveShop, Review, Spot
 from app import db, cache
 from flask_jwt_extended import jwt_required, get_current_user
+from app.helpers.get_localities import get_localities
 import logging
 import newrelic.agent
 
@@ -323,3 +324,27 @@ def get_typeahea_nearby():
     newrelic.agent.record_exception(e)
     return { 'msg': str(e) }, 500
   return { "data": list(map(lambda x: x.get_typeahead_dict(), results)) }
+
+@bp.route("/geocode/<int:beach_id>")
+def geocode(beach_id):
+    spot = DiveShop.query.filter_by(id=beach_id).first_or_404()
+    if not spot.latitude or not spot.longitude:
+      return spot.get_dict()
+      # abort(422, 'no lat/lng')
+    r = requests.get('https://maps.googleapis.com/maps/api/geocode/json', params = {
+      'latlng': f'{spot.latitude},{spot.longitude}',
+      'key': os.environ.get('GOOGLE_API_KEY')
+    })
+    response = r.json()
+    if response.get('status') == 'OK':
+      address_components = response.get('results')[0].get('address_components')
+      locality, area_2, area_1, country = get_localities(address_components)
+      if country:
+        spot.locality = locality
+        spot.area_one = area_1
+        spot.area_two = area_2
+        spot.country = country
+        db.session.add(spot)
+        db.session.commit()
+        spot.id
+    return spot.get_dict()
