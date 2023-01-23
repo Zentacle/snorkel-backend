@@ -117,6 +117,7 @@ class User(db.Model):
     longitude = db.Column(db.Float)
     has_pro = db.Column(db.Boolean, default=False)
     push_token = db.Column(db.String)
+    certification = db.Column(db.String)
 
     reviews = db.relationship(
         "Review",
