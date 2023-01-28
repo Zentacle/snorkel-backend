@@ -663,6 +663,7 @@ class DiveShop(db.Model):
             "hours": self.hours,
             "country_name": self.country_name,
             'zip': self.zip,
+            'hero_img': self.logo_img,
         }
 
         dict["full_address"] = DiveShop.get_full_address(
