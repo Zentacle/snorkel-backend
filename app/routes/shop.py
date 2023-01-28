@@ -204,8 +204,17 @@ def fetch_dive_shop(id):
         .options(joinedload('area_two')) \
         .options(joinedload('area_one')) \
         .options(joinedload('country')) \
-        .get_or_404(id)
+        .filter_by(id=id) \
+        .first()
     data = dive_shop.get_dict()
+    if dive_shop.country:
+        data['country'] = dive_shop.country.get_simple_dict()
+    if dive_shop.area_one:
+        data['area_one'] = dive_shop.area_one.get_simple_dict()
+    if dive_shop.area_two:
+        data['area_two'] = dive_shop.area_two.get_simple_dict()
+    if dive_shop.locality:
+        data['locality'] = dive_shop.locality.get_simple_dict()
     return {'data': data}
 
 
