@@ -22,7 +22,6 @@ from flask_jwt_extended import (
 )
 from sqlalchemy import or_, and_, sql
 from sqlalchemy.orm import joinedload
-from sqlalchemy.exc import OperationalError
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
 from app.helpers.get_localities import get_localities

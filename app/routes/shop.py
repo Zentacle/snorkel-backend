@@ -4,8 +4,9 @@ from app.helpers.wally_integration import mint_nft
 import boto3
 import io
 from flask import Blueprint, request, abort
-from sqlalchemy import or_, exc
-from app.models import DiveShop, Review, Spot
+from sqlalchemy import or_, exc, sql, and_
+from sqlalchemy.orm import joinedload
+from app.models import DiveShop, Review, Spot, Country, AreaOne, AreaTwo, Locality
 from app import db, cache
 from flask_jwt_extended import jwt_required, get_current_user
 from app.helpers.get_localities import get_localities
@@ -30,6 +31,166 @@ def fetch_dive_shops():
   data = [dive_shop.get_simple_dict() for dive_shop in dive_shops]
   return {'data': data}
 
+@bp.route("/loc")
+@cache.cached(query_string=True)
+def get_spots():
+  """ Get Dive Sites/Beaches
+  ---
+  get:
+      summary: Get dive sites
+      description: Get dive sites
+      parameters:
+          - name: beach_id
+            in: body
+            description: Beach ID
+            type: string
+            required: false
+          - name: locality
+            in: body
+            description: locality (eg. Kihei)
+            type: string
+            required: false
+          - name: area_two
+            in: body
+            description: area_two (eg. Maui)
+            type: string
+            required: false
+          - name: area_one
+            in: body
+            description: area_one (eg. Hawaii)
+            type: string
+            required: false
+          - name: country
+            in: body
+            description: country (eg. USA)
+            type: string
+            required: false
+          - name: sort
+            in: body
+            description: sort (latest, most_reviewed, top). defaults to top
+            type: string
+            required: false
+          - name: limit
+            in: body
+            description: limit on number of results returned (default 15)
+            type: string
+            required: false
+      responses:
+          200:
+              description: Returns singular beach object or list of beach objects
+              content:
+                application/json:
+                  schema: BeachSchema
+          400:
+              content:
+                application/json:
+                  schema:
+                    Error:
+                      properties:
+                        msg:
+                          type: string
+              description: Wrong password.
+  """
+  newrelic.agent.capture_request_params()
+  area = None
+  spot = None
+
+  query = DiveShop.query
+  locality_name = request.args.get('locality')
+  area_two_name = request.args.get('area_two')
+  area_one_name = request.args.get('area_one')
+  country_name = request.args.get('country')
+  if locality_name:
+    area_two_spot_query = DiveShop.area_two.has(short_name=area_two_name)
+    area_two_area_query = Locality.area_two.has(short_name=area_two_name)
+    if area_two_name == '_':
+      area_two_spot_query = sql.true()
+      area_two_area_query = sql.true()
+    query = query.filter(
+      and_(
+        DiveShop.locality.has(short_name=locality_name),
+        area_two_spot_query,
+        DiveShop.area_one.has(short_name=area_one_name),
+        DiveShop.country.has(short_name=country_name),
+      )
+    )
+    area = Locality.query \
+      .options(joinedload('area_two')) \
+      .options(joinedload('area_one')) \
+      .options(joinedload('country')) \
+      .filter(
+        Locality.short_name==locality_name,
+        area_two_area_query,
+        Locality.area_one.has(short_name=area_one_name),
+        Locality.country.has(short_name=country_name),
+      ) \
+      .first_or_404()
+  elif area_two_name:
+    query = query.filter(
+      and_(
+        DiveShop.area_two.has(short_name=area_two_name),
+        DiveShop.area_one.has(short_name=area_one_name),
+        DiveShop.country.has(short_name=country_name),
+      )
+    )
+    area = AreaTwo.query \
+      .options(joinedload('area_one')) \
+      .options(joinedload('country')) \
+      .filter(
+        and_(
+          AreaTwo.short_name==area_two_name,
+          AreaTwo.area_one.has(short_name=area_one_name),
+          AreaTwo.country.has(short_name=country_name),
+        )
+      ) \
+      .first_or_404()
+  elif area_one_name:
+      query = query.filter(
+        and_(
+          DiveShop.area_one.has(short_name=area_one_name),
+          DiveShop.country.has(short_name=country_name),
+        )
+      )
+      area = AreaOne.query \
+        .options(joinedload('country')) \
+        .filter(
+          and_(
+            AreaOne.short_name==area_one_name,
+            AreaOne.country.has(short_name=country_name),
+          )
+        ) \
+        .first_or_404()
+  elif country_name:
+      query = query.filter(DiveShop.country.has(short_name=country_name))
+      area = Country.query \
+        .filter_by(short_name=country_name) \
+        .first_or_404()
+  query = query.order_by(DiveShop.name.desc())
+  if request.args.get('limit') != 'none':
+    limit = request.args.get('limit') if request.args.get('limit') else 15
+    query = query.limit(limit)
+  spots = query.all()
+  output = []
+  for spot in spots:
+    spot_data = spot.get_dict()
+    if request.args.get('ssg'):
+      spot_data['beach_name_for_url'] = spot.get_beach_name_for_url()
+    if not spot.location_google and spot.latitude and spot.longitude:
+      spot_data['location_google'] = ('http://maps.google.com/maps?q=%(latitude)f,%(longitude)f'
+        % { 'latitude': spot.latitude, 'longitude': spot.longitude}
+      )
+    output.append(spot_data)
+  resp = { 'data': output }
+  if area:
+    area_data = area.get_dict()
+    if area_data.get('area_two'):
+      area_data['area_two'] = area_data.get('area_two').get_dict(area.country, area.area_one)
+    if area_data.get('area_one'):
+      area_data['area_one'] = area_data.get('area_one').get_dict(area.country)
+    if area_data.get('country'):
+      area_data['country'] = area_data.get('country').get_dict()
+    resp['area'] = area_data
+  return resp
 
 @bp.route('<int:id>', methods=['GET'])
 @bp.route('/get/<int:id>', methods=['GET'])
