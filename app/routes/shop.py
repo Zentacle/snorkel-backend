@@ -217,6 +217,27 @@ def fetch_dive_shop(id):
         data['locality'] = dive_shop.locality.get_dict()
     return {'data': data}
 
+@bp.route('<int:id>/reviews', methods=['GET'])
+def fetch_dive_shop_reviews(id):
+    dive_shop = DiveShop.query \
+        .options(joinedload(DiveShop.reviews).subqueryload(Review.spot)) \
+        .filter_by(id=id) \
+        .first()
+    data = dive_shop.get_dict()
+    data['reviews'] = []
+    if dive_shop.country:
+        data['country'] = dive_shop.country.get_dict()
+    if dive_shop.area_one:
+        data['area_one'] = dive_shop.area_one.get_dict()
+    if dive_shop.area_two:
+        data['area_two'] = dive_shop.area_two.get_dict()
+    if dive_shop.locality:
+        data['locality'] = dive_shop.locality.get_dict()
+    for review in dive_shop.reviews:
+        review_data = review.get_simple_dict()
+        review_data['spot'] = review.spot.get_simple_dict()
+        data['reviews'].append(review_data)
+    return {'data': data}
 
 @bp.route('/create', methods=['POST'])
 @jwt_required()

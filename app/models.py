@@ -232,7 +232,8 @@ class Spot(db.Model):
     tags = db.relationship('Tag', secondary=tags, lazy='subquery',
                            backref=db.backref('spot', lazy=True))
 
-    def get_basic_data(self):
+    def get_simple_dict(self):
+        self_data = self.__dict__.copy()
         data = {}
         keys = [
             'name',
@@ -242,7 +243,8 @@ class Spot(db.Model):
             'location_city',
         ]
         for key in keys:
-            data[key] = self.get(key)
+            data[key] = self_data.get(key)
+        data['url'] = self.get_url()
         return data
 
     def get_dict(self):
@@ -357,12 +359,13 @@ class Review(db.Model):
     dive_shop_id = db.Column(db.Integer, db.ForeignKey('dive_shop.id'))
     is_private = db.Column(db.Boolean, nullable=True, default=False)
 
-    dive_shop = db.relationship("DiveShop", uselist=False)
+    dive_shop = db.relationship("DiveShop", backref='reviews', uselist=False)
     images = db.relationship("Image", backref=db.backref('review', lazy=True))
     shorediving_data = db.relationship(
         "ShoreDivingReview", back_populates="review", uselist=False)
 
     def get_simple_dict(self):
+        self_data = self.__dict__.copy()
         keys = [
             'id',
             'rating',
@@ -375,7 +378,7 @@ class Review(db.Model):
         ]
         data = {}
         for key in keys:
-            data[key] = self.get(key)
+            data[key] = self_data.get(key)
         return data
 
     def get_dict(self):
