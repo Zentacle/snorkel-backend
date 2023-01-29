@@ -199,13 +199,19 @@ def get_spots():
 @bp.route('<int:id>', methods=['GET'])
 @bp.route('/get/<int:id>', methods=['GET'])
 def fetch_dive_shop(id):
-    dive_shop = DiveShop.query \
+    sq = db.session.query(Review.dive_shop_id, db.func.count(Review.id).label('count')).group_by(Review.dive_shop_id).subquery()
+    result = db.session.query(
+      DiveShop,
+      sq.c.count,
+    ) \
         .options(joinedload('locality')) \
         .options(joinedload('area_two')) \
         .options(joinedload('area_one')) \
         .options(joinedload('country')) \
-        .filter_by(id=id) \
+        .join(sq, DiveShop.id == sq.c.dive_shop_id, isouter=True) \
+        .filter(DiveShop.id==id) \
         .first()
+    (dive_shop, count) = result
     data = dive_shop.get_dict()
     if dive_shop.country:
         data['country'] = dive_shop.country.get_dict()
@@ -215,6 +221,7 @@ def fetch_dive_shop(id):
         data['area_two'] = dive_shop.area_two.get_dict()
     if dive_shop.locality:
         data['locality'] = dive_shop.locality.get_dict()
+    data['num_reviews'] = count if count else 0
     return {'data': data}
 
 @bp.route('<int:id>/reviews', methods=['GET'])
