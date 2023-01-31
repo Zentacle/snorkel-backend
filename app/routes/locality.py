@@ -5,7 +5,8 @@ from app.models import (
   AreaOne,
   AreaTwo,
   Locality,
-  Spot
+  Spot,
+  DiveShop
 )
 from app import db, cache
 from sqlalchemy import and_, func
@@ -97,14 +98,16 @@ def get_area_one():
 @bp.route("/country")
 @cache.cached()
 def get_country():
-  sq = db.session.query(Spot.country_id, func.count(Spot.id).label('count')).group_by(Spot.country_id).subquery()
-  localities = db.session.query(Country, sq.c.count).join(sq, sq.c.country_id == Country.id).all()
+  table = Spot
+  if request.args.get('shops'):
+    table = DiveShop
+  sq = db.session.query(table.country_id, func.count(table.id).label('count')).group_by(table.country_id).subquery()
+  localities = db.session.query(Country, sq.c.count).join(sq, sq.c.country_id == Country.id).order_by(db.desc('count')).all()
   data = []
   for (locality, count) in localities:
     dict = locality.get_dict()
     dict['num_spots'] = count
     data.append(dict)
-  data.sort(reverse=True, key=lambda country:country['num_spots'])
   return { 'data': data }
 
 @bp.route("/<country>/<area_one>")
