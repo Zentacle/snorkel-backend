@@ -348,6 +348,17 @@ def update_dive_shop(id):
 
     return {'data': data}
 
+@bp.route('/patch/padi/<int:id>', methods=['PATCH'])
+def update_padi_dive_shop(id):
+    dive_shop = DiveShop.query.filter_by(padi_store_id=f'{id}').first_or_404()
+
+    updates = request.json
+    for key in updates.keys():
+        setattr(dive_shop, key, updates.get(key))
+    db.session.commit()
+    data = dive_shop.get_dict()
+
+    return {'data': data}
 
 @bp.route('/<int:id>/stamp_image', methods=['POST'])
 @jwt_required()

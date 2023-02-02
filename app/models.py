@@ -592,6 +592,7 @@ class DiveShop(db.Model):
     padi_store_id = db.Column(db.String, unique=True)
     name = db.Column(db.String)
     description = db.Column(db.String)
+    auto_description = db.Column(db.String)
     hours = db.Column(db.JSON(none_as_null=True))
     website = db.Column(db.String)
     fareharbor_url = db.Column(db.String)
@@ -663,7 +664,7 @@ class DiveShop(db.Model):
             "owner_user_id": self.owner_user_id,
             "stamp_uri": self.stamp_uri,
             "phone": self.phone,
-            "description": self.description,
+            "description": self.description if self.description else self.auto_description,
             "hours": self.hours,
             "country_name": self.country_name,
             'zip': self.zip,
