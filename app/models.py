@@ -621,6 +621,10 @@ class DiveShop(db.Model):
         db.Integer, db.ForeignKey('user.id'), nullable=True)
     stamp_uri = db.Column(db.String, nullable=True)
     owner = db.relationship("User", uselist=False)
+    created = db.Column(db.DateTime, nullable=False,
+                              default=datetime.utcnow)
+    updated = db.Column(db.DateTime, nullable=False, server_default=func.now(), onupdate=func.current_timestamp())
+
 
     def get_typeahead_dict(self):
         return {
