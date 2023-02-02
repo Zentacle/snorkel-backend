@@ -118,6 +118,7 @@ class User(db.Model):
     has_pro = db.Column(db.Boolean, default=False)
     push_token = db.Column(db.String)
     certification = db.Column(db.String)
+    updated = db.Column(db.DateTime, nullable=False, server_default=func.now(), onupdate=func.current_timestamp())
 
     reviews = db.relationship(
         "Review",
@@ -221,6 +222,9 @@ class Spot(db.Model):
     country_id = db.Column(
         db.Integer, db.ForeignKey('country.id'), nullable=True)
     noaa_station_id = db.Column(db.String)
+    created = db.Column(db.DateTime, nullable=False,
+                              default=datetime.utcnow)
+    updated = db.Column(db.DateTime, nullable=False, server_default=func.now(), onupdate=func.current_timestamp())
 
     reviews = db.relationship("Review", backref="spot")
     images = db.relationship("Image", backref="spot")
@@ -358,6 +362,7 @@ class Review(db.Model):
     difficulty = db.Column(db.String)
     dive_shop_id = db.Column(db.Integer, db.ForeignKey('dive_shop.id'))
     is_private = db.Column(db.Boolean, nullable=True, default=False)
+    updated = db.Column(db.DateTime, nullable=False, server_default=func.now(), onupdate=func.current_timestamp())
 
     dive_shop = db.relationship("DiveShop", backref='reviews', uselist=False)
     images = db.relationship("Image", backref=db.backref('review', lazy=True))
@@ -684,7 +689,7 @@ class DiveShop(db.Model):
             self.country_name
         )
         dict["url"] = DiveShop.get_shop_url(self)
-        if not self.description:
+        if not dict['description']:
             name = self.name
             city = str(self.city or '') + ', ' + str(self.country_name or '')
             dict['description'] = f'{name} is a scuba dive shop based in {city}. They are a PADI certified dive shop' \
@@ -751,6 +756,9 @@ class PasswordReset(db.Model):
     token = db.Column(db.String, nullable=False, unique=True)
     token_expiry = db.Column(db.DateTime, nullable=False, default=(
         lambda: datetime.utcnow() + timedelta(minutes=15)))
+    created = db.Column(db.DateTime, nullable=False,
+                              default=datetime.utcnow)
+    updated = db.Column(db.DateTime, nullable=False, server_default=func.now(), onupdate=func.current_timestamp())
 
 
 class DivePartnerAd(db.Model):
