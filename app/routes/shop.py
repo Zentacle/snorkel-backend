@@ -504,6 +504,7 @@ def nearby_locations():
     try:
         query = DiveShop.query \
             .filter(DiveShop.id != shop_id) \
+            .options(joinedload('locality')) \
             .order_by(DiveShop.distance(startlat, startlng)).limit(limit)
         results = query.all()
     except Exception as e:
@@ -512,6 +513,10 @@ def nearby_locations():
     data = []
     for result in results:
         temp_data = result.get_simple_dict()
+        if result.locality and result.locality.url:
+            temp_data['locality'] = {
+                'url': result.locality.url + '/shop'
+            }
         data.append(temp_data)
     return {'data': data}
 
