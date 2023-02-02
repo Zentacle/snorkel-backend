@@ -517,6 +517,7 @@ def nearby_locations():
             temp_data['locality'] = {
                 'url': result.locality.url + '/shop'
             }
+        temp_data['location_city'] = result.city
         data.append(temp_data)
     return {'data': data}
 
