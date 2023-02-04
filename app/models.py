@@ -612,6 +612,7 @@ class DiveShop(db.Model):
     zip = db.Column(db.String)
     country_name = db.Column(db.String)
     logo_img = db.Column(db.String)
+    hero_img = db.Column(db.String)
     latitude = db.Column(db.Float)
     longitude = db.Column(db.Float)
     email = db.Column(db.String)
@@ -681,7 +682,7 @@ class DiveShop(db.Model):
             "hours": self.hours,
             "country_name": self.country_name,
             'zip': self.zip,
-            'hero_img': self.logo_img,
+            'hero_img': self.hero_img if self.hero_img else self.logo_img,
         }
 
         dict["full_address"] = DiveShop.get_full_address(
