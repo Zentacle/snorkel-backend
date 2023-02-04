@@ -118,7 +118,8 @@ class User(db.Model):
     has_pro = db.Column(db.Boolean, default=False)
     push_token = db.Column(db.String)
     certification = db.Column(db.String)
-    updated = db.Column(db.DateTime, nullable=False, server_default=func.now(), onupdate=func.current_timestamp())
+    updated = db.Column(db.DateTime, nullable=False, server_default=func.now(
+    ), onupdate=func.current_timestamp())
 
     reviews = db.relationship(
         "Review",
@@ -223,8 +224,9 @@ class Spot(db.Model):
         db.Integer, db.ForeignKey('country.id'), nullable=True)
     noaa_station_id = db.Column(db.String)
     created = db.Column(db.DateTime, nullable=False,
-                              default=datetime.utcnow)
-    updated = db.Column(db.DateTime, nullable=False, server_default=func.now(), onupdate=func.current_timestamp())
+                        default=datetime.utcnow)
+    updated = db.Column(db.DateTime, nullable=False, server_default=func.now(
+    ), onupdate=func.current_timestamp())
 
     reviews = db.relationship("Review", backref="spot")
     images = db.relationship("Image", backref="spot")
@@ -362,7 +364,8 @@ class Review(db.Model):
     difficulty = db.Column(db.String)
     dive_shop_id = db.Column(db.Integer, db.ForeignKey('dive_shop.id'))
     is_private = db.Column(db.Boolean, nullable=True, default=False)
-    updated = db.Column(db.DateTime, nullable=False, server_default=func.now(), onupdate=func.current_timestamp())
+    updated = db.Column(db.DateTime, nullable=False, server_default=func.now(
+    ), onupdate=func.current_timestamp())
 
     dive_shop = db.relationship("DiveShop", backref='reviews', uselist=False)
     images = db.relationship("Image", backref=db.backref('review', lazy=True))
@@ -598,6 +601,7 @@ class DiveShop(db.Model):
     name = db.Column(db.String)
     description = db.Column(db.String)
     auto_description = db.Column(db.String)
+    description_v2 = db.Column(db.String)
     hours = db.Column(db.JSON(none_as_null=True))
     website = db.Column(db.String)
     fareharbor_url = db.Column(db.String)
@@ -627,9 +631,9 @@ class DiveShop(db.Model):
     stamp_uri = db.Column(db.String, nullable=True)
     owner = db.relationship("User", uselist=False)
     created = db.Column(db.DateTime, nullable=False,
-                              default=datetime.utcnow)
-    updated = db.Column(db.DateTime, nullable=False, server_default=func.now(), onupdate=func.current_timestamp())
-
+                        default=datetime.utcnow)
+    updated = db.Column(db.DateTime, nullable=False, server_default=func.now(
+    ), onupdate=func.current_timestamp())
 
     def get_typeahead_dict(self):
         return {
@@ -673,7 +677,7 @@ class DiveShop(db.Model):
             "owner_user_id": self.owner_user_id,
             "stamp_uri": self.stamp_uri,
             "phone": self.phone,
-            "description": self.description if self.description else self.auto_description,
+            "description": self.description if self.description else (self.description_v2 if self.description_v2 else self.auto_description),
             "hours": self.hours,
             "country_name": self.country_name,
             'zip': self.zip,
@@ -757,8 +761,9 @@ class PasswordReset(db.Model):
     token_expiry = db.Column(db.DateTime, nullable=False, default=(
         lambda: datetime.utcnow() + timedelta(minutes=15)))
     created = db.Column(db.DateTime, nullable=False,
-                              default=datetime.utcnow)
-    updated = db.Column(db.DateTime, nullable=False, server_default=func.now(), onupdate=func.current_timestamp())
+                        default=datetime.utcnow)
+    updated = db.Column(db.DateTime, nullable=False, server_default=func.now(
+    ), onupdate=func.current_timestamp())
 
 
 class DivePartnerAd(db.Model):
