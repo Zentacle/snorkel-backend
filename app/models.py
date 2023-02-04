@@ -656,7 +656,7 @@ class DiveShop(db.Model):
             'address1': self.address1,
             'address2': self.address2,
             'zip': self.zip,
-            'hero_img': self.logo_img,
+            'hero_img': self.hero_img if self.hero_img else self.logo_img,
         }
         simpleDict["url"] = DiveShop.get_url(self)
         return simpleDict
