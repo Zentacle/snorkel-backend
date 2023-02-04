@@ -10,10 +10,11 @@ from app.models import (
   Country,
   AreaOne,
   AreaTwo,
-  Locality
+  Locality,
+  DiveShop,
 )
 from app.helpers.get_nearby_spots import get_nearby_spots
-from app.helpers.typeahead_from_spot import typeahead_from_spot
+from app.helpers.typeahead_from_spot import typeahead_from_spot, typeahead_from_shop
 
 bp = Blueprint('search', __name__, url_prefix="/search")
 
@@ -90,6 +91,11 @@ def get_typeahead():
     results.append(result)
   if beach_only:
     return { 'data': results }
+
+  dive_shops = DiveShop.query.filter(DiveShop.name.ilike('%'+query+'%')).limit(10).all()
+  for shop in dive_shops:
+    result = typeahead_from_shop(shop)
+    results.append(result)
 
   countries = Country.query.filter(Country.name.ilike('%'+query+'%')).limit(10).all()
   area_ones = AreaOne.query.filter(AreaOne.name.ilike('%'+query+'%')).limit(10).all()

@@ -653,7 +653,7 @@ class DiveShop(db.Model):
             'zip': self.zip,
             'hero_img': self.logo_img,
         }
-        simpleDict["url"] = DiveShop.get_shop_url(self)
+        simpleDict["url"] = DiveShop.get_url(self)
         return simpleDict
 
     def get_dict(self):
@@ -688,7 +688,7 @@ class DiveShop(db.Model):
             self.zip,
             self.country_name
         )
-        dict["url"] = DiveShop.get_shop_url(self)
+        dict["url"] = DiveShop.get_url(self)
         if not dict['description']:
             name = self.name
             city = str(self.city or '') + ', ' + str(self.country_name or '')
@@ -697,7 +697,7 @@ class DiveShop(db.Model):
         return dict
 
     @classmethod
-    def get_shop_url(cls, shop):
+    def get_url(cls, shop):
         url_name = demicrosoft(shop.name).lower()
         id = shop.id
         return f'/shop/{id}/{url_name}'

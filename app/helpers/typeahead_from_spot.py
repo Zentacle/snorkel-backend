@@ -1,3 +1,5 @@
+from app.models import DiveShop
+
 def typeahead_from_spot(spot):
     return {
         'id': spot.id,
@@ -9,5 +11,19 @@ def typeahead_from_spot(spot):
             'latitude': spot.latitude,
             'longitude': spot.longitude,
             'location_city': spot.location_city,
+        }
+    }
+
+def typeahead_from_shop(shop):
+    return {
+        'id': shop.id,
+        'text': shop.name,
+        'url': DiveShop.get_url(shop),
+        'type': 'shop',
+        'subtext': shop.city,
+        'data': {
+            'latitude': shop.latitude,
+            'longitude': shop.longitude,
+            'location_city': shop.city,
         }
     }
