@@ -1,5 +1,6 @@
 from flask import Blueprint, request
 from app.helpers.merge_area_one import merge_area_one
+from app.helpers.get_limit import get_limit
 from app.models import (
     Country,
     AreaOne,
@@ -17,12 +18,31 @@ bp = Blueprint('locality', __name__, url_prefix="/locality")
 
 @bp.route("/locality")
 @cache.cached(query_string=True)
-def locality_get():
-    limit = request.args.get('limit') if request.args.get('limit') else 15
+def get_locality():
+    limit = get_limit(request.args.get('limit'), 15)
+    table = Spot
+    if request.args.get('shops'):
+        table = DiveShop
     country_short_name = request.args.get('country')
     area_one_short_name = request.args.get('area_one')
     area_two_short_name = request.args.get('area_two')
-    localities = Locality.query
+    sq = db.session \
+        .query(
+            table.country_id,
+            table.area_one_id,
+            table.area_two_id,
+            table.locality_id,
+            func.count(table.id).label('count')
+        ).group_by(table.area_one_id, table.country_id, table.area_two_id, table.locality_id).subquery()
+    localities = db.session.query(
+        Locality,
+        sq.c.count,
+    ).join(sq, and_(
+        sq.c.country_id == Locality.country_id,
+        sq.c.area_one_id == Locality.area_one_id,
+        sq.c.area_two_id == Locality.area_two_id,
+        sq.c.locality_id == Locality.id,
+    )).order_by(db.desc('count'))
     if country_short_name:
         localities = localities.filter(
             Locality.country.has(short_name=country_short_name))
@@ -32,58 +52,68 @@ def locality_get():
     if area_two_short_name:
         localities = localities.filter(
             Locality.area_two.has(short_name=area_two_short_name))
-    localities = localities \
-        .options(joinedload('area_two')) \
+    localities = localities.options(joinedload('country')) \
         .options(joinedload('area_one')) \
-        .options(joinedload('country'))
-    if limit != 'none':
-        localities = localities.limit(limit)
-    localities = localities.all()
+        .options(joinedload('area_two')) \
+        .limit(limit) \
+        .all()
     data = []
-    for locality in localities:
+    for (locality, count) in localities:
         locality_data = locality.get_dict()
-        if locality_data.get('area_two'):
-            locality_data['area_two'] = locality_data.get(
-                'area_two').get_simple_dict()
-        if locality_data.get('area_one'):
-            locality_data['area_one'] = locality_data.get(
-                'area_one').get_simple_dict()
         if locality_data.get('country'):
             locality_data['country'] = locality_data.get(
                 'country').get_simple_dict()
+        if locality_data.get('area_one'):
+            locality_data['area_one'] = locality_data.get(
+                'area_one').get_simple_dict()
+        if locality_data.get('area_two'):
+            locality_data['area_two'] = locality_data.get(
+                'area_two').get_simple_dict()
+        locality_data['num_spots'] = count
         data.append(locality_data)
-    #   if 'url' in locality_data and not locality.url:
-    #     locality.url = locality_data['url']
-    # db.session.commit()
     return {'data': data}
 
 
 @bp.route("/area_two")
 @cache.cached(query_string=True)
 def get_area_two():
-    limit = request.args.get('limit') if request.args.get('limit') else 25
+    limit = get_limit(request.args.get('limit'), 15)
+    table = Spot
+    if request.args.get('shops'):
+        table = DiveShop
     country_short_name = request.args.get('country')
     area_one_short_name = request.args.get('area_one')
-    localities = AreaTwo.query
+    sq = db.session \
+        .query(
+            table.country_id,
+            table.area_one_id,
+            table.area_two_id,
+            func.count(table.id).label('count')
+        ).group_by(table.area_one_id, table.country_id, table.area_two_id).subquery()
+    localities = db.session.query(
+        AreaTwo,
+        sq.c.count,
+    ).join(sq, and_(sq.c.area_one_id == AreaTwo.area_one_id, sq.c.country_id == AreaTwo.country_id, sq.c.area_two_id == AreaTwo.id)).order_by(db.desc('count'))
     if country_short_name:
         localities = localities.filter(
             AreaTwo.country.has(short_name=country_short_name))
     if area_one_short_name:
         localities = localities.filter(
             AreaTwo.area_one.has(short_name=area_one_short_name))
-    localities = localities \
+    localities = localities.options(joinedload('country')) \
         .options(joinedload('area_one')) \
-        .options(joinedload('country'))
-    if limit != 'none':
-        localities = localities.limit(limit)
-    localities = localities.all()
+        .limit(limit) \
+        .all()
     data = []
-    for locality in localities:
+    for (locality, count) in localities:
         locality_data = locality.get_dict()
-        if locality.area_one:
-            locality_data['area_one'] = locality.area_one.get_simple_dict()
-        if locality.country:
-            locality_data['country'] = locality.country.get_simple_dict()
+        if locality_data.get('country'):
+            locality_data['country'] = locality_data.get(
+                'country').get_simple_dict()
+        if locality_data.get('area_one'):
+            locality_data['area_one'] = locality_data.get(
+                'area_one').get_simple_dict()
+        locality_data['num_spots'] = count
         data.append(locality_data)
     return {'data': data}
 
@@ -91,22 +121,26 @@ def get_area_two():
 @bp.route("/area_one")
 @cache.cached(query_string=True)
 def get_area_one():
+    limit = get_limit(request.args.get('limit'), 15)
     table = Spot
     if request.args.get('shops'):
         table = DiveShop
     country_short_name = request.args.get('country')
     sq = db.session \
-    .query(
-        table.area_one_id,
-        func.count(table.id).label('count')
-    ).group_by(table.area_one_id).subquery()
+        .query(
+            table.country_id,
+            table.area_one_id,
+            func.count(table.id).label('count')
+        ).group_by(table.area_one_id, table.country_id).subquery()
     localities = db.session.query(
-      AreaOne,
-      sq.c.count,
-    ).join(sq, sq.c.area_one_id == AreaOne.id).order_by(db.desc('count'))
+        AreaOne,
+        sq.c.count,
+    ).join(sq, and_(sq.c.area_one_id == AreaOne.id, sq.c.country_id == AreaOne.country_id)).order_by(db.desc('count'))
     if country_short_name:
-        localities = localities.filter(AreaOne.country.has(short_name=country_short_name))
+        localities = localities.filter(
+            AreaOne.country.has(short_name=country_short_name))
     localities = localities.options(joinedload('country')) \
+        .limit(limit) \
         .all()
     data = []
     for (locality, count) in localities:
@@ -122,6 +156,7 @@ def get_area_one():
 @bp.route("/country")
 @cache.cached()
 def get_country():
+    limit = get_limit(request.args.get('limit'), 15)
     table = Spot
     if request.args.get('shops'):
         table = DiveShop
@@ -130,8 +165,10 @@ def get_country():
             table.country_id,
             func.count(table.id).label('count')
         ).group_by(table.country_id).subquery()
-    localities = db.session.query(Country, sq.c.count).join(
-        sq, sq.c.country_id == Country.id).order_by(db.desc('count')).all()
+    localities = db.session.query(Country, sq.c.count) \
+        .join(sq, sq.c.country_id == Country.id).order_by(db.desc('count')) \
+        .limit(limit) \
+        .all()
     data = []
     for (locality, count) in localities:
         dict = locality.get_dict()
