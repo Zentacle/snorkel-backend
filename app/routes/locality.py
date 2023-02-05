@@ -19,7 +19,7 @@ bp = Blueprint('locality', __name__, url_prefix="/locality")
 @bp.route("/locality")
 @cache.cached(query_string=True)
 def get_locality():
-    limit = get_limit(request.args.get('limit'), 15)
+    limit = get_limit(request.args.get('limit'), 100)
     table = Spot
     if request.args.get('shops'):
         table = DiveShop
@@ -77,7 +77,7 @@ def get_locality():
 @bp.route("/area_two")
 @cache.cached(query_string=True)
 def get_area_two():
-    limit = get_limit(request.args.get('limit'), 15)
+    limit = get_limit(request.args.get('limit'), 100)
     table = Spot
     if request.args.get('shops'):
         table = DiveShop
@@ -121,7 +121,7 @@ def get_area_two():
 @bp.route("/area_one")
 @cache.cached(query_string=True)
 def get_area_one():
-    limit = get_limit(request.args.get('limit'), 15)
+    limit = get_limit(request.args.get('limit'), 100)
     table = Spot
     if request.args.get('shops'):
         table = DiveShop
@@ -156,7 +156,7 @@ def get_area_one():
 @bp.route("/country")
 @cache.cached()
 def get_country():
-    limit = get_limit(request.args.get('limit'), 15)
+    limit = get_limit(request.args.get('limit'), 100)
     table = Spot
     if request.args.get('shops'):
         table = DiveShop
