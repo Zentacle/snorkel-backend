@@ -619,6 +619,8 @@ class DiveShop(db.Model):
     email = db.Column(db.String)
     phone = db.Column(db.String)
     location_google = db.Column(db.String)
+    rating = db.Column(db.Float)
+    num_reviews = db.Column(db.Integer)
     username = db.Column(db.String)
     locality_id = db.Column(
         db.Integer, db.ForeignKey('locality.id'), nullable=True)
