@@ -1,11 +1,35 @@
 import os
-from flask import Blueprint, request, abort
+from flask import Blueprint, request
 from app.models import Spot
 from app import db, cache, get_summary_reviews_helper
 import requests
 from app.helpers.get_localities import get_localities
+from sqlalchemy.orm import joinedload
 
 bp = Blueprint('spot', __name__, url_prefix="/spot")
+
+@bp.route('/<int:beach_id>')
+@cache.cached()
+def get_spot(beach_id):
+  spot = Spot.query \
+    .options(joinedload('locality')) \
+    .options(joinedload('area_two')) \
+    .options(joinedload('area_one')) \
+    .options(joinedload('country')) \
+    .options(joinedload('shorediving_data')) \
+    .filter_by(id=beach_id) \
+    .first_or_404()
+  spot_data = spot.get_dict()
+  if spot_data['locality']:
+    spot_data['locality'] = spot.locality.get_dict(spot.country, spot.area_one, spot.area_two)
+  if spot_data['area_two']:
+    spot_data['area_two'] = spot.area_two.get_dict(spot.country, spot.area_one)
+  if spot_data['area_one']:
+    spot_data['area_one'] = spot.area_one.get_dict(spot.country)
+  if spot_data['country']:
+    spot_data['country'] = spot.country.get_dict()
+  spot_data["ratings"] = get_summary_reviews_helper(beach_id)
+  return { 'data': spot_data }
 
 @bp.route("/recalc", methods=["GET"])
 def recalc_spot_rating():

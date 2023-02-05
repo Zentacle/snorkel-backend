@@ -496,7 +496,8 @@ class AreaTwo(db.Model):
         return data
 
     def get_url(self, country, area_one):
-        return '/loc/' + country.short_name + '/' + area_one.short_name + '/' + self.short_name
+        area_one_short_name = area_one.short_name if area_one else '_'
+        return '/loc/' + country.short_name + '/' + area_one_short_name + '/' + self.short_name
 
 # State
 
