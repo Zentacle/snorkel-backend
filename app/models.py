@@ -621,6 +621,8 @@ class DiveShop(db.Model):
     location_google = db.Column(db.String)
     rating = db.Column(db.Float)
     num_reviews = db.Column(db.Integer)
+    google_place_id = db.Column(db.String)
+
     username = db.Column(db.String)
     locality_id = db.Column(
         db.Integer, db.ForeignKey('locality.id'), nullable=True)
