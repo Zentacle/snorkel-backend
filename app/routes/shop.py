@@ -166,7 +166,7 @@ def get_spots():
         area = Country.query \
             .filter_by(short_name=country_name) \
             .first_or_404()
-    query = query.order_by(DiveShop.rating.desc())
+    query = query.order_by(DiveShop.rating.desc().nullslast())
     if request.args.get('limit') != 'none':
         limit = request.args.get('limit') if request.args.get('limit') else 15
         query = query.limit(limit)
@@ -517,7 +517,7 @@ def nearby_locations():
         query = DiveShop.query \
             .filter(DiveShop.id != shop_id) \
             .options(joinedload('locality')) \
-            .order_by(DiveShop.distance(startlat, startlng)).nullslast().limit(limit)
+            .order_by(DiveShop.distance(startlat, startlng)).limit(limit)
         results = query.all()
     except Exception as e:
         newrelic.agent.record_exception(e)
