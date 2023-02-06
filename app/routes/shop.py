@@ -221,6 +221,7 @@ def fetch_dive_shop(id):
         data['area_two'] = dive_shop.area_two.get_dict()
     if dive_shop.locality:
         data['locality'] = dive_shop.locality.get_dict()
+    count = count if count else dive_shop.num_reviews
     data['num_reviews'] = count if count else 0
     return {'data': data}
 
@@ -516,7 +517,7 @@ def nearby_locations():
         query = DiveShop.query \
             .filter(DiveShop.id != shop_id) \
             .options(joinedload('locality')) \
-            .order_by(DiveShop.distance(startlat, startlng)).limit(limit)
+            .order_by(DiveShop.distance(startlat, startlng)).nullslast().limit(limit)
         results = query.all()
     except Exception as e:
         newrelic.agent.record_exception(e)
