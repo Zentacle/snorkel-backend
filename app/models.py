@@ -662,8 +662,8 @@ class DiveShop(db.Model):
             'address2': self.address2,
             'zip': self.zip,
             'hero_img': self.hero_img if self.hero_img else self.logo_img,
-            'rating': self.rating,
-            'num_reviews': self.num_reviews,
+            'rating': self.rating if self.rating else 0,
+            'num_reviews': self.num_reviews if self.num_reviews else 0,
         }
         simpleDict["url"] = DiveShop.get_url(self)
         return simpleDict
@@ -690,8 +690,8 @@ class DiveShop(db.Model):
             "country_name": self.country_name,
             'zip': self.zip,
             'hero_img': self.hero_img if self.hero_img else self.logo_img,
-            'rating': self.rating,
-            'num_reviews': self.num_reviews,
+            'rating': self.rating if self.rating else 0,
+            'num_reviews': self.num_reviews if self.num_reviews else 0,
         }
 
         dict["full_address"] = DiveShop.get_full_address(
