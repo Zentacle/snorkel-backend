@@ -166,7 +166,7 @@ def get_spots():
         area = Country.query \
             .filter_by(short_name=country_name) \
             .first_or_404()
-    query = query.order_by(DiveShop.name.desc())
+    query = query.order_by(DiveShop.rating.desc())
     if request.args.get('limit') != 'none':
         limit = request.args.get('limit') if request.args.get('limit') else 15
         query = query.limit(limit)
