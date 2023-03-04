@@ -224,7 +224,7 @@ def add_review():
   event = BaseEvent(event_type="review__submitted", user_id=f'{user_id}')
   client.track(event)
   if spot.latitude and text.strip():
-    send_notification(
+    notif_receivers = send_notification(
       spot.latitude,
       spot.longitude,
       f'New activity at {spot.name}!',

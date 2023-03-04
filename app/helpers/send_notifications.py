@@ -3,13 +3,13 @@ from app.models import User
 
 def send_notification(latitude, longitude, title, message):
     nearby_users = User.query \
-        .filter(User.distance(latitude, longitude) < 1) \
+        .filter(User.distance(latitude, longitude) < 50) \
         .all()
     for user in nearby_users:
         if user.push_token:
             send_push_notification(user.push_token, title, message)
         send_email(user.email, message)
-    return 'ok'
+    return nearby_users
 
 def send_email(email, message):
     return email, message
