@@ -32,6 +32,7 @@ from sqlalchemy.orm import joinedload
 from sqlalchemy import and_
 from app.helpers.demicrosoft import demicrosoft
 from app.helpers.parse_uddf import parse_uddf
+from app.helpers.send_notifications import send_notification
 
 bp = Blueprint('review', __name__, url_prefix="/review")
 wally_api_base = os.environ.get('WALLY_API')
@@ -222,6 +223,13 @@ def add_review():
   client.configuration.min_id_length = 1
   event = BaseEvent(event_type="review__submitted", user_id=f'{user_id}')
   client.track(event)
+  if spot.latitude and text.strip():
+    send_notification(
+      spot.latitude,
+      spot.longitude,
+      f'New activity at {spot.name}!',
+      f'{user.display_name} said \'{text}\''
+    )
 
   return { 'review': review.get_dict(), 'spot': spot.get_dict() }, 200
 
