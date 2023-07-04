@@ -181,6 +181,8 @@ def add_review():
   spot.num_reviews = num_reviews
   spot.rating = total/num_reviews
   spot.last_review_date = datetime.utcnow()
+  if images and len(images) and not spot.hero_img:
+    spot.hero_img = images[0]
   if visibility and (not spot.last_review_date or date_dived > spot.last_review_date):
     spot.last_review_viz = visibility
   db.session.commit()
