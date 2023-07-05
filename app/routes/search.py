@@ -2,7 +2,7 @@ import requests
 import os
 from flask import Blueprint, request
 import newrelic.agent
-from sqlalchemy import or_
+from sqlalchemy import or_, func
 
 from app import cache
 from app.models import (
@@ -15,6 +15,11 @@ from app.models import (
 )
 from app.helpers.get_nearby_spots import get_nearby_spots
 from app.helpers.typeahead_from_spot import typeahead_from_spot, typeahead_from_shop
+from sqlalchemy.sql.functions import ReturnTypeFromArgs
+
+class unaccent(ReturnTypeFromArgs):
+    pass
+
 
 bp = Blueprint('search', __name__, url_prefix="/search")
 
@@ -32,9 +37,9 @@ def search_location():
 
 @bp.route("/autocomplete")
 def search_autocomplete():
-  search_term = request.args.get('q')
+  search_term = request.args.get('q').lower()
   spots = Spot.query.filter(
-    Spot.name.ilike('%' + search_term + '%')
+    func.lower(Spot.name).like('%' + search_term + '%')
   ).limit(5).all()
   output = []
   for spot in spots:
@@ -73,7 +78,7 @@ def get_typeahead():
                   schema: TypeAheadSchema
   """
   newrelic.agent.capture_request_params()
-  query = request.args.get('query')
+  query = request.args.get('query').lower()
   beach_only = request.args.get('beach_only')
   results = []
   spots = Spot.query \
@@ -97,10 +102,10 @@ def get_typeahead():
     result = typeahead_from_shop(shop)
     results.append(result)
 
-  countries = Country.query.filter(Country.name.ilike('%'+query+'%')).limit(10).all()
-  area_ones = AreaOne.query.filter(AreaOne.name.ilike('%'+query+'%')).limit(10).all()
-  area_twos = AreaTwo.query.filter(AreaTwo.name.ilike('%'+query+'%')).limit(10).all()
-  localities = Locality.query.filter(Locality.name.ilike('%'+query+'%')).limit(10).all()
+  countries = Country.query.filter(unaccent(Country.name).ilike('%'+query+'%')).limit(10).all()
+  area_ones = AreaOne.query.filter(unaccent(AreaOne.name).ilike('%'+query+'%')).limit(10).all()
+  area_twos = AreaTwo.query.filter(unaccent(AreaTwo.name).ilike('%'+query+'%')).limit(10).all()
+  localities = Locality.query.filter(unaccent(Locality.name).ilike('%'+query+'%')).limit(10).all()
   for loc in countries:
     url = loc.get_url()
     segments = url.split("/")
