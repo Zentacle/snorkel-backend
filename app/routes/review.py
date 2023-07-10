@@ -264,10 +264,8 @@ def get_review():
     if review.dive_shop:
       dive_shop = review.dive_shop.get_dict()
     image_data = []
-    signedUrls = []
     for image in review.images:
       image_data.append(image.get_dict())
-      signedUrls.append(image.url)
     data['images'] = image_data
     data['user'] = review.user.get_dict()
     return { 'review': data, 'spot': spot.get_dict(), 'dive_shop': dive_shop }
