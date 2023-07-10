@@ -39,10 +39,11 @@ def get_recent_reviews():
       .subquery()
     reviews = reviews.filter(and_(
       Review.beach_id.in_(nearby_spots),
-      Review.is_private.is_not(True)
+      Review.is_private.is_not(True),
+      Review.spot_id.is_not(19)
     ))
 
-  reviews = reviews.order_by(Review.date_posted.desc()) \
+  reviews = reviews.filter(Review.spot_id.is_not(19)).order_by(Review.date_posted.desc()) \
     .limit(limit) \
     .offset(offset) \
     .all()
