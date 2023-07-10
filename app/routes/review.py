@@ -263,10 +263,11 @@ def get_review():
     dive_shop = {}
     if review.dive_shop:
       dive_shop = review.dive_shop.get_dict()
-    image_data = []
-    for image in review.images:
-      image_data.append(image.get_dict())
-    data['images'] = image_data
+    if len(review.images):
+      image_data = []
+      for image in review.images:
+        image_data.append(image.get_dict())
+      data['images'] = image_data
     data['user'] = review.user.get_dict()
     return { 'review': data, 'spot': spot.get_dict(), 'dive_shop': dive_shop }
   else:
