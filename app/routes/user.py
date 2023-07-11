@@ -572,7 +572,7 @@ def upload():
   setattr(user, 'profile_pic', s3_url)
   db.session.commit()
 
-  return { 'msg': 'user successfully updated' }
+  return { 'data': s3_url }
 
 @bp.route('/wallet', methods=['GET'])
 @jwt_required()
