@@ -406,7 +406,6 @@ def patch_review():
                 description: Not logged in.
   """
   id = request.json.get('id')
-  beach_id = request.json.get('beach_id')
   review = Review.query.filter_by(id=id).first_or_404()
   user = get_current_user()
 
@@ -414,11 +413,8 @@ def patch_review():
     abort(403, 'You are not allowed to do that')
 
   updates = request.json
-  did_add_dive_shop = False
   if "date_dived" in updates:
     updates['date_dived'] = dateutil.parser.isoparse(request.json.get('date_dived'))
-  if 'dive_shop_id' in updates and not review.dive_shop_id:
-    did_add_dive_shop = True
 
   updates.pop('id', None)
   updates.pop('date_posted', None)
@@ -426,22 +422,6 @@ def patch_review():
     setattr(review, key, updates.get(key))
   db.session.commit()
   review.id
-
-  dive_shop_id = request.json.get('dive_shop_id')
-
-  if did_add_dive_shop:
-    if request.json.get('include_wallet'):
-      create_wallet(user=user)
-      dive_shop = DiveShop.query.get_or_404(dive_shop_id)
-      spot = Spot.query.filter_by(id=beach_id).first()
-
-      if dive_shop.stamp_uri:
-        mint_nft(
-          current_review=review,
-          dive_shop=dive_shop,
-          beach=spot,
-          user=user,
-        )
 
   review_data = review.get_dict()
   return review_data, 200
