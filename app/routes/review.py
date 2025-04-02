@@ -4,6 +4,7 @@ from amplitude import Amplitude, BaseEvent
 from app.helpers.wally_integration import create_wallet, mint_nft
 import boto3
 import io
+import requests
 from flask import Blueprint, request, abort
 from app.models import (
   Review,
@@ -187,39 +188,31 @@ def add_review():
     spot.last_review_viz = visibility
   db.session.commit()
 
-  message = Mail(
-      from_email=('hello@zentacle.com', 'Zentacle'),
-      to_emails='mayank@zentacle.com')
-
-  message.template_id = 'd-3188c5ee843443bf91c5eecf3b66f26d'
-  message.reply_to = user.email
-  message.dynamic_template_data = {
-      'beach_name': spot.name,
-      'first_name': user.first_name,
-      'text': text,
-      'url': 'https://www.zentacle.com'+spot.get_url(),
-  }
   if not os.environ.get('FLASK_DEBUG'):
     try:
-        sg = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
-        sg.send(message)
+        requests.post(os.environ.get('SLACK_REVIEW_WEBHOOK'), json={
+          'text': f'New review on {spot.name} by {user.first_name}',
+          "blocks": [
+            {
+              "type": "section",
+              "text": {
+                "type": "mrkdwn",
+                "text": f'New review on [{spot.name}](https://www.zentacle.com/{spot.get_url()}) by {user.first_name}'
+              }
+            },
+            {
+              "type": "section",
+              "text": {
+                "type": "mrkdwn",
+                "text": f'>{text}'
+              }
+            }
+          ]
+        })
     except Exception as e:
         print(e.body)
   review.id
 
-  if request.json.get('include_wallet'):
-    try:
-      create_wallet(user=user)
-      if dive_shop_id:
-        dive_shop = DiveShop.query.get_or_404(dive_shop_id)
-        if dive_shop.stamp_uri:
-          mint_nft(
-            current_review=review,
-            dive_shop=dive_shop,
-            beach=spot, user=user
-          )
-    except e:
-      logging.error(e)
   client = Amplitude(os.environ.get('AMPLITUDE_API_KEY'))
   user_id=user.id
   client.configuration.min_id_length = 1
