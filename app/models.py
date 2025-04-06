@@ -622,6 +622,7 @@ class DiveShop(db.Model):
     rating = db.Column(db.Float)
     num_reviews = db.Column(db.Integer)
     google_place_id = db.Column(db.String)
+    padi_data = db.Column(db.JSON(none_as_null=True))
 
     username = db.Column(db.String)
     locality_id = db.Column(

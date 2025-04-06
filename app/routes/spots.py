@@ -642,7 +642,7 @@ def add_spot():
   if not user or not user.admin:
     message = Mail(
         from_email=('hello@zentacle.com', 'Zentacle'),
-        to_emails='mayank@zentacle.com')
+        to_emails=['mayank@zentacle.com', 'cayley@zentacle.com'])
 
     message.template_id = 'd-df22c68e00c345108a3ac18ebf65bdaf'
     message.dynamic_template_data = {
