@@ -197,7 +197,7 @@ def add_review():
               "type": "section",
               "text": {
                 "type": "mrkdwn",
-                "text": f'New review on [{spot.name}](https://www.zentacle.com/{spot.get_url()}) by {user.first_name}'
+                "text": f'New review on <https://www.zentacle.com/{spot.get_url()}|{spot.name}> by {user.first_name}'
               }
             },
             {
