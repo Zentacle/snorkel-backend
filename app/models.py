@@ -693,6 +693,7 @@ class DiveShop(db.Model):
             'hero_img': self.hero_img if self.hero_img else self.logo_img,
             'rating': self.rating if self.rating else 0,
             'num_reviews': self.num_reviews if self.num_reviews else 0,
+            'padi_data': self.padi_data
         }
 
         dict["full_address"] = DiveShop.get_full_address(
