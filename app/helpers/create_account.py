@@ -7,6 +7,7 @@ from sendgrid.helpers.mail import Mail
 from flask.helpers import make_response
 from sqlalchemy import func
 from app.helpers.validate_email_format import validate_email_format
+from app.helpers.phone_validation import format_phone_to_e164, validate_phone_format
 import os
 import bcrypt
 import newrelic.agent
@@ -22,6 +23,7 @@ def create_account(
   username=None,
   unencrypted_password=None,
   app_name=None,
+  phone=None,
 ):
   newrelic.agent.capture_request_params()
   password = bcrypt.hashpw(unencrypted_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8') \
@@ -34,6 +36,13 @@ def create_account(
     abort(422, 'Please enter an email')
   if not first_name:
     abort(422, 'Please enter a name')
+
+  # Validate and format phone number if provided
+  formatted_phone = None
+  if phone:
+    if not validate_phone_format(phone):
+      abort(422, 'Please enter a valid phone number')
+    formatted_phone = format_phone_to_e164(phone)
 
   email = email.lower()
   user = User.query.filter(func.lower(User.email)==email).first()
@@ -53,7 +62,8 @@ def create_account(
     email=email,
     password=password,
     username=username,
-    profile_pic=profile_pic
+    profile_pic=profile_pic,
+    phone=formatted_phone
   )
   db.session.add(user)
   db.session.commit()

@@ -19,31 +19,27 @@ from amplitude import Amplitude, BaseEvent
 from sendgrid import SendGridAPIClient
 from werkzeug.exceptions import HTTPException
 import json
+from app.config import config
+
+# Load environment variables from .env file
+from dotenv import load_dotenv
+load_dotenv()
+
+# Get configuration based on environment
+config_name = os.environ.get('FLASK_ENV', 'development')
+app_config_class = config.get(config_name, config['default'])
+app_config = app_config_class()
 
 app = Flask(__name__)
-app.secret_key = os.environ.get('FLASK_SECRET_KEY')
-SQLALCHEMY_DATABASE_URI = (os.environ.get('DATABASE_URL').replace("://", "ql://", 1)
-  if not os.environ.get('FLASK_DEBUG')
-  else os.environ.get('DATABASE_URL'))
-app.config["SQLALCHEMY_DATABASE_URI"] = SQLALCHEMY_DATABASE_URI
-app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-app.config["JWT_SECRET_KEY"] = os.environ.get('JWT_SECRET')
-app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(hours=1)
-app.config["JWT_REFRESH_TOKEN_EXPIRES"] = timedelta(days=30)
-app.config["JWT_TOKEN_LOCATION"] = ["headers", "cookies"]
-app.config["JWT_SESSION_COOKIE"] = False
-app.config["CACHE_TYPE"] = "SimpleCache"
-app.config["CACHE_DEFAULT_TIMEOUT"] = 300
+
+# Apply configuration
+app.config.from_object(app_config)
+
+# Set up logging
 if __name__ != '__main__':
   gunicorn_logger = logging.getLogger('gunicorn.error')
   app.logger.handlers = gunicorn_logger.handlers
   app.logger.setLevel(gunicorn_logger.level)
-  # logging.basicConfig()
-  # logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
-app.config["JWT_COOKIE_SECURE"] = (True
-  if not os.environ.get('FLASK_DEBUG')
-  else False
-)
 
 cors = CORS(app)
 cache = Cache(app)

@@ -53,6 +53,7 @@ class UserSchema(Schema):
     first_name = fields.Str()
     last_name = fields.Str()
     profile_pic = fields.Str()
+    phone = fields.Str()
     reviews = fields.List(fields.Nested(ReviewSchema()))
 
 class TypeAheadSchema(Schema):

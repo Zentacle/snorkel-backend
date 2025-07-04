@@ -117,6 +117,7 @@ class User(db.Model):
     longitude = db.Column(db.Float)
     has_pro = db.Column(db.Boolean, default=False)
     push_token = db.Column(db.String)
+    phone = db.Column(db.String)
     certification = db.Column(db.String)
     updated = db.Column(db.DateTime, nullable=False, server_default=func.now(
     ), onupdate=func.current_timestamp())
@@ -129,46 +130,26 @@ class User(db.Model):
     images = db.relationship("Image")
 
     def get_dict(self):
-        data = self.__dict__.copy()
-        if data.get('_sa_instance_state'):
-            data.pop('_sa_instance_state', None)
+        data = {}
+        # Get all column names from the model
+        for column in self.__table__.columns:
+            column_name = column.name
+            # Skip sensitive fields
+            if column_name in ['password', 'email', 'admin', 'is_fake', 'latitude', 'longitude', 'push_token']:
+                continue
+            # Get the value for this column
+            value = getattr(self, column_name)
+            data[column_name] = value
+
+        # Apply any transformations
+        if data.get('username'):
+            data['username'] = data['username'].lower()
+
+        # Set defaults for missing fields
         if not data.get('bio'):
             data['bio'] = 'Looking for a dive buddy!'
         if not data.get('profile_pic'):
             data['profile_pic'] = 'https://www.zentacle.com/image/profile_pic/placeholder'
-        data.pop('password', None)
-        if self.username:
-            data['username'] = self.username.lower()
-
-        try:
-            data.pop('email', None)
-        except KeyError:
-            pass
-
-        try:
-            data.pop('is_fake')
-        except KeyError:
-            pass
-
-        try:
-            data.pop('admin')
-        except KeyError:
-            pass
-
-        try:
-            data.pop('latitude')
-        except KeyError:
-            pass
-
-        try:
-            data.pop('longitude')
-        except KeyError:
-            pass
-
-        try:
-            data.pop('push_token')
-        except KeyError:
-            pass
 
         return data
 
@@ -239,9 +220,9 @@ class Spot(db.Model):
                            backref=db.backref('spot', lazy=True))
 
     def get_simple_dict(self):
-        self_data = self.__dict__.copy()
         data = {}
         keys = [
+            'id',
             'name',
             'hero_img',
             'rating',
@@ -249,31 +230,38 @@ class Spot(db.Model):
             'location_city',
         ]
         for key in keys:
-            data[key] = self_data.get(key)
+            data[key] = getattr(self, key)
         data['url'] = self.get_url()
         return data
 
     def get_dict(self):
-        data = self.__dict__.copy()
-        if data.get('_sa_instance_state'):
-            data.pop('_sa_instance_state', None)
+        data = {}
+        # Get all column names from the model
+        for column in self.__table__.columns:
+            column_name = column.name
+            # Get the value for this column
+            value = getattr(self, column_name)
+            data[column_name] = value
+
+        # Handle special cases
         if data.get('shorediving_data'):
             data.pop('shorediving_data', None)
-        if data.get('is_verified'):
-            data.pop('is_verified', None)
-        if data.get('is_deleted'):
-            data.pop('is_deleted', None)
-        if not data.get('description').strip():
+
+        # Set default description if missing or empty
+        if not data.get('description') or not data.get('description').strip():
             data['description'] = f"{data.get('name')} is a {data.get('rating') if data.get('rating') else 0}-star" \
                 f" rated scuba dive and snorkel destination in {data.get('location_city')} which is accessible from" \
                 f" shore based on {data.get('num_reviews')} ratings."
+
         if not data.get('difficulty'):
             data['difficulty'] = 'Unrated'
-        if data.get('tags'):
+
+        # Handle tags
+        if hasattr(self, 'tags') and self.tags:
             data['access'] = []
-            for tag in data.get('tags'):
+            for tag in self.tags:
                 data['access'].append(tag.get_dict())
-            data.pop('tags', None)
+
         data['url'] = '/Beach/'+str(self.id)+'/'+demicrosoft(self.name).lower()
         return data
 
@@ -373,7 +361,6 @@ class Review(db.Model):
         "ShoreDivingReview", back_populates="review", uselist=False)
 
     def get_simple_dict(self):
-        self_data = self.__dict__.copy()
         keys = [
             'id',
             'rating',
@@ -386,17 +373,26 @@ class Review(db.Model):
         ]
         data = {}
         for key in keys:
-            data[key] = self_data.get(key)
+            data[key] = getattr(self, key)
         return data
 
     def get_dict(self):
-        data = self.__dict__.copy()
-        if data.get('_sa_instance_state'):
-            data.pop('_sa_instance_state', None)
-        if not data.get('title') and self.spot.name:
+        data = {}
+        # Get all column names from the model
+        for column in self.__table__.columns:
+            column_name = column.name
+            # Get the value for this column
+            value = getattr(self, column_name)
+            data[column_name] = value
+
+        # Handle special cases
+        if not data.get('title') and hasattr(self, 'spot') and self.spot and self.spot.name:
             data['title'] = self.spot.name
+
+        # Remove relationship objects that shouldn't be serialized
         if data.get('spot'):
             data.pop('spot', None)
+
         return data
 
 
@@ -414,6 +410,8 @@ class Image(db.Model):
         return {
             'url': self.url,
             'id': self.id,
+            'beach_id': self.beach_id,
+            'user_id': self.user_id,
             'review_id': self.review_id,
             'caption': self.caption,
         }
@@ -437,16 +435,23 @@ class Locality(db.Model):
     shops = db.relationship('DiveShop', backref='locality', lazy=True)
 
     def get_dict(self, country=None, area_one=None, area_two=None):
-        data = self.__dict__.copy()
-        if data.get('_sa_instance_state'):
-            data.pop('_sa_instance_state', None)
-        if not self.short_name:
+        data = {}
+        # Get all column names from the model
+        for column in self.__table__.columns:
+            column_name = column.name
+            # Get the value for this column
+            value = getattr(self, column_name)
+            data[column_name] = value
+
+        # Handle special cases
+        if not data.get('short_name'):
             data['short_name'] = self.get_short_name()
+
         if country and area_one:
             data['url'] = self.get_url(country, area_one, area_two)
-        elif self.country and self.area_one:
-            data['url'] = self.get_url(
-                self.country, self.area_one, self.area_two)
+        elif hasattr(self, 'country') and hasattr(self, 'area_one') and self.country and self.area_one:
+            data['url'] = self.get_url(self.country, self.area_one, self.area_two)
+
         return data
 
     def get_short_name(self):
@@ -482,17 +487,19 @@ class AreaTwo(db.Model):
         }
 
     def get_dict(self, country=None, area_one=None):
-        data = self.__dict__.copy()
-        if data.get('_sa_instance_state'):
-            data.pop('_sa_instance_state', None)
-        if data.get('area_one_id'):
-            data.pop('area_one_id', None)
-        if data.get('country_id'):
-            data.pop('country_id', None)
+        data = {}
+        # Get all column names from the model
+        for column in self.__table__.columns:
+            column_name = column.name
+            # Get the value for this column
+            value = getattr(self, column_name)
+            data[column_name] = value
+
         if country and area_one:
             data['url'] = self.get_url(country, area_one)
-        elif self.country and self.area_one:
+        elif hasattr(self, 'country') and hasattr(self, 'area_one') and self.country and self.area_one:
             data['url'] = self.get_url(self.country, self.area_one)
+
         return data
 
     def get_url(self, country, area_one):
@@ -525,15 +532,19 @@ class AreaOne(db.Model):
         }
 
     def get_dict(self, country=None):
-        data = self.__dict__.copy()
-        if data.get('_sa_instance_state'):
-            data.pop('_sa_instance_state', None)
-        if data.get('country_id'):
-            data.pop('country_id', None)
+        data = {}
+        # Get all column names from the model
+        for column in self.__table__.columns:
+            column_name = column.name
+            # Get the value for this column
+            value = getattr(self, column_name)
+            data[column_name] = value
+
         if country:
             data['url'] = self.get_url(country)
-        elif self.country:
+        elif hasattr(self, 'country') and self.country:
             data['url'] = self.get_url(self.country)
+
         return data
 
     def get_url(self, country):
@@ -564,9 +575,14 @@ class Country(db.Model):
         }
 
     def get_dict(self):
-        data = self.__dict__.copy()
-        if data.get('_sa_instance_state'):
-            data.pop('_sa_instance_state', None)
+        data = {}
+        # Get all column names from the model
+        for column in self.__table__.columns:
+            column_name = column.name
+            # Get the value for this column
+            value = getattr(self, column_name)
+            data[column_name] = value
+
         data['url'] = self.get_url()
         return data
 
@@ -581,9 +597,14 @@ class Tag(db.Model):
     short_name = db.Column(db.String, unique=True, nullable=False)
 
     def get_dict(self):
-        data = self.__dict__.copy()
-        if data.get('_sa_instance_state'):
-            data.pop('_sa_instance_state', None)
+        data = {}
+        # Get all column names from the model
+        for column in self.__table__.columns:
+            column_name = column.name
+            # Get the value for this column
+            value = getattr(self, column_name)
+            data[column_name] = value
+
         return data
 
 

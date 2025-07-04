@@ -1,0 +1,92 @@
+name: Test Suite
+
+on:
+  pull_request:
+    branches:
+      - "*"
+  push:
+    branches:
+      - main
+      - master
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:14
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: snorkel_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres" --health-interval 10s --health-timeout 5s --health-retries 5
+    env:
+      CI: true
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/snorkel_test
+      TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/snorkel_test
+      PGPASSWORD: postgres
+      FLASK_ENV: testing
+      PYTHONUNBUFFERED: 1
+      FLASK_SECRET_KEY: test-secret-key
+      JWT_SECRET: test-jwt-secret
+      AMPLITUDE_API_KEY: dummy
+      SENDGRID_API_KEY: dummy
+      AWS_ACCESS_KEY_ID: dummy
+      AWS_SECRET_ACCESS_KEY: dummy
+      AWS_DEFAULT_REGION: us-east-1
+      S3_BUCKET_NAME: test-bucket
+      GOOGLE_CLIENT_ID: dummy
+      GOOGLE_API_KEY: dummy
+      STRIPE_PAYMENT_LINK: dummy
+      STRIPE_ENDPOINT_SECRET: dummy
+      REVENUECAT_API_KEY: dummy
+      APPLE_APP_ID: dummy
+      SLACK_WEBHOOK: dummy
+      SLACK_REVIEW_WEBHOOK: dummy
+      WALLY_API: dummy
+      WALLY_AUTH_TOKEN: dummy
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
+      - name: Wait for PostgreSQL
+        run: |
+          until pg_isready -h localhost -p 5432 -U postgres; do
+            echo "Waiting for PostgreSQL..."
+            sleep 2
+          done
+          echo "PostgreSQL is ready"
+          PGPASSWORD=postgres psql -h localhost -U postgres -d snorkel_test -c "SELECT 1;" || echo "Database connection test failed"
+      - name: Create database tables
+        run: |
+          echo "Database URL: $DATABASE_URL"
+          echo "Testing database connection..."
+          python -c "
+          from app import app, db
+          print('App config DATABASE_URI:', app.config.get('SQLALCHEMY_DATABASE_URI'))
+          with app.app_context():
+              try:
+                  db.create_all()
+                  print('Database tables created successfully')
+              except Exception as e:
+                  print(f'Error creating database tables: {e}')
+                  raise
+          "
+      - name: Run tests
+        run: pytest --cov=app --cov-report=xml
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./coverage.xml
+          fail_ci_if_error: false
+          verbose: true
