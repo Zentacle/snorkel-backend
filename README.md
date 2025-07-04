@@ -1,47 +1,253 @@
-Not included in the github is the environment variables file. You will need to get a copy of the environment variable file and store it at environment.env
+# Snorkel Backend
 
+A Flask-based REST API for the Snorkel application, providing dive spot information, user management, and review functionality.
+
+## Quick Start
+
+### Prerequisites
+
+- Python 3.8 or higher
+- PostgreSQL
+- Git
+
+### Automated Setup (Recommended)
+
+The easiest way to get started is using our automated setup script:
+
+```bash
+# Run the automated setup
+make setup
 ```
-export FLASK_APP='app'
-export FLASK_DEBUG='True'
-export FLASK_RUN_PORT=8000
-export DATABASE_URL='postgresql://localhost:5432/snorkel'
-export SENDGRID_API_KEY=''
-export AWS_ACCESS_KEY_ID='
-export AWS_SECRET_ACCESS_KEY=''
-export GOOGLE_CLIENT_ID=''
-export GOOGLE_API_KEY=''
-export FLASK_SECRET_KEY=''
-export S3_BUCKET_NAME='snorkel-dev'
-```
 
-#Running the code
-```
-#make sure to create a virtual environment
+This will automatically:
+- ✅ Check Python version compatibility
+- ✅ Create a virtual environment
+- ✅ Install all dependencies
+- ✅ Create `.env` file from template
+- ✅ Set up database (if PostgreSQL is available)
+- ✅ Run database migrations
+- ✅ Create git hooks for code quality
 
-#Mac/Linux
-virtualenv env
-source env/bin/activate
-source environment.env
+### Manual Setup
 
-#Windows
-#assign environment variable to windows' system properties environment variables
-#don't need environment.env file
-#Install WSL to simulate linux shell on windows: https://learn.microsoft.com/en-us/windows/wsl/install
-venv\Scripts\activate
+If you prefer manual setup or the automated script doesn't work:
 
-#run
-pip install -r requirements.txt
+1. **Create virtual environment**:
+   ```bash
+   # Modern approach (recommended)
+   python3 -m venv venv
+
+   # Activate virtual environment
+   source venv/bin/activate  # On macOS/Linux
+   # or
+   venv\Scripts\activate     # On Windows
+   ```
+
+2. **Install dependencies**:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+3. **Set up environment variables**:
+   ```bash
+   # Copy the example environment file
+   cp .env.example .env
+
+   # Edit with your actual values
+   vim .env
+   ```
+
+4. **Set up database**:
+   ```bash
+   # Create database
+   createdb snorkel
+
+   # Run migrations
+   flask db upgrade
+   ```
+
+5. **Run the application**:
+   ```bash
+   flask run
+   ```
+
+## Environment Variables
+
+Copy `.env.example` to `.env` and configure the following variables:
+
+### Required Variables
+- `FLASK_SECRET_KEY` - Secret key for Flask sessions
+- `DATABASE_URL` - PostgreSQL connection string
+- `JWT_SECRET` - Secret key for JWT tokens
+
+### Optional Variables
+- `FLASK_DEBUG` - Set to `True` for development
+- `FLASK_RUN_PORT` - Port to run the server on (default: 8000)
+- `SENDGRID_API_KEY` - For email functionality
+- `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` - For S3 file uploads
+- `GOOGLE_CLIENT_ID` / `GOOGLE_API_KEY` - For Google services
+- `AMPLITUDE_API_KEY` - For analytics
+- `STRIPE_PAYMENT_LINK` / `STRIPE_ENDPOINT_SECRET` - For payments
+- And more... (see `.env.example` for complete list)
+
+## Development Workflow
+
+### Common Commands
+
+```bash
+# Activate virtual environment (if not already active)
+source venv/bin/activate
+
+# Run the development server
+make run
+# or
 flask run
+
+# Run tests
+make test
+
+# Format code
+make format
+
+# Check code quality
+make lint
+
+# Database operations
+make migrate          # Run migrations
+make migrate-create   # Create new migration (requires message parameter)
+make db-reset         # Reset database (careful!)
+
+# Open Flask shell for debugging
+make shell
+
+# Validate environment variables
+make validate-env
 ```
 
-You should be able to check if the db works by typing in `psql snorkel` and then typing `\dt` which prints out a list of the tables that were created.
+### Database Management
 
-If you have a database backup, you can set up with the following command:
+```bash
+# Create database
+make db-create
+
+# Drop database
+make db-drop
+
+# Reset database (drop, create, migrate)
+make db-reset
+
+# Run migrations
+make migrate
+
+# Create new migration
+make migrate-create message="Description of changes"
+```
+
+### Code Quality
+
+The project includes several tools for maintaining code quality:
+
+- **Black**: Code formatting
+- **Flake8**: Linting
+- **Pytest**: Testing (when implemented)
+
+```bash
+# Format code with Black
+make format
+
+# Check code quality
+make lint
+
+# Run tests (when implemented)
+make test
+```
+
+## Project Structure
 
 ```
-$ psql
-`CREATE DATABASE snorkel;`
-# exit out of postgres eg control+D
-$ pg_restore --no-owner -d snorkel <dump filnamename>
-# eg `$ pg_restore --no-owner -d snorkel cef2f6d5-89fc-468a-97fc-f1064fd85140`
+snorkel-backend/
+├── app/                    # Main application package
+│   ├── __init__.py        # Flask app initialization
+│   ├── config.py          # Configuration management
+│   ├── models.py          # Database models
+│   ├── helpers/           # Helper functions
+│   └── routes/            # API routes
+├── migrations/            # Database migrations
+├── scripts/               # Utility scripts
+│   └── setup.py          # Automated setup script
+├── tests/                 # Test files (when implemented)
+├── .env.example          # Environment variables template
+├── requirements.txt      # Production dependencies
+├── requirements-dev.txt  # Development dependencies
+├── Makefile             # Development commands
+├── pyproject.toml       # Project configuration
+└── README.md           # This file
 ```
+
+## API Documentation
+
+Once the server is running, you can access:
+
+- **API Documentation**: `http://localhost:8000/spec`
+- **Health Check**: `http://localhost:8000/`
+- **Database Status**: `http://localhost:8000/db`
+
+## Deployment
+
+### Production Setup
+
+```bash
+# Install production dependencies
+make production-install
+
+# Run production server
+make production-run
+```
+
+### Heroku Deployment
+
+The project includes a `Procfile` for Heroku deployment:
+
+```bash
+# Deploy to Heroku
+git push heroku main
+
+# Run migrations on Heroku
+heroku run flask db upgrade
+```
+
+## Troubleshooting
+
+### Common Issues
+
+1. **Database connection errors**:
+   - Ensure PostgreSQL is running
+   - Check `DATABASE_URL` in `.env`
+   - Verify database exists: `psql -l | grep snorkel`
+
+2. **Environment variable errors**:
+   - Run `make validate-env` to check required variables
+   - Ensure `.env` file exists and is properly formatted
+
+3. **Import errors**:
+   - Ensure virtual environment is activated
+   - Reinstall dependencies: `pip install -r requirements.txt`
+
+4. **Migration errors**:
+   - Check database connection
+   - Try resetting database: `make db-reset`
+
+### Getting Help
+
+- Check the logs for error messages
+- Validate your environment: `make validate-env`
+- Ensure all prerequisites are installed
+- Try the automated setup: `make setup`
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Run tests and linting: `make test && make lint`
+5. Submit a pull request

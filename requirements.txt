@@ -19,13 +19,12 @@ Flask-JWT-Extended==4.4.4
 Flask-Migrate==4.0.1
 Flask-SQLAlchemy==3.0.2
 google-auth==2.15.0
-greenlet==2.0.1
 gunicorn==20.1.0
 idna==3.4
 itsdangerous==2.1.2
 Jinja2==3.1.2
 jmespath==1.0.1
-lxml==4.9.2
+lxml==6.0.0
 Mako==1.2.4
 MarkupSafe==2.1.1
 marshmallow==3.19.0
@@ -51,3 +50,6 @@ stripe==5.0.0
 toml==0.10.2
 urllib3==1.26.13
 Werkzeug==2.2.2
+
+# New additions for improved development setup
+python-dotenv==1.0.0

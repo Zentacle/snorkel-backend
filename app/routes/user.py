@@ -23,6 +23,7 @@ from app.helpers.create_account import create_account
 from app.helpers.login import login
 from app.helpers.get_localities import format_localities
 from app.helpers.send_notifications import send_notification
+from app.helpers.phone_validation import format_phone_to_e164, validate_phone_format
 from sqlalchemy import or_, func
 from sqlalchemy.orm import joinedload
 from google.oauth2 import id_token
@@ -73,6 +74,11 @@ def user_signup():
             description: Password
             type: string
             required: false
+          - name: phone
+            in: body
+            description: Phone number (will be stored in E.164 format)
+            type: string
+            required: false
       responses:
           200:
               description: Returns User object
@@ -92,6 +98,7 @@ def user_signup():
   username = request.json.get('username')
   profile_pic = request.json.get('profile_pic')
   unencrypted_password = request.json.get('password')
+  phone = request.json.get('phone')
   app_name = request.json.get('app')
   display_name = first_name + ' ' + last_name
 
@@ -105,6 +112,7 @@ def user_signup():
     username=username,
     unencrypted_password=unencrypted_password,
     app_name=app_name,
+    phone=phone,
   )
   return resp
 
@@ -373,14 +381,64 @@ def patch_user():
   """ Patch User
     ---
     patch:
-        summary: patch user (admin only)
-        description: patch user (admin only). also include the params of the user that you want to change in the body
+        summary: Update user profile
+        description: Update user profile fields. Include the fields you want to change in the request body. Phone numbers will be automatically formatted to E.164 format.
         parameters:
           - name: id
             in: body
-            description: user id
+            description: user id (admin only)
             type: int
-            required: true
+            required: false
+          - name: email
+            in: body
+            description: user email (admin only)
+            type: string
+            required: false
+          - name: username
+            in: body
+            description: username (must be alphanumeric)
+            type: string
+            required: false
+          - name: phone
+            in: body
+            description: phone number (will be stored in E.164 format)
+            type: string
+            required: false
+          - name: first_name
+            in: body
+            description: first name
+            type: string
+            required: false
+          - name: last_name
+            in: body
+            description: last name
+            type: string
+            required: false
+          - name: bio
+            in: body
+            description: user bio
+            type: string
+            required: false
+          - name: hometown
+            in: body
+            description: hometown
+            type: string
+            required: false
+          - name: unit
+            in: body
+            description: preferred unit system (imperial/metric)
+            type: string
+            required: false
+          - name: latitude
+            in: body
+            description: latitude (will also update hometown)
+            type: float
+            required: false
+          - name: longitude
+            in: body
+            description: longitude (will also update hometown)
+            type: float
+            required: false
         responses:
             200:
                 description: Returns User object
@@ -417,7 +475,16 @@ def patch_user():
       if same_username_user and user.id != same_username_user.id:
         abort(401, 'Someone already has that username')
       setattr(user, key, username.lower())
-    if key == 'latitude':
+    elif key == 'phone':
+      phone = updates.get(key)
+      if phone:
+        if not validate_phone_format(phone):
+          abort(422, 'Please enter a valid phone number')
+        formatted_phone = format_phone_to_e164(phone)
+        setattr(user, key, formatted_phone)
+      else:
+        setattr(user, key, None)
+    elif key == 'latitude':
       setattr(user, key, updates.get(key))
       latitude = updates.get('latitude')
       longitude = updates.get('longitude')
