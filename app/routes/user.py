@@ -1,5 +1,4 @@
 import os
-from app.helpers.wally_integration import fetch_user_wallet
 import boto3
 import io
 from flask import Blueprint, request, abort
@@ -224,7 +223,6 @@ def user_google_signup():
               description: User couldn't be created.
   """
   token = request.json.get('credential')
-  app.logger.error(request.json.get('credential'))
   app_name = request.json.get('app')
   userid = None
   try:

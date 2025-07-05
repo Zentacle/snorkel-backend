@@ -70,10 +70,6 @@ class Config:
     SLACK_WEBHOOK = os.environ.get('SLACK_WEBHOOK')
     SLACK_REVIEW_WEBHOOK = os.environ.get('SLACK_REVIEW_WEBHOOK')
 
-    # Wally Integration
-    WALLY_API = os.environ.get('WALLY_API')
-    WALLY_AUTH_TOKEN = os.environ.get('WALLY_AUTH_TOKEN')
-
     @property
     def JWT_COOKIE_SECURE(self):
         """Set JWT cookie secure based on debug mode."""

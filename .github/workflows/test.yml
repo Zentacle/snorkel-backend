@@ -46,8 +46,6 @@ jobs:
       APPLE_APP_ID: dummy
       SLACK_WEBHOOK: dummy
       SLACK_REVIEW_WEBHOOK: dummy
-      WALLY_API: dummy
-      WALLY_AUTH_TOKEN: dummy
     steps:
       - uses: actions/checkout@v4
       - name: Set up Python

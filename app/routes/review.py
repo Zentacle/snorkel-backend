@@ -1,7 +1,6 @@
 import os
 import logging
 from amplitude import Amplitude, BaseEvent
-from app.helpers.wally_integration import create_wallet, mint_nft
 import boto3
 import io
 import requests
@@ -36,8 +35,6 @@ from app.helpers.parse_uddf import parse_uddf
 from app.helpers.send_notifications import send_notification
 
 bp = Blueprint('review', __name__, url_prefix="/review")
-wally_api_base = os.environ.get('WALLY_API')
-wally_auth_token = os.environ.get('WALLY_AUTH_TOKEN')
 
 @bp.route("/add", methods=["POST"])
 @jwt_required()

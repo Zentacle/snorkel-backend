@@ -1,6 +1,5 @@
 import requests
 import os
-from app.helpers.wally_integration import mint_nft
 import boto3
 import io
 from flask import Blueprint, request, abort
@@ -14,8 +13,6 @@ import logging
 import newrelic.agent
 
 bp = Blueprint('shop', __name__, url_prefix="/shop")
-wally_api_base = os.environ.get('WALLY_API')
-wally_auth_token = os.environ.get('WALLY_AUTH_TOKEN')
 
 
 @bp.route('/get', methods=['GET'])
@@ -310,24 +307,6 @@ def create_dive_shop():
     except exc.IntegrityError as e:
         abort(409, 'Dive shop already exists')
 
-    if not ignore_wallet:
-        request_url = f'{wally_api_base}/wallet'
-        headers = {
-            'Authorization': f'Bearer {wally_auth_token}',
-            'Content-Type': 'application/json',
-        }
-
-        payload = {
-            'id': 'shop_' + str(dive_shop.id),
-            'email': user.email,  # owner is the current user, so owner email is current user email
-            'tags': ['shop']
-        }
-
-        response = requests.post(request_url, headers=headers, json=payload)
-        if response.status_code >= 300:
-            logging.error('Error creating dive shop wallet',
-                          response.status_code, response.text)
-
     return {'data': dive_shop.get_dict()}
 
 
@@ -366,16 +345,8 @@ def update_padi_dive_shop(id):
 def upload_stamp_image(id):
     if 'file' not in request.files:
         abort(422, 'No file included in request')
-    request_url = f'{wally_api_base}/files/upload'
-    headers = {
-        'Authorization': f'Bearer {wally_auth_token}'
-    }
 
-    response = requests.post(request_url, headers=headers,
-                             data={}, files=request.files)
-    response.raise_for_status()
-    data = response.json()
-
+    abort(501, 'Not implemented')
     dive_shop = DiveShop.query.get_or_404(id)
     setattr(dive_shop, 'stamp_uri', data.get('uri'))
     db.session.commit()
