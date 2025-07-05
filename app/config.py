@@ -22,8 +22,20 @@ class Config:
 
     # SQLAlchemy Configuration
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    # Set a default database URI to prevent SQLite fallback
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL')
+
+    def __init__(self):
+        """Initialize configuration with proper database URL conversion."""
+        # Silence SQLAlchemy 2.0 deprecation warnings
+        os.environ.setdefault('SQLALCHEMY_SILENCE_UBER_WARNING', '1')
+
+        db_url = os.environ.get('DATABASE_URL')
+        if not db_url:
+            raise ValueError("DATABASE_URL environment variable is not set")
+
+        if db_url.startswith('postgres://'):
+            db_url = db_url.replace('postgres://', 'postgresql://', 1)
+
+        self.SQLALCHEMY_DATABASE_URI = db_url
 
     # Cache Configuration
     CACHE_TYPE = "SimpleCache"
@@ -89,21 +101,12 @@ class DevelopmentConfig(Config):
     CACHE_TYPE = "SimpleCache"
 
     def __init__(self):
-        db_url = os.environ.get('DATABASE_URL')
-        if db_url:
-            self.SQLALCHEMY_DATABASE_URI = db_url
+        super().__init__()
 
 class ProductionConfig(Config):
     """Production configuration."""
     DEBUG = False
     CACHE_TYPE = "SimpleCache"  # Consider Redis for production
-
-    def __init__(self):
-        db_url = os.environ.get('DATABASE_URL')
-        if db_url:
-            if db_url.startswith('postgres://'):
-                db_url = db_url.replace('postgres://', 'postgresql://', 1)
-            self.SQLALCHEMY_DATABASE_URI = db_url
 
 class TestingConfig(Config):
     """Testing configuration."""
