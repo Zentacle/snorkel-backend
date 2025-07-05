@@ -8,46 +8,27 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
-from app import db
+from app import create_app, db
 from app.models import User, Spot, Review, Country, AreaOne, AreaTwo, Locality
+
+
+class TestConfig:
+    TESTING = True
+    SQLALCHEMY_DATABASE_URI = 'sqlite:///:memory:'
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
+    WTF_CSRF_ENABLED = False
+    JWT_SECRET_KEY = 'test-secret-key'
+    JWT_ACCESS_TOKEN_EXPIRES = False
 
 
 @pytest.fixture(scope='session')
 def app():
     """Create and configure a new app instance for each test session."""
-    from app import app as flask_app
+    app = create_app(config_object=TestConfig)
 
-    # Check if we're in CI environment (PostgreSQL) or local environment (SQLite)
-    if os.environ.get('CI') or os.environ.get('DATABASE_URL'):
-        # Use PostgreSQL in CI environment
-        flask_app.config.update({
-            'TESTING': True,
-            'SQLALCHEMY_TRACK_MODIFICATIONS': False,
-            'WTF_CSRF_ENABLED': False,
-            'JWT_SECRET_KEY': 'test-secret-key',
-            'JWT_ACCESS_TOKEN_EXPIRES': False,  # Disable token expiration for tests
-        })
-    else:
-        # Use SQLite for local testing
-        db_fd, db_path = tempfile.mkstemp()
-        flask_app.config.update({
-            'TESTING': True,
-            'SQLALCHEMY_DATABASE_URI': f'sqlite:///{db_path}',
-            'SQLALCHEMY_TRACK_MODIFICATIONS': False,
-            'WTF_CSRF_ENABLED': False,
-            'JWT_SECRET_KEY': 'test-secret-key',
-            'JWT_ACCESS_TOKEN_EXPIRES': False,  # Disable token expiration for tests
-        })
-
-    # Create the database and load test data
-    with flask_app.app_context():
+    with app.app_context():
         db.create_all()
-        yield flask_app
-
-    # Clean up the temporary database (only for SQLite)
-    if not (os.environ.get('CI') or os.environ.get('DATABASE_URL')):
-        os.close(db_fd)
-        os.unlink(db_path)
+        yield app
 
 
 @pytest.fixture(scope='function')
@@ -66,28 +47,23 @@ def runner(app):
 def db_session(app):
     """Create a fresh database session for a test."""
     with app.app_context():
-        try:
-            connection = db.engine.connect()
-            transaction = connection.begin()
+        connection = db.engine.connect()
+        transaction = connection.begin()
 
-            # Create a session using the connection
-            session = scoped_session(
-                sessionmaker(bind=connection, binds={})
-            )
+        # Create a session using the connection
+        session = scoped_session(
+            sessionmaker(bind=connection, binds={})
+        )
 
-            # Patch the db session
-            db.session = session
+        # Patch the db session
+        db.session = session
 
-            yield session
+        yield session
 
-            # Clean up
-            transaction.rollback()
-            connection.close()
-            session.remove()
-        except Exception as e:
-            print(f"Database connection error: {e}")
-            print(f"Database URI: {app.config.get('SQLALCHEMY_DATABASE_URI')}")
-            raise
+        # Clean up
+        transaction.rollback()
+        connection.close()
+        session.remove()
 
 
 @pytest.fixture

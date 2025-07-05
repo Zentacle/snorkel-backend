@@ -5,7 +5,6 @@ from dotenv import load_dotenv
 # Load environment variables from .env file
 load_dotenv()
 
-
 class Config:
     """Base configuration class."""
 
@@ -23,6 +22,8 @@ class Config:
 
     # SQLAlchemy Configuration
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    # Set a default database URI to prevent SQLite fallback
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL')
 
     # Cache Configuration
     CACHE_TYPE = "SimpleCache"
@@ -82,18 +83,15 @@ class Config:
 
         return missing_vars
 
-
 class DevelopmentConfig(Config):
     """Development configuration."""
     DEBUG = True
     CACHE_TYPE = "SimpleCache"
 
     def __init__(self):
-        # Set database URI in constructor
         db_url = os.environ.get('DATABASE_URL')
         if db_url:
             self.SQLALCHEMY_DATABASE_URI = db_url
-
 
 class ProductionConfig(Config):
     """Production configuration."""
@@ -101,14 +99,11 @@ class ProductionConfig(Config):
     CACHE_TYPE = "SimpleCache"  # Consider Redis for production
 
     def __init__(self):
-        # Set database URI in constructor with Heroku compatibility
         db_url = os.environ.get('DATABASE_URL')
         if db_url:
             if db_url.startswith('postgres://'):
-                # Heroku uses postgres:// but SQLAlchemy expects postgresql://
                 db_url = db_url.replace('postgres://', 'postgresql://', 1)
             self.SQLALCHEMY_DATABASE_URI = db_url
-
 
 class TestingConfig(Config):
     """Testing configuration."""
@@ -117,13 +112,12 @@ class TestingConfig(Config):
     CACHE_TYPE = "SimpleCache"
 
     def __init__(self):
-        # Use test database for testing
-        test_db_url = os.environ.get('TEST_DATABASE_URL') or os.environ.get('DATABASE_URL')
+        test_db_url = os.environ.get('TEST_DATABASE_URL')
         if test_db_url:
             self.SQLALCHEMY_DATABASE_URI = test_db_url
         else:
-            self.SQLALCHEMY_DATABASE_URI = 'postgresql://localhost:5432/snorkel_test'
-
+            # Use SQLite in-memory for local tests if not specified
+            self.SQLALCHEMY_DATABASE_URI = 'sqlite:///:memory:'
 
 # Configuration mapping
 config = {

@@ -25,6 +25,8 @@ chrome-user-data
 *.swo
 *.envi
 *.sql
+*.db
+instance/
 environment.env
 .env
 env
