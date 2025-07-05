@@ -21,6 +21,7 @@ from werkzeug.exceptions import HTTPException
 import json
 from app.config import config
 import newrelic.agent
+from datetime import datetime
 
 # Load environment variables from .env file
 from dotenv import load_dotenv
@@ -114,11 +115,71 @@ def handle_unhandled_exception(e):
 
 @app.route("/")
 def home_view():
+  """Comprehensive health check endpoint for monitoring"""
   client = Amplitude(os.environ.get('AMPLITUDE_API_KEY'))
   client.configuration.min_id_length = 1
   event = BaseEvent(event_type="health_check", user_id="1")
   client.track(event)
-  return "Ok"
+
+  health_status = {
+      "status": "healthy",
+      "timestamp": datetime.now().isoformat(),
+      "version": "1.0.0",  # You can set this from environment or git
+      "checks": {}
+  }
+
+  # Database health check
+  try:
+      db.session.execute("SELECT 1")
+      health_status["checks"]["database"] = "healthy"
+  except Exception as e:
+      health_status["checks"]["database"] = f"unhealthy: {str(e)}"
+      health_status["status"] = "unhealthy"
+      newrelic.agent.record_exception(e)
+
+  # Cache health check
+  try:
+      cache.set("health_check", "ok", timeout=10)
+      cache_value = cache.get("health_check")
+      if cache_value == "ok":
+          health_status["checks"]["cache"] = "healthy"
+      else:
+          health_status["checks"]["cache"] = "unhealthy: cache not working"
+          health_status["status"] = "unhealthy"
+  except Exception as e:
+      health_status["checks"]["cache"] = f"unhealthy: {str(e)}"
+      health_status["status"] = "unhealthy"
+      newrelic.agent.record_exception(e)
+
+  # External services health check (optional)
+  try:
+      # Check SendGrid (if configured)
+      if os.environ.get('SENDGRID_API_KEY'):
+          health_status["checks"]["sendgrid"] = "configured"
+      else:
+          health_status["checks"]["sendgrid"] = "not_configured"
+  except Exception as e:
+      health_status["checks"]["sendgrid"] = f"error: {str(e)}"
+
+  # Return appropriate status code
+  status_code = 200 if health_status["status"] == "healthy" else 503
+  return jsonify(health_status), status_code
+
+@app.route("/health/ready")
+def readiness_check():
+    """Readiness check for Kubernetes/container orchestration"""
+    try:
+        # Basic database connectivity
+        db.session.execute("SELECT 1")
+        return jsonify({"status": "ready"}), 200
+    except Exception as e:
+        newrelic.agent.record_exception(e)
+        return jsonify({"status": "not_ready", "error": str(e)}), 503
+
+@app.route("/health/live")
+def liveness_check():
+    """Liveness check for Kubernetes/container orchestration"""
+    return jsonify({"status": "alive"}), 200
 
 @app.route("/db")
 def db_create():
