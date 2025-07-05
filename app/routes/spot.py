@@ -20,13 +20,13 @@ def get_spot(beach_id):
     .filter_by(id=beach_id) \
     .first_or_404()
   spot_data = spot.get_dict()
-  if spot_data['locality']:
+  if spot.locality:
     spot_data['locality'] = spot.locality.get_dict(spot.country, spot.area_one, spot.area_two)
-  if spot_data['area_two']:
+  if spot.area_two:
     spot_data['area_two'] = spot.area_two.get_dict(spot.country, spot.area_one)
-  if spot_data['area_one']:
+  if spot.area_one:
     spot_data['area_one'] = spot.area_one.get_dict(spot.country)
-  if spot_data['country']:
+  if spot.country:
     spot_data['country'] = spot.country.get_dict()
   spot_data["ratings"] = get_summary_reviews_helper(beach_id)
   return { 'data': spot_data }
