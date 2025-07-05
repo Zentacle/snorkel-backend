@@ -913,7 +913,7 @@ def nearby_locations():
         return { 'msg': str(e) }
     else:
       try:
-        spots = Spot.query.filter(Spot.has(country_id=spot.country_id)).limit(limit).all()
+        spots = Spot.query.filter_by(country_id=spot.country_id).limit(limit).all()
       except AttributeError as e:
         newrelic.agent.record_exception(e)
         return { 'msg': str(e) }
