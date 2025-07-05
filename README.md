@@ -143,24 +143,66 @@ make migrate
 make migrate-create message="Description of changes"
 ```
 
-### Code Quality
+### Code Quality and Linting
 
-The project includes several tools for maintaining code quality:
+The project includes a comprehensive linting system to ensure code quality, consistency, and security:
 
-- **Black**: Code formatting
-- **Flake8**: Linting
-- **Pytest**: Testing (when implemented)
-
+#### Quick Setup
 ```bash
-# Format code with Black
-make format
+# Setup development environment with linting
+make dev-setup
 
-# Check code quality
+# Quick code quality check
+make quick-check
+
+# Full comprehensive check
+make full-check
+```
+
+#### Available Tools
+- **Black**: Code formatting
+- **isort**: Import sorting
+- **Flake8**: Style guide enforcement
+- **Pylint**: Code analysis
+- **MyPy**: Type checking
+- **Bandit**: Security linting
+- **Pydocstyle**: Docstring style
+- **Vulture**: Dead code detection
+- **Eradicate**: Commented code detection
+
+#### Common Commands
+```bash
+# Basic linting
 make lint
 
-# Run tests (when implemented)
-make test
+# All linting tools
+make lint-all
+
+# Format code
+make format
+
+# Format and fix all issues
+make format-all
+
+# Security checks
+make security-check
+
+# Run tests with coverage
+make test-cov
 ```
+
+#### Pre-commit Hooks
+The project uses pre-commit hooks to automatically run linting checks before each commit:
+
+```bash
+# Install pre-commit hooks
+make pre-commit-install
+
+# Run hooks manually
+make pre-commit-run
+```
+
+For detailed information about the linting system, see [LINTING_GUIDE.md](LINTING_GUIDE.md).
 
 ## Project Structure
 

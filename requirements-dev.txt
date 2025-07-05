@@ -9,11 +9,17 @@ faker==20.1.0
 responses==0.24.1
 freezegun==1.2.2
 
-# Code quality
+# Code quality and linting
 black==23.11.0
 flake8==6.1.0
 isort==5.12.0
 mypy==1.7.1
-
-# Development tools
+pylint==3.0.3
+bandit==1.7.5
+safety==2.3.5
 pre-commit==3.5.0
+
+# Additional code quality tools
+pydocstyle==6.3.0
+eradicate==4.0
+vulture==2.10
