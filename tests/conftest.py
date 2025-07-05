@@ -26,44 +26,9 @@ def app():
     """Create and configure a new app instance for each test session."""
     app = create_app(config_object=TestConfig)
 
-    print(f"[TEST DEBUG] CI: {os.environ.get('CI')}")
-    print(f"[TEST DEBUG] DATABASE_URL: {os.environ.get('DATABASE_URL')}")
-
-    # Check if we're in CI environment (PostgreSQL) or local environment (SQLite)
-    if os.environ.get('CI'):
-        # Use PostgreSQL in CI environment
-        print("[TEST DEBUG] Using PostgreSQL for CI")
-        app.config.update({
-            'TESTING': True,
-            'SQLALCHEMY_TRACK_MODIFICATIONS': False,
-            'WTF_CSRF_ENABLED': False,
-            'JWT_SECRET_KEY': 'test-secret-key',
-            'JWT_ACCESS_TOKEN_EXPIRES': False,  # Disable token expiration for tests
-        })
-    else:
-        # Use SQLite for local testing (regardless of DATABASE_URL)
-        print("[TEST DEBUG] Using SQLite for local testing")
-        db_fd, db_path = tempfile.mkstemp()
-        app.config.update({
-            'TESTING': True,
-            'SQLALCHEMY_DATABASE_URI': f'sqlite:///{db_path}',
-            'SQLALCHEMY_TRACK_MODIFICATIONS': False,
-            'WTF_CSRF_ENABLED': False,
-            'JWT_SECRET_KEY': 'test-secret-key',
-            'JWT_ACCESS_TOKEN_EXPIRES': False,  # Disable token expiration for tests
-        })
-        print(f"[TEST DEBUG] SQLite path: {db_path}")
-        print(f"[TEST DEBUG] Final SQLALCHEMY_DATABASE_URI: {app.config.get('SQLALCHEMY_DATABASE_URI')}")
-
-    # Create the database and load test data
     with app.app_context():
         db.create_all()
         yield app
-
-    # Clean up the temporary database (only for SQLite)
-    if not os.environ.get('CI'):
-        os.close(db_fd)
-        os.unlink(db_path)
 
 
 @pytest.fixture(scope='function')
@@ -82,29 +47,23 @@ def runner(app):
 def db_session(app):
     """Create a fresh database session for a test."""
     with app.app_context():
-        try:
-            # Use the Flask app's database engine, not the global db.engine
-            connection = db.engine.connect()
-            transaction = connection.begin()
+        connection = db.engine.connect()
+        transaction = connection.begin()
 
-            # Create a session using the connection
-            session = scoped_session(
-                sessionmaker(bind=connection, binds={})
-            )
+        # Create a session using the connection
+        session = scoped_session(
+            sessionmaker(bind=connection, binds={})
+        )
 
-            # Patch the db session
-            db.session = session
+        # Patch the db session
+        db.session = session
 
-            yield session
+        yield session
 
-            # Clean up
-            transaction.rollback()
-            connection.close()
-            session.remove()
-        except Exception as e:
-            print(f"Database connection error: {e}")
-            print(f"Database URI: {app.config.get('SQLALCHEMY_DATABASE_URI')}")
-            raise
+        # Clean up
+        transaction.rollback()
+        connection.close()
+        session.remove()
 
 
 @pytest.fixture
