@@ -20,6 +20,7 @@ from sendgrid import SendGridAPIClient
 from werkzeug.exceptions import HTTPException
 import json
 from app.config import config
+import newrelic.agent
 
 # Load environment variables from .env file
 from dotenv import load_dotenv
@@ -73,6 +74,12 @@ def refresh_expiring_jwts(response):
         # Case where there is not a valid JWT. Just return the original respone
         return response
 
+@app.before_request
+def capture_request_params():
+    """Capture request parameters for all requests for better observability"""
+    if not app.config.get('DEBUG', False):  # Only in non-debug mode
+        newrelic.agent.capture_request_params()
+
 @app.errorhandler(HTTPException)
 def handle_exception(e):
     """Return JSON instead of HTML for HTTP errors."""
@@ -85,6 +92,24 @@ def handle_exception(e):
         "msg": e.description,
     })
     response.content_type = "application/json"
+    return response
+
+@app.errorhandler(Exception)
+def handle_unhandled_exception(e):
+    """Global exception handler to capture all unhandled exceptions"""
+    # Record the exception in New Relic
+    newrelic.agent.record_exception(e)
+
+    # Log the exception
+    app.logger.error(f"Unhandled exception: {str(e)}", exc_info=True)
+
+    # Return a generic error response
+    response = jsonify({
+        "code": 500,
+        "name": "Internal Server Error",
+        "msg": "An unexpected error occurred. Please try again later."
+    })
+    response.status_code = 500
     return response
 
 @app.route("/")
