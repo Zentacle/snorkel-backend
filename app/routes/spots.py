@@ -32,279 +32,263 @@ bp = Blueprint("spots", __name__, url_prefix="/spots")
 @bp.route("/get")
 @cache.cached(query_string=True)
 def get_spots():
-    """Get Dive Sites/Beaches
-    ---
-    get:
-        summary: Get dive sites
-        description: Get dive sites
-        parameters:
-            - name: beach_id
-              in: body
-              description: Beach ID
-              type: string
-              required: false
-            - name: locality
-              in: body
-              description: locality (eg. Kihei)
-              type: string
-              required: false
-            - name: area_two
-              in: body
-              description: area_two (eg. Maui)
-              type: string
-              required: false
-            - name: area_one
-              in: body
-              description: area_one (eg. Hawaii)
-              type: string
-              required: false
-            - name: country
-              in: body
-              description: country (eg. USA)
-              type: string
-              required: false
-            - name: sort
-              in: body
-              description: sort (latest, most_reviewed, top). defaults to top
-              type: string
-              required: false
-            - name: limit
-              in: body
-              description: limit on number of results returned (default 15)
-              type: string
-              required: false
-        responses:
-            200:
-                description: Returns singular beach object or list of beach objects
-                content:
-                  application/json:
-                    schema: BeachSchema
-            400:
-                content:
-                  application/json:
-                    schema:
-                      Error:
-                        properties:
-                          msg:
-                            type: string
-                description: Wrong password.
-    """
-    newrelic.agent.capture_request_params()
-    is_shorediving = False
-    area = None
-    spot = None
-    sd_spot = None
-    if (
-        request.args.get("beach_id")
-        or request.args.get("region")
-        or request.args.get("sd_id")
-    ):
-        if request.args.get("beach_id"):
-            beach_id = request.args.get("beach_id")
-            spot = (
-                Spot.query.options(joinedload("locality"))
-                .options(joinedload("area_two"))
-                .options(joinedload("area_one"))
-                .options(joinedload("country"))
-                .options(joinedload("shorediving_data"))
-                .filter_by(id=beach_id)
-                .first_or_404()
-            )
-            if spot.shorediving_data:
-                sd_spot = spot.shorediving_data
-        elif request.args.get("region"):
-            is_shorediving = True
-            region = request.args.get("region")
-            destination = request.args.get("destination")
-            site = request.args.get("site")
-            sd_spot = (
-                ShoreDivingData.query.options(joinedload("spot"))
-                .filter(
-                    and_(
-                        ShoreDivingData.region_url == region,
-                        ShoreDivingData.destination_url == destination,
-                        ShoreDivingData.name_url == site,
-                    )
-                )
-                .first_or_404()
-            )
-            spot = (
-                Spot.query.options(joinedload("locality"))
-                .options(joinedload("area_two"))
-                .options(joinedload("area_one"))
-                .options(joinedload("country"))
-                .filter_by(id=sd_spot.spot_id)
-                .first()
-            )
-        elif request.args.get("sd_id"):
-            is_shorediving = True
-            fsite = request.args.get("sd_id")
-            sd_spot = (
-                ShoreDivingData.query.options(joinedload("spot"))
-                .filter_by(id=fsite)
-                .first_or_404()
-            )
-            spot = (
-                Spot.query.options(joinedload("locality"))
-                .options(joinedload("area_two"))
-                .options(joinedload("area_one"))
-                .options(joinedload("country"))
-                .filter_by(id=sd_spot.spot_id)
-                .first()
-            )
-        spot_data = spot.get_dict()
-        if is_shorediving and sd_spot:
-            spot_data["sd_url"] = sd_spot.get_url()
-            spot_data["country"] = sd_spot.get_region_dict()
-            spot_data["area_one"] = sd_spot.get_destination_dict()
-            spot_data["area_two"] = None
-            spot_data["locality"] = None
-        else:
-            if spot.locality:
-                spot_data["locality"] = spot.locality.get_dict(
-                    spot.country, spot.area_one, spot.area_two
-                )
-            if spot.area_two:
-                spot_data["area_two"] = spot.area_two.get_dict(
-                    spot.country, spot.area_one
-                )
-            if spot.area_one:
-                spot_data["area_one"] = spot.area_one.get_dict(spot.country)
-            if spot.country:
-                spot_data["country"] = spot.country.get_dict()
-        beach_id = spot.id
-        if not spot.location_google and spot.latitude and spot.longitude:
-            spot_data["location_google"] = (
-                "http://maps.google.com/maps?q=%(latitude)f,%(longitude)f"
-                % {"latitude": spot.latitude, "longitude": spot.longitude}
-            )
-        spot_data["ratings"] = get_summary_reviews_helper(beach_id)
-        return {"data": spot_data}
-    query = Spot.query
-    if request.args.get("unverified"):
-        query = query.filter(Spot.is_verified.isnot(True))
+  """ Get Dive Sites/Beaches
+  ---
+  get:
+      summary: Get dive sites
+      description: Get dive sites
+      parameters:
+          - name: beach_id
+            in: body
+            description: Beach ID
+            type: string
+            required: false
+          - name: locality
+            in: body
+            description: locality (eg. Kihei)
+            type: string
+            required: false
+          - name: area_two
+            in: body
+            description: area_two (eg. Maui)
+            type: string
+            required: false
+          - name: area_one
+            in: body
+            description: area_one (eg. Hawaii)
+            type: string
+            required: false
+          - name: country
+            in: body
+            description: country (eg. USA)
+            type: string
+            required: false
+          - name: sort
+            in: body
+            description: sort (latest, most_reviewed, top). defaults to top
+            type: string
+            required: false
+          - name: limit
+            in: body
+            description: limit on number of results returned (default 15)
+            type: string
+            required: false
+      responses:
+          200:
+              description: Returns singular beach object or list of beach objects
+              content:
+                application/json:
+                  schema: BeachSchema
+          400:
+              content:
+                application/json:
+                  schema:
+                    Error:
+                      properties:
+                        msg:
+                          type: string
+              description: Wrong password.
+  """
+  newrelic.agent.capture_request_params()
+  is_shorediving = False
+  area = None
+  spot = None
+  sd_spot = None
+  if request.args.get('beach_id') or request.args.get('region') or request.args.get('sd_id'):
+    if request.args.get('beach_id'):
+      beach_id = request.args.get('beach_id')
+      spot = Spot.query \
+        .options(joinedload('locality')) \
+        .options(joinedload('area_two')) \
+        .options(joinedload('area_one')) \
+        .options(joinedload('country')) \
+        .options(joinedload('shorediving_data')) \
+        .filter_by(id=beach_id) \
+        .first_or_404()
+      if spot.shorediving_data:
+        sd_spot = spot.shorediving_data
+    elif request.args.get('region'):
+      is_shorediving = True
+      region = request.args.get('region')
+      destination = request.args.get('destination')
+      site = request.args.get('site')
+      sd_spot = ShoreDivingData.query \
+        .options(joinedload('spot')) \
+        .filter(and_(
+          ShoreDivingData.region_url==region,
+          ShoreDivingData.destination_url==destination,
+          ShoreDivingData.name_url==site,
+        )) \
+        .first_or_404()
+      spot = Spot.query \
+        .options(joinedload('locality')) \
+        .options(joinedload('area_two')) \
+        .options(joinedload('area_one')) \
+        .options(joinedload('country')) \
+        .filter_by(id=sd_spot.spot_id) \
+        .first()
+    elif request.args.get('sd_id'):
+      is_shorediving = True
+      fsite = request.args.get('sd_id')
+      sd_spot = ShoreDivingData.query \
+        .options(joinedload('spot')) \
+        .filter_by(id=fsite) \
+        .first_or_404()
+      spot = Spot.query \
+        .options(joinedload('locality')) \
+        .options(joinedload('area_two')) \
+        .options(joinedload('area_one')) \
+        .options(joinedload('country')) \
+        .filter_by(id=sd_spot.spot_id) \
+        .first()
+    spot_data = spot.get_dict()
+    if is_shorediving and sd_spot:
+      spot_data['sd_url'] = sd_spot.get_url()
+      spot_data['country'] = sd_spot.get_region_dict()
+      spot_data['area_one'] = sd_spot.get_destination_dict()
+      spot_data['area_two'] = None
+      spot_data['locality'] = None
     else:
-        query = query.filter(Spot.is_verified.isnot(False))
-        query = query.filter(Spot.is_deleted.isnot(True))
-    locality_name = request.args.get("locality")
-    area_two_name = request.args.get("area_two")
-    area_one_name = request.args.get("area_one")
-    country_name = request.args.get("country")
-    if locality_name:
-        area_two_spot_query = Spot.area_two.has(short_name=area_two_name)
-        area_two_area_query = Locality.area_two.has(short_name=area_two_name)
-        if area_two_name == "_":
-            area_two_spot_query = sql.true()
-            area_two_area_query = sql.true()
-        query = query.filter(
-            and_(
-                Spot.locality.has(short_name=locality_name),
-                area_two_spot_query,
-                Spot.area_one.has(short_name=area_one_name),
-                Spot.country.has(short_name=country_name),
-            )
+      if spot.locality:
+        spot_data['locality'] = spot.locality.get_dict(spot.country, spot.area_one, spot.area_two)
+      if spot.area_two:
+        spot_data['area_two'] = spot.area_two.get_dict(spot.country, spot.area_one)
+      if spot.area_one:
+        spot_data['area_one'] = spot.area_one.get_dict(spot.country)
+      if spot.country:
+        spot_data['country'] = spot.country.get_dict()
+    beach_id = spot.id
+    if not spot.location_google and spot.latitude and spot.longitude:
+      spot_data['location_google'] = ('http://maps.google.com/maps?q=%(latitude)f,%(longitude)f'
+        % { 'latitude': spot.latitude, 'longitude': spot.longitude}
+      )
+    spot_data["ratings"] = get_summary_reviews_helper(beach_id)
+    return { 'data': spot_data }
+  query = Spot.query
+  if request.args.get('unverified'):
+    query = query.filter(Spot.is_verified.isnot(True))
+  else:
+    query = query.filter(Spot.is_verified.isnot(False))
+    query = query.filter(Spot.is_deleted.isnot(True))
+  locality_name = request.args.get('locality')
+  area_two_name = request.args.get('area_two')
+  area_one_name = request.args.get('area_one')
+  country_name = request.args.get('country')
+  if locality_name:
+    area_two_spot_query = Spot.area_two.has(short_name=area_two_name)
+    area_two_area_query = Locality.area_two.has(short_name=area_two_name)
+    if area_two_name == '_':
+      area_two_spot_query = sql.true()
+      area_two_area_query = sql.true()
+    query = query.filter(
+      and_(
+        Spot.locality.has(short_name=locality_name),
+        area_two_spot_query,
+        Spot.area_one.has(short_name=area_one_name),
+        Spot.country.has(short_name=country_name),
+      )
+    )
+    area = Locality.query \
+      .options(joinedload('area_two')) \
+      .options(joinedload('area_one')) \
+      .options(joinedload('country')) \
+      .filter(
+        Locality.short_name==locality_name,
+        area_two_area_query,
+        Locality.area_one.has(short_name=area_one_name),
+        Locality.country.has(short_name=country_name),
+      ) \
+      .first_or_404()
+  elif area_two_name:
+    query = query.filter(
+      and_(
+        Spot.area_two.has(short_name=area_two_name),
+        Spot.area_one.has(short_name=area_one_name),
+        Spot.country.has(short_name=country_name),
+      )
+    )
+    area = AreaTwo.query \
+      .options(joinedload('area_one')) \
+      .options(joinedload('country')) \
+      .filter(
+        and_(
+          AreaTwo.short_name==area_two_name,
+          AreaTwo.area_one.has(short_name=area_one_name),
+          AreaTwo.country.has(short_name=country_name),
         )
-        area = (
-            Locality.query.options(joinedload("area_two"))
-            .options(joinedload("area_one"))
-            .options(joinedload("country"))
-            .filter(
-                Locality.short_name == locality_name,
-                area_two_area_query,
-                Locality.area_one.has(short_name=area_one_name),
-                Locality.country.has(short_name=country_name),
-            )
-            .first_or_404()
+      ) \
+      .first_or_404()
+  elif area_one_name:
+      query = query.filter(
+        and_(
+          Spot.area_one.has(short_name=area_one_name),
+          Spot.country.has(short_name=country_name),
         )
-    elif area_two_name:
-        query = query.filter(
-            and_(
-                Spot.area_two.has(short_name=area_two_name),
-                Spot.area_one.has(short_name=area_one_name),
-                Spot.country.has(short_name=country_name),
-            )
-        )
-        area = (
-            AreaTwo.query.options(joinedload("area_one"))
-            .options(joinedload("country"))
-            .filter(
-                and_(
-                    AreaTwo.short_name == area_two_name,
-                    AreaTwo.area_one.has(short_name=area_one_name),
-                    AreaTwo.country.has(short_name=country_name),
-                )
-            )
-            .first_or_404()
-        )
-    elif area_one_name:
-        query = query.filter(
-            and_(
-                Spot.area_one.has(short_name=area_one_name),
-                Spot.country.has(short_name=country_name),
-            )
-        )
-        area = (
-            AreaOne.query.options(joinedload("country"))
-            .filter(
-                and_(
-                    AreaOne.short_name == area_one_name,
-                    AreaOne.country.has(short_name=country_name),
-                )
-            )
-            .first_or_404()
-        )
-    elif country_name:
-        query = query.filter(Spot.country.has(short_name=country_name))
-        area = Country.query.filter_by(short_name=country_name).first_or_404()
-    difficulty_filter = request.args.get("difficulty")
-    if difficulty_filter:
-        query = query.filter(Spot.difficulty == difficulty_filter)
-    access_filter = request.args.get("entry")
-    if access_filter:
-        query = query.filter(Spot.tags.any(short_name=access_filter))
-    sort_param = request.args.get("sort")
-    if sort_param == "latest":
-        query = query.order_by(Spot.last_review_date.desc().nullslast())
-    elif sort_param == "most_reviewed":
-        query = query.order_by(Spot.num_reviews.desc().nullslast(), Spot.rating.desc())
-    elif sort_param == "top":
-        query = query.order_by(Spot.rating.desc().nullslast(), Spot.num_reviews.desc())
-    else:
-        query = query.order_by(Spot.num_reviews.desc().nullslast())
-    if request.args.get("limit") != "none":
-        limit = request.args.get("limit") if request.args.get("limit") else 15
-        query = query.limit(limit)
-    query = query.options(joinedload(Spot.shorediving_data))
-    spots = query.all()
-    if sort_param == "top":
-        spots.sort(reverse=True, key=lambda spot: spot.get_confidence_score())
-    output = []
-    for spot in spots:
-        spot_data = spot.get_dict()
-        if request.args.get("ssg"):
-            spot_data["beach_name_for_url"] = spot.get_beach_name_for_url()
-        if spot.shorediving_data:
-            spot_data["sd_url"] = spot.shorediving_data.get_url()
-        if not spot.location_google and spot.latitude and spot.longitude:
-            spot_data["location_google"] = (
-                "http://maps.google.com/maps?q=%(latitude)f,%(longitude)f"
-                % {"latitude": spot.latitude, "longitude": spot.longitude}
-            )
-        output.append(spot_data)
-    resp = {"data": output}
-    if area:
-        area_data = area.get_dict()
-        if area_data.get("area_two"):
-            area_data["area_two"] = area_data.get("area_two").get_dict(
-                area.country, area.area_one
-            )
-        if area_data.get("area_one"):
-            area_data["area_one"] = area_data.get("area_one").get_dict(area.country)
-        if area_data.get("country"):
-            area_data["country"] = area_data.get("country").get_dict()
-        resp["area"] = area_data
-    return resp
+      )
+      area = AreaOne.query \
+        .options(joinedload('country')) \
+        .filter(
+          and_(
+            AreaOne.short_name==area_one_name,
+            AreaOne.country.has(short_name=country_name),
+          )
+        ) \
+        .first_or_404()
+  elif country_name:
+      query = query.filter(Spot.country.has(short_name=country_name))
+      area = Country.query \
+        .filter_by(short_name=country_name) \
+        .first_or_404()
+  difficulty_filter = request.args.get('difficulty')
+  if difficulty_filter:
+    query = query.filter(Spot.difficulty==difficulty_filter)
+  access_filter = request.args.get('entry')
+  if access_filter:
+    query = query.filter(Spot.tags.any(short_name=access_filter))
+  sort_param = request.args.get('sort')
+  if sort_param == 'latest':
+    query = query.order_by(Spot.last_review_date.desc().nullslast())
+  elif sort_param == 'most_reviewed':
+    query = query.order_by(Spot.num_reviews.desc().nullslast(), Spot.rating.desc())
+  elif sort_param == 'top':
+    query = query.order_by(Spot.rating.desc().nullslast(), Spot.num_reviews.desc())
+  else:
+    query = query.order_by(Spot.num_reviews.desc().nullslast())
+  if request.args.get('limit') != 'none':
+    limit = request.args.get('limit') if request.args.get('limit') else 15
+    query = query.limit(limit)
+  query = query.options(joinedload(Spot.shorediving_data))
+  spots = query.all()
+  if sort_param == 'top':
+    spots.sort(reverse=True, key=lambda spot: spot.get_confidence_score())
+  output = []
+  for spot in spots:
+    spot_data = spot.get_dict()
+    if request.args.get('ssg'):
+      spot_data['beach_name_for_url'] = spot.get_beach_name_for_url()
+    if spot.shorediving_data:
+      spot_data['sd_url'] = spot.shorediving_data.get_url()
+    if not spot.location_google and spot.latitude and spot.longitude:
+      spot_data['location_google'] = ('http://maps.google.com/maps?q=%(latitude)f,%(longitude)f'
+        % { 'latitude': spot.latitude, 'longitude': spot.longitude}
+      )
+    output.append(spot_data)
+  resp = { 'data': output }
+  if area:
+    area_data = area.get_dict()
+    if area_data.get('area_two'):
+      area_data['area_two'] = area_data.get('area_two').get_dict(area.country, area.area_one)
+    if area_data.get('area_one'):
+      area_data['area_one'] = area_data.get('area_one').get_dict(area.country)
+    if area_data.get('country'):
+      area_data['country'] = area_data.get('country').get_dict()
+    resp['area'] = area_data
 
+    # Add new geographic URL if available
+    if hasattr(area, 'geographic_node') and area.geographic_node:
+      resp['geographic_url'] = area.geographic_node.get_url()
+
+  return resp
 
 @bp.route("/search")
 def search_spots():
