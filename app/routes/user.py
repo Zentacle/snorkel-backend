@@ -4,7 +4,7 @@ import boto3
 import io
 from flask import Blueprint, request, abort
 from app.models import User, Review
-from app import db, app, cache
+from app import db, cache
 import jwt
 import json
 import requests
@@ -505,7 +505,7 @@ def patch_user():
           city_name = components.get('area_1').get('long_name')
           country_name = components.get('country').get('short_name')
           hometown = f'{city_name}, {country_name}'
-          setattr(spot, 'hometown', hometown)
+          setattr(user, 'hometown', hometown)
     else:
       setattr(user, key, updates.get(key))
   db.session.commit()

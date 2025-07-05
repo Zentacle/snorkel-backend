@@ -8,19 +8,32 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
-from app import db
+from app import create_app, db
 from app.models import User, Spot, Review, Country, AreaOne, AreaTwo, Locality
+
+
+class TestConfig:
+    TESTING = True
+    SQLALCHEMY_DATABASE_URI = 'sqlite:///:memory:'
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
+    WTF_CSRF_ENABLED = False
+    JWT_SECRET_KEY = 'test-secret-key'
+    JWT_ACCESS_TOKEN_EXPIRES = False
 
 
 @pytest.fixture(scope='session')
 def app():
     """Create and configure a new app instance for each test session."""
-    from app import app as flask_app
+    app = create_app(config_object=TestConfig)
+
+    print(f"[TEST DEBUG] CI: {os.environ.get('CI')}")
+    print(f"[TEST DEBUG] DATABASE_URL: {os.environ.get('DATABASE_URL')}")
 
     # Check if we're in CI environment (PostgreSQL) or local environment (SQLite)
-    if os.environ.get('CI') or os.environ.get('DATABASE_URL'):
+    if os.environ.get('CI'):
         # Use PostgreSQL in CI environment
-        flask_app.config.update({
+        print("[TEST DEBUG] Using PostgreSQL for CI")
+        app.config.update({
             'TESTING': True,
             'SQLALCHEMY_TRACK_MODIFICATIONS': False,
             'WTF_CSRF_ENABLED': False,
@@ -28,9 +41,10 @@ def app():
             'JWT_ACCESS_TOKEN_EXPIRES': False,  # Disable token expiration for tests
         })
     else:
-        # Use SQLite for local testing
+        # Use SQLite for local testing (regardless of DATABASE_URL)
+        print("[TEST DEBUG] Using SQLite for local testing")
         db_fd, db_path = tempfile.mkstemp()
-        flask_app.config.update({
+        app.config.update({
             'TESTING': True,
             'SQLALCHEMY_DATABASE_URI': f'sqlite:///{db_path}',
             'SQLALCHEMY_TRACK_MODIFICATIONS': False,
@@ -38,14 +52,16 @@ def app():
             'JWT_SECRET_KEY': 'test-secret-key',
             'JWT_ACCESS_TOKEN_EXPIRES': False,  # Disable token expiration for tests
         })
+        print(f"[TEST DEBUG] SQLite path: {db_path}")
+        print(f"[TEST DEBUG] Final SQLALCHEMY_DATABASE_URI: {app.config.get('SQLALCHEMY_DATABASE_URI')}")
 
     # Create the database and load test data
-    with flask_app.app_context():
+    with app.app_context():
         db.create_all()
-        yield flask_app
+        yield app
 
     # Clean up the temporary database (only for SQLite)
-    if not (os.environ.get('CI') or os.environ.get('DATABASE_URL')):
+    if not os.environ.get('CI'):
         os.close(db_fd)
         os.unlink(db_path)
 
@@ -67,6 +83,7 @@ def db_session(app):
     """Create a fresh database session for a test."""
     with app.app_context():
         try:
+            # Use the Flask app's database engine, not the global db.engine
             connection = db.engine.connect()
             transaction = connection.begin()
 
