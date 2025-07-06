@@ -5,16 +5,13 @@ from marshmallow import Schema, fields
 
 # Create spec
 spec = APISpec(
-    title='Zentacle API',
-    version='1.0.0',
+    title="Zentacle API",
+    version="1.0.0",
     openapi_version="3.0.2",
-    info=dict(
-        description='Internal API for interacting with the Zentacle database'
-    ),
-    plugins=[
-        FlaskPlugin(), MarshmallowPlugin()
-    ]
+    info=dict(description="Internal API for interacting with the Zentacle database"),
+    plugins=[FlaskPlugin(), MarshmallowPlugin()],
 )
+
 
 # Reference your schemas definitions
 class TagSchema(Schema):
@@ -22,6 +19,7 @@ class TagSchema(Schema):
     short_name = fields.Str()
     text = fields.Str()
     type = fields.Str()
+
 
 class BeachSchema(Schema):
     name = fields.Str()
@@ -37,6 +35,7 @@ class BeachSchema(Schema):
     location_google = fields.Str()
     access = fields.List(fields.Nested(TagSchema()))
 
+
 class ReviewSchema(Schema):
     text = fields.Str()
     spot = fields.Nested(BeachSchema())
@@ -45,6 +44,7 @@ class ReviewSchema(Schema):
     rating = fields.Float()
     activity_type = fields.Str()
     visibility = fields.Int()
+
 
 class UserSchema(Schema):
     display_name = fields.Str()
@@ -56,18 +56,24 @@ class UserSchema(Schema):
     phone = fields.Str()
     reviews = fields.List(fields.Nested(ReviewSchema()))
 
+
 class TypeAheadSchema(Schema):
     text = fields.Str()
     id = fields.Int()
-    type = fields.Str(description="Either 'location' (if it's a country, state, etc) or 'site' (if it's a specific dive site)")
+    type = fields.Str(
+        description="Either 'location' (if it's a country, state, etc) or 'site' (if it's a specific dive site)"
+    )
     url = fields.Str()
     subtext = fields.Str()
 
+
 class ImageUploadRequestSchema(Schema):
-    file = fields.Raw(type='file')
+    file = fields.Raw(type="file")
+
 
 class ImageUploadResponseSchema(Schema):
     data = fields.Str()
+
 
 class AppleRegisterSchema(Schema):
     id_token = fields.Str()
