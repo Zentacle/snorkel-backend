@@ -45,7 +45,7 @@ make full-check
 ### 1. Black (Code Formatter)
 - **Purpose**: Automatic code formatting
 - **Configuration**: `pyproject.toml` [tool.black]
-- **Line length**: 88 characters
+- **Line length**: 100 characters
 - **Usage**: `black app/ tests/`
 
 ### 2. isort (Import Sorter)
@@ -57,7 +57,7 @@ make full-check
 ### 3. flake8 (Style Guide Enforcement)
 - **Purpose**: Style guide enforcement (PEP 8)
 - **Configuration**: `pyproject.toml` [tool.flake8]
-- **Line length**: 88 characters
+- **Line length**: 100 characters
 - **Usage**: `flake8 app/ tests/`
 
 ### 4. pylint (Code Analysis)

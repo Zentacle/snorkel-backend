@@ -1,0 +1,41 @@
+# Cursor Rules for Snorkel Backend
+
+## Code Style Guidelines
+
+- Follow PEP 8 with a 120-character line limit
+- Use double quotes for strings consistently
+- Use type hints where appropriate
+- Follow the existing import structure and patterns
+- Use f-strings for string formatting
+- Prefer list comprehensions over map/filter when readable
+- Use meaningful variable names (avoid single letters except for loops)
+
+## Project-Specific Rules
+
+- Use SQLAlchemy for database operations
+- Follow Flask application patterns established in the codebase
+- Use the existing error handling patterns
+- Follow the established route naming conventions
+- Use the existing model patterns for database models
+- Prefer explicit imports over wildcard imports
+
+## File Organization
+
+- Keep functions focused and single-purpose
+- Use descriptive function and variable names
+- Add docstrings for public functions and classes
+- Follow the existing module structure
+
+## Database Patterns
+
+- Use the existing db session patterns
+- Follow the established model relationships
+- Use proper transaction handling with commit/rollback
+- Follow the existing query patterns
+
+## Error Handling
+
+- Use try/except blocks appropriately
+- Log errors with meaningful messages
+- Return appropriate HTTP status codes
+- Follow the existing error response patterns
