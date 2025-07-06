@@ -1,4 +1,4 @@
-name: Lint and Test
+name: Lint and Code Quality
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
     branches: [ main, develop ]
 
 jobs:
-  lint-and-test:
+  lint-and-quality:
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -119,14 +119,5 @@ jobs:
           echo "No files changed, skipping security checks"
         fi
 
-    - name: Run tests
-      run: |
-        make test-cov
-
-    - name: Upload coverage reports
-      uses: codecov/codecov-action@v3
-      with:
-        file: ./htmlcov/coverage.xml
-        flags: unittests
-        name: codecov-umbrella
-        fail_ci_if_error: false
+    # Tests are run in the dedicated test.yml workflow
+    # This workflow focuses on code quality checks only
