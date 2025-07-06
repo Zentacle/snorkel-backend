@@ -34,7 +34,10 @@ class GeographicNode(db.Model):
     latitude = db.Column(db.Float)
     longitude = db.Column(db.Float)
     country_code = db.Column(db.String(2))  # ISO country code
-    admin_level = db.Column(db.Integer)  # 0=country, 1=state/province, 2=county, 3=city
+    admin_level = db.Column(
+        db.Integer,
+        nullable=False,
+    )  # 0=country, 1=state/province, 2=county, 3=city
 
     # Content
     description = db.Column(db.String)
@@ -477,6 +480,7 @@ class Spot(db.Model):
         """Legacy method for backwards compatibility"""
         return cls.create_legacy_url(id, name)
 
+    @hybrid_method
     def get_confidence_score(self):
         import math
 
@@ -486,6 +490,28 @@ class Spot(db.Model):
             return float(self.rating) - z * (std_dev / math.sqrt(self.num_reviews))
         else:
             return 0
+
+    @get_confidence_score.expression
+    def get_confidence_score(self):
+        """Database expression for confidence score calculation"""
+        z = 1.645  # 90% confidence interval
+        std_dev = 0.50  # standard deviation
+
+        # Convert rating to float and handle nulls
+        rating_float = func.cast(self.rating, db.Float)
+
+        # Calculate confidence score: rating - z * (std_dev / sqrt(num_reviews))
+        # Handle case where num_reviews is 0 or null
+        confidence_score = func.case(
+            (
+                self.num_reviews > 0,
+                rating_float
+                - z * (std_dev / func.sqrt(func.cast(self.num_reviews, db.Float))),
+            ),
+            else_=0.0,
+        )
+
+        return confidence_score
 
     @hybrid_method
     def distance(self, latitude, longitude):

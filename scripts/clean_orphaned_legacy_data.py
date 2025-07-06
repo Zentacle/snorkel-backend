@@ -131,7 +131,10 @@ def clean_orphaned_data():
         orphaned_countries = find_orphaned_countries()
 
         total_orphaned = (
-            len(orphaned_localities) + len(orphaned_area_twos) + len(orphaned_area_ones) + len(orphaned_countries)
+            len(orphaned_localities)
+            + len(orphaned_area_twos)
+            + len(orphaned_area_ones)
+            + len(orphaned_countries)
         )
 
         if total_orphaned == 0:
@@ -148,20 +151,28 @@ def clean_orphaned_data():
         # Step 2: Show some examples
         print(f"\nExamples of orphaned records:")
         if orphaned_localities:
-            second_locality = orphaned_localities[1].name if len(orphaned_localities) > 1 else ""
-            print(f"  Localities: {orphaned_localities[0].name}, {second_locality}")
+            print(
+                f"  Localities: {orphaned_localities[0].name}, {orphaned_localities[1].name if len(orphaned_localities) > 1 else ''}"
+            )
         if orphaned_area_twos:
-            second_area_two = orphaned_area_twos[1].name if len(orphaned_area_twos) > 1 else ""
-            print(f"  Area Twos: {orphaned_area_twos[0].name}, {second_area_two}")
+            print(
+                f"  Area Twos: {orphaned_area_twos[0].name}, {orphaned_area_twos[1].name if len(orphaned_area_twos) > 1 else ''}"
+            )
         if orphaned_area_ones:
-            second_area_one = orphaned_area_ones[1].name if len(orphaned_area_ones) > 1 else ""
-            print(f"  Area Ones: {orphaned_area_ones[0].name}, {second_area_one}")
+            print(
+                f"  Area Ones: {orphaned_area_ones[0].name}, {orphaned_area_ones[1].name if len(orphaned_area_ones) > 1 else ''}"
+            )
         if orphaned_countries:
-            second_country = orphaned_countries[1].name if len(orphaned_countries) > 1 else ""
-            print(f"  Countries: {orphaned_countries[0].name}, {second_country}")
+            print(
+                f"  Countries: {orphaned_countries[0].name}, {orphaned_countries[1].name if len(orphaned_countries) > 1 else ''}"
+            )
 
         # Step 3: Confirm deletion
-        response = input(f"\nDelete {total_orphaned} orphaned records? (y/n): ").lower().strip()
+        response = (
+            input(f"\nDelete {total_orphaned} orphaned records? (y/n): ")
+            .lower()
+            .strip()
+        )
 
         if response != "y":
             print("Operation cancelled.")
@@ -205,13 +216,18 @@ def clean_orphaned_data():
         remaining_countries = find_orphaned_countries()
 
         total_remaining = (
-            len(remaining_localities) + len(remaining_area_twos) + len(remaining_area_ones) + len(remaining_countries)
+            len(remaining_localities)
+            + len(remaining_area_twos)
+            + len(remaining_area_ones)
+            + len(remaining_countries)
         )
 
         if total_remaining == 0:
             print("✓ All orphaned records successfully removed!")
         else:
-            print(f"⚠ {total_remaining} orphaned records still remain (may have circular dependencies)")
+            print(
+                f"⚠ {total_remaining} orphaned records still remain (may have circular dependencies)"
+            )
 
 
 def check_data_integrity():
@@ -223,7 +239,9 @@ def check_data_integrity():
         print("\nChecking data integrity...")
 
         # Check for area_twos without area_one_id
-        orphaned_area_twos = AreaTwo.query.filter(AreaTwo.country_id.isnot(None), AreaTwo.area_one_id.is_(None)).count()
+        orphaned_area_twos = AreaTwo.query.filter(
+            AreaTwo.country_id.isnot(None), AreaTwo.area_one_id.is_(None)
+        ).count()
 
         # Check for localities without area_two_id
         orphaned_localities = Locality.query.filter(
