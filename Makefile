@@ -171,3 +171,8 @@ quick-check: lint test
 
 full-check: lint-all test-cov security-check
 	@echo "Full code quality check complete!"
+
+# Auto-fix linting issues
+autofix:
+	@echo "Running auto-fix for common linting issues..."
+	python scripts/autofix_lint.py

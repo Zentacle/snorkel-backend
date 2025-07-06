@@ -17,14 +17,22 @@ from dotenv import load_dotenv
 from flask import Flask, abort, jsonify, redirect, request
 from flask_caching import Cache
 from flask_cors import CORS
-from flask_jwt_extended import *
+from flask_jwt_extended import (
+    JWTManager,
+    create_access_token,
+    get_current_user,
+    get_jwt,
+    get_jwt_identity,
+    jwt_required,
+    set_access_cookies,
+)
 from flask_migrate import Migrate
 from sendgrid import SendGridAPIClient
 from sqlalchemy import and_, not_
 from werkzeug.exceptions import HTTPException
 
 from app.config import config
-from app.models import *
+from app.models import AreaOne, AreaTwo, Country, Image, Spot, User, db
 from app.scripts.openapi import spec
 
 load_dotenv()
@@ -55,7 +63,7 @@ def get_summary_reviews_helper(beach_id):
         num = str(i)
         try:
             output[num]
-        except:
+        except KeyError:
             output[num] = 0
 
     return output
@@ -202,10 +210,12 @@ def create_app(config_name=None, config_object=None):
         if not user.admin:
             abort(403, "You must be an admin to that")
         email = request.args.get("email")
-        user = User.query.filter_by(email=email).first()
-        db.session.delete(user)
+        user_to_delete = User.query.filter_by(email=email).first()
+        if not user_to_delete:
+            abort(404, "User not found")
+        db.session.delete(user_to_delete)
         db.session.commit()
-        return "Successfully deleted user: " + email
+        return {"msg": "User deleted successfully"}
 
     @app.route("/getall/email")
     @jwt_required()
@@ -307,18 +317,6 @@ def create_app(config_name=None, config_object=None):
         # The response contains the presigned URL and required fields
         return response
 
-    @app.route("/generate-short-names", methods=["GET"])
-    def backfill_short_names():
-        localities = Locality.query.all()
-        already_had = []
-        for locality in localities:
-            if not locality.short_name:
-                locality.short_name = demicrosoft(locality.name).lower()
-            else:
-                already_had.append(locality.get_dict())
-        db.session.commit()
-        return {"msg": already_had}
-
     @app.route("/set-country")
     def set_country():
         country_id = request.args.get("country_id")
@@ -388,7 +386,7 @@ def create_app(config_name=None, config_object=None):
                 )
                 try:
                     db.session.commit()
-                except Exception as e:
+                except Exception:
                     failed.append(user.get_dict())
         return {
             "data": output,
@@ -451,7 +449,7 @@ def create_app(config_name=None, config_object=None):
                 f"{payment_link}?prefilled_email={email}&client_reference_id={user_id}",
                 code=302,
             )
-        except Exception as e:
+        except Exception:
             raise Exception("Unable to create payment intent")
 
     @app.route("/stripe-webhook", methods=["POST"])
@@ -517,53 +515,53 @@ def create_app(config_name=None, config_object=None):
 
         return jsonify(json.loads(response.text[6:])[0])
 
-    from app.routes import shop
+    from app.routes import shop as shop_routes
 
-    app.register_blueprint(shop.bp)
+    app.register_blueprint(shop_routes.bp)
 
-    from app.routes import user
+    from app.routes import user as user_routes
 
-    app.register_blueprint(user.bp)
+    app.register_blueprint(user_routes.bp)
 
-    from app.routes import users
+    from app.routes import users as users_routes
 
-    app.register_blueprint(users.bp)
+    app.register_blueprint(users_routes.bp)
 
-    from app.routes import review
+    from app.routes import review as review_routes
 
-    app.register_blueprint(review.bp)
+    app.register_blueprint(review_routes.bp)
 
-    from app.routes import reviews
+    from app.routes import reviews as reviews_routes
 
-    app.register_blueprint(reviews.bp)
+    app.register_blueprint(reviews_routes.bp)
 
-    from app.routes import buddy
+    from app.routes import buddy as buddy_routes
 
-    app.register_blueprint(buddy.bp)
+    app.register_blueprint(buddy_routes.bp)
 
-    from app.routes import spots
+    from app.routes import spots as spots_routes
 
-    app.register_blueprint(spots.bp)
+    app.register_blueprint(spots_routes.bp)
 
-    from app.routes import spot
+    from app.routes import spot as spot_routes
 
-    app.register_blueprint(spot.bp)
+    app.register_blueprint(spot_routes.bp)
 
-    from app.routes import search
+    from app.routes import search as search_routes
 
-    app.register_blueprint(search.bp)
+    app.register_blueprint(search_routes.bp)
 
-    from app.routes import loc
+    from app.routes import loc as loc_routes
 
-    app.register_blueprint(loc.bp)
+    app.register_blueprint(loc_routes.bp)
 
-    from app.routes import locality
+    from app.routes import locality as locality_routes
 
-    app.register_blueprint(locality.bp)
+    app.register_blueprint(locality_routes.bp)
 
-    from app.routes import password
+    from app.routes import password as password_routes
 
-    app.register_blueprint(password.bp)
+    app.register_blueprint(password_routes.bp)
 
     with app.test_request_context():
         pass

@@ -1,5 +1,4 @@
 import io
-import logging
 import os
 
 import boto3
@@ -315,7 +314,7 @@ def create_dive_shop():
     try:
         db.session.add(dive_shop)
         db.session.commit()
-    except exc.IntegrityError as e:
+    except exc.IntegrityError:
         abort(409, "Dive shop already exists")
 
     return {"data": dive_shop.get_dict()}
@@ -360,11 +359,12 @@ def upload_stamp_image(id):
         abort(422, "No file included in request")
 
     abort(501, "Not implemented")
-    dive_shop = DiveShop.query.get_or_404(id)
-    setattr(dive_shop, "stamp_uri", data.get("uri"))
-    db.session.commit()
+    # TODO: Fixup
+    # dive_shop = DiveShop.query.get_or_404(id)
+    # setattr(dive_shop, "stamp_uri", data.get("uri"))
+    # db.session.commit()
 
-    return {"msg": "dive shop successfully updated"}
+    # return {"msg": "dive shop successfully updated"}
 
 
 @bp.route("/<int:id>/logo", methods=["POST"])
@@ -415,28 +415,6 @@ def get_typeahead():
     )
 
     return {"data": list(map(lambda x: x.get_typeahead_dict(), dive_shops))}
-
-
-@bp.route("/<int:id>/mint_dive_stamp", methods=["POST"])
-@jwt_required()
-def mint_dive_stamp(id):
-    user = get_current_user()
-    # restrict access
-    dive_shop = DiveShop.query.get_or_404(id).get_dict()
-    if dive_shop.get("owner_user_id") != user.id and not user.admin:
-        abort(403, "Only shop owner and admin can perform this action")
-
-    current_review = Review.query.get_or_404(request.json.get("review_id")).get_dict()
-    beach_id = current_review.get("beach_id")
-    beach = Spot.query.get_or_404(beach_id).get_dict()
-    if dive_shop.get("stamp_uri"):
-        data = mint_nft(
-            current_review=current_review, dive_shop=dive_shop, beach=beach, user=user
-        )
-
-        return {"data": data}
-
-    return {"msg": "This dive shop needs a stamp image uri to be able to mint an nft"}
 
 
 @bp.route("/nearby")

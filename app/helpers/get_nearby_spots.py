@@ -11,7 +11,7 @@ def get_nearby_spots(latitude, longitude, limit=25, spot_id=None):
         query = (
             Spot.query.filter(
                 and_(
-                    Spot.is_verified == True,
+                    Spot.is_verified,
                     Spot.is_deleted.is_not(True),
                     Spot.id != spot_id,
                 )
@@ -26,7 +26,7 @@ def get_nearby_spots(latitude, longitude, limit=25, spot_id=None):
             query = (
                 Spot.query.filter(
                     and_(
-                        Spot.is_verified == True,
+                        Spot.is_verified,
                         Spot.is_deleted.is_not(True),
                         Spot.id != spot_id,
                     )

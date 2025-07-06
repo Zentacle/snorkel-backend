@@ -1,6 +1,5 @@
 from datetime import datetime, timedelta
 
-from flask import current_app
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import func
 from sqlalchemy.ext.hybrid import hybrid_method

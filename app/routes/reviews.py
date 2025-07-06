@@ -228,7 +228,7 @@ def send_recent_reviews():
         html_content=html,
     )
     message.reply_to = "mayank@zentacle.com"
-    sg = SendGridAPIClient(os.environ.get("SENDGRID_API_KEY"))
+    SendGridAPIClient(os.environ.get("SENDGRID_API_KEY"))
     print(html)
     return {"data": html.replace("\n", "")}
     # response = sg.send(message)

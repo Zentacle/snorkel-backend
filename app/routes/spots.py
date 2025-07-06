@@ -372,13 +372,13 @@ def search_spots():
     if not search_term:
         search_term = request.args.get("search_term")
     difficulty = request.args.get("difficulty")
-    activity = request.args.get("activity")
+    request.args.get("activity")
     entry = request.args.get("entry")
-    sort = request.args.get("sort")
+    request.args.get("sort")
     difficulty_query = sql.true()
     entry_query = sql.true()
-    activity_query = sql.true()
-    sort_query = sql.true()
+    sql.true()
+    sql.true()
     if difficulty:
         difficulty_query = Spot.difficulty.__eq__(difficulty)
     if entry:

@@ -1,13 +1,7 @@
-import os
-import tempfile
 from unittest.mock import MagicMock, patch
 
 import pytest
-from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
-from sqlalchemy.pool import StaticPool
 
 from app import create_app, db
 from app.models import AreaOne, AreaTwo, Country, Locality, Review, Spot, User

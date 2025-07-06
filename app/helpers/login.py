@@ -9,8 +9,6 @@ from flask_jwt_extended import (
     set_refresh_cookies,
 )
 
-from app.models import *
-
 
 def login(user):
     auth_token = create_access_token(identity=user.id)

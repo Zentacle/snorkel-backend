@@ -11,7 +11,6 @@ from flask import Blueprint, abort, request
 from flask_jwt_extended import get_current_user, get_jwt_identity, jwt_required
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
-from sqlalchemy import and_
 from sqlalchemy.orm import joinedload
 
 from app import db, get_summary_reviews_helper
@@ -19,15 +18,7 @@ from app.helpers.demicrosoft import demicrosoft
 from app.helpers.parse_uddf import parse_uddf
 from app.helpers.send_notifications import send_notification
 from app.helpers.validate_email_format import validate_email_format
-from app.models import (
-    DiveShop,
-    Image,
-    Review,
-    ShoreDivingData,
-    ShoreDivingReview,
-    Spot,
-    User,
-)
+from app.models import Image, Review, ShoreDivingData, ShoreDivingReview, Spot, User
 
 bp = Blueprint("review", __name__, url_prefix="/review")
 
@@ -222,7 +213,7 @@ def add_review():
             f"New activity at {spot.name}!",
             f"{user.display_name} said '{text}'",
         )
-
+        print(f"Review notification receivers: {notif_receivers}")
     return {"review": review.get_dict(), "spot": spot.get_dict()}, 200
 
 

@@ -55,3 +55,4 @@ def send_push_notification(push_token, title, message):
             },
         },
     )
+    print(f"Pinpoint send_messages response: {response}")

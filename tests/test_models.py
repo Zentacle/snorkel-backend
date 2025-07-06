@@ -1,7 +1,3 @@
-from datetime import datetime, timedelta
-
-import pytest
-
 from app.models import (
     AreaOne,
     AreaTwo,

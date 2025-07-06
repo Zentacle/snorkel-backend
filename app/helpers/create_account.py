@@ -18,7 +18,7 @@ from sqlalchemy import func
 
 from app.helpers.phone_validation import format_phone_to_e164, validate_phone_format
 from app.helpers.validate_email_format import validate_email_format
-from app.models import *
+from app.models import User
 
 
 def create_account(
@@ -138,6 +138,7 @@ def create_account(
             "list_ids": ["49e5fa45-3112-4a99-ba4b-9e5a8d18af3c"],
         }
         response = sg.client.marketing.contacts.put(request_body=data)
+        print(f"Add SendGrid contact response: {response}")
     except Exception as e:
         print(e.body)
     return resp

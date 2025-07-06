@@ -1,6 +1,6 @@
 from sqlalchemy import and_
 
-from app.models import *
+from app.models import AreaOne, AreaTwo, Country, Locality
 
 from .demicrosoft import demicrosoft
 

@@ -23,7 +23,7 @@ from jwt.algorithms import RSAAlgorithm
 from sqlalchemy import func, or_
 from sqlalchemy.orm import joinedload
 
-from app import cache, db
+from app import db
 from app.helpers.create_account import create_account
 from app.helpers.get_localities import format_localities
 from app.helpers.login import login
@@ -144,9 +144,9 @@ def user_apple_signup():
                 description: User couldn't be created.
     """
     # https://developer.apple.com/documentation/sign_in_with_apple/sign_in_with_apple_js/configuring_your_webpage_for_sign_in_with_apple
-    code = request.json.get("code")
+    request.json.get("code")
     id_token = request.json.get("id_token")
-    state = request.json.get("state")
+    request.json.get("state")
     audience = (
         request.json.get("audience")
         if request.json.get("audience")
@@ -170,9 +170,9 @@ def user_apple_signup():
         token = jwt.decode(
             id_token, public_key, audience=audience, algorithms=["RS256"]
         )
-    except jwt.exceptions.ExpiredSignatureError as e:
+    except jwt.exceptions.ExpiredSignatureError:
         raise Exception("That token has expired")
-    except jwt.exceptions.InvalidAudienceError as e:
+    except jwt.exceptions.InvalidAudienceError:
         raise Exception("That token's audience did not match")
     except Exception as e:
         print(e)
@@ -278,7 +278,6 @@ def user_google_signup():
     except ValueError as e:
         abort(401, e.body)
         # Invalid token
-        pass
     return {"data": userid, "token": token}
 
 
@@ -685,10 +684,11 @@ def upload():
 @bp.route("/wallet", methods=["GET"])
 @jwt_required()
 def get_user_wallet():
-    user = get_current_user()
-    wallet_data = fetch_user_wallet(user.id)
-
-    return {"data": wallet_data}
+    # TODO: Implement fetch_user_wallet function
+    # user = get_current_user()
+    # wallet_data = fetch_user_wallet(user.id)
+    # return {"data": wallet_data}
+    return {"data": {"wallet": "not implemented yet"}}
 
 
 @bp.route("/push_token", methods=["POST"])
