@@ -76,7 +76,7 @@ jobs:
             # Run isort check on changed files
             isort --check-only --diff $(cat python_files.txt | tr '\n' ' ') || true
             # Run flake8 on changed files
-            flake8 $(cat python_files.txt | tr '\n' ' ') --max-line-length=88 || true
+            flake8 $(cat python_files.txt | tr '\n' ' ') || true
           else
             echo "No Python files changed, skipping linting"
           fi
