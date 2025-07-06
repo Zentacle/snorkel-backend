@@ -95,4 +95,12 @@ def get_localities(address_components):
             country=country,
             url=f"/loc/{country_short_name}/{area_1_short_name}/{area_2_short_name}/{locality_short_name}",
         )
-    return (locality, area_2, area_1, country)
+
+    # Create or find the corresponding geographic node
+    from app.services.url_mapping import URLMappingService
+
+    geographic_node = URLMappingService.create_legacy_mapping(
+        country, area_1, area_2, locality
+    )
+
+    return (locality, area_2, area_1, country, geographic_node)

@@ -303,6 +303,11 @@ def get_spots():
         if area_data.get("country"):
             area_data["country"] = area_data.get("country").get_dict()
         resp["area"] = area_data
+
+        # Add new geographic URL if available
+        if hasattr(area, "geographic_node") and area.geographic_node:
+            resp["geographic_url"] = area.geographic_node.get_url()
+
     return resp
 
 

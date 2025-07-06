@@ -563,6 +563,11 @@ def create_app(config_name=None, config_object=None):
 
     app.register_blueprint(password_routes.bp)
 
+    # Register new geographic routing system
+    from app.routes import geography
+
+    app.register_blueprint(geography.bp)
+
     with app.test_request_context():
         pass
         # spec.path(view=user_signup)

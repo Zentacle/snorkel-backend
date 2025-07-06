@@ -34,6 +34,12 @@ def get_spot(beach_id):
         spot_data["area_one"] = spot.area_one.get_dict(spot.country)
     if spot.country:
         spot_data["country"] = spot.country.get_dict()
+
+    # Add new geographic URL if available
+    if spot.geographic_node:
+        spot_data["geographic_url"] = spot.get_url()
+        spot_data["geographic_node"] = spot.geographic_node.get_dict()
+
     spot_data["ratings"] = get_summary_reviews_helper(beach_id)
     return {"data": spot_data}
 
@@ -96,12 +102,15 @@ def geocode(beach_id):
     response = r.json()
     if response.get("status") == "OK":
         address_components = response.get("results")[0].get("address_components")
-        locality, area_2, area_1, country = get_localities(address_components)
+        locality, area_2, area_1, country, geographic_node = get_localities(
+            address_components
+        )
         if country:
             spot.locality = locality
             spot.area_one = area_1
             spot.area_two = area_2
             spot.country = country
+            spot.geographic_node = geographic_node
             db.session.add(spot)
             db.session.commit()
             spot.id
