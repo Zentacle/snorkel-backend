@@ -46,10 +46,11 @@ profile = "black"
 multi_line_output = 3
 line_length = 88
 known_first_party = ["app"]
+sections = ["FUTURE", "STDLIB", "THIRDPARTY", "FIRSTPARTY", "LOCALFOLDER"]
 
 [tool.flake8]
 max-line-length = 88
-extend-ignore = ["E203", "W503"]
+extend-ignore = ["E203", "W503", "E501"]
 exclude = [
     ".git",
     "__pycache__",
@@ -59,6 +60,47 @@ exclude = [
     ".venv",
     "migrations",
 ]
+
+[tool.pylint.messages_control]
+disable = [
+    "C0114",  # missing-module-docstring
+    "C0115",  # missing-class-docstring
+    "C0116",  # missing-function-docstring
+    "R0903",  # too-few-public-methods
+    "R0913",  # too-many-arguments
+    "R0914",  # too-many-locals
+    "W0621",  # redefined-outer-name
+    "W0703",  # broad-except
+    "C0103",  # invalid-name
+]
+
+[tool.pylint.format]
+max-line-length = 88
+
+[tool.pylint.basic]
+good-names = ["i", "j", "k", "ex", "Run", "_", "id", "db"]
+
+[tool.pylint.design]
+max-args = 10
+max-locals = 20
+max-returns = 10
+max-branches = 15
+max-statements = 60
+
+[tool.bandit]
+exclude_dirs = ["tests", "migrations", "venv", ".venv"]
+skips = ["B101", "B601"]
+
+[tool.pydocstyle]
+convention = "google"
+add_ignore = ["D100", "D104", "D107", "D200", "D203", "D212", "D406", "D407", "D413"]
+
+[tool.vulture]
+min_confidence = 80
+exclude = ["venv", ".venv", "migrations", "tests"]
+
+[tool.eradicate]
+aggressive = false
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
