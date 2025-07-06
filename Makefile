@@ -57,7 +57,7 @@ lint:
 	@echo "Checking import sorting..."
 	isort --check-only --diff app/ tests/
 	@echo "Running flake8..."
-	flake8 app/ tests/ --max-line-length=88 --extend-ignore=E203,W503,E501 --exclude=venv,.venv,migrations
+	flake8 app/ tests/ --max-line-length=88 --exclude=venv,.venv,migrations
 
 # Run all linting and code quality checks
 lint-all: lint

@@ -4,7 +4,6 @@ Setup script for the linting system.
 This script helps initialize and configure the linting tools.
 """
 
-import os
 import subprocess
 import sys
 from pathlib import Path
@@ -14,7 +13,7 @@ def run_command(command, description):
     """Run a command and handle errors."""
     print(f"Running: {description}")
     try:
-        result = subprocess.run(command, shell=True, check=True, capture_output=True, text=True)
+        subprocess.run(command, shell=True, check=True, capture_output=True, text=True)
         print(f"✓ {description} completed successfully")
         return True
     except subprocess.CalledProcessError as e:
