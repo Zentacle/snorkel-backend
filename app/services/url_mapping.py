@@ -1,13 +1,19 @@
-from app.models import GeographicNode, Country, AreaOne, AreaTwo, Locality
-from app import db
 from sqlalchemy.orm import joinedload
+
+from app import db
+from app.models import AreaOne, AreaTwo, Country, GeographicNode, Locality
+
 
 class URLMappingService:
     """Service to handle URL mapping between old and new geographic systems"""
 
     @staticmethod
-    def find_node_by_legacy_path(country_short_name, area_one_short_name=None,
-                                area_two_short_name=None, locality_short_name=None):
+    def find_node_by_legacy_path(
+        country_short_name,
+        area_one_short_name=None,
+        area_two_short_name=None,
+        locality_short_name=None,
+    ):
         """Find a geographic node by legacy path components with hierarchical context"""
 
         # Build the query based on what components are provided
@@ -20,7 +26,7 @@ class URLMappingService:
                 GeographicNode.legacy_area_one.has(short_name=area_one_short_name),
                 GeographicNode.legacy_area_two.has(short_name=area_two_short_name),
                 GeographicNode.legacy_locality.has(short_name=locality_short_name),
-                GeographicNode.admin_level == 3  # Locality level
+                GeographicNode.admin_level == 3,  # Locality level
             )
         elif area_two_short_name:
             # Path: country/area_one/area_two
@@ -28,20 +34,20 @@ class URLMappingService:
                 GeographicNode.legacy_country.has(short_name=country_short_name),
                 GeographicNode.legacy_area_one.has(short_name=area_one_short_name),
                 GeographicNode.legacy_area_two.has(short_name=area_two_short_name),
-                GeographicNode.admin_level == 2  # Area two level
+                GeographicNode.admin_level == 2,  # Area two level
             )
         elif area_one_short_name:
             # Path: country/area_one
             query = query.filter(
                 GeographicNode.legacy_country.has(short_name=country_short_name),
                 GeographicNode.legacy_area_one.has(short_name=area_one_short_name),
-                GeographicNode.admin_level == 1  # Area one level
+                GeographicNode.admin_level == 1,  # Area one level
             )
         else:
             # Path: country
             query = query.filter(
                 GeographicNode.legacy_country.has(short_name=country_short_name),
-                GeographicNode.admin_level == 0  # Country level
+                GeographicNode.admin_level == 0,  # Country level
             )
 
         return query.first()
@@ -68,7 +74,7 @@ class URLMappingService:
                     legacy_area_two_id=area_two.id if area_two else None,
                     legacy_locality_id=locality.id,
                     description=locality.description,
-                    map_image_url=locality.map_image_url
+                    map_image_url=locality.map_image_url,
                 )
                 db.session.add(node)
 
@@ -87,7 +93,7 @@ class URLMappingService:
                     legacy_area_one_id=area_one.id if area_one else None,
                     legacy_area_two_id=area_two.id,
                     description=area_two.description,
-                    map_image_url=area_two.map_image_url
+                    map_image_url=area_two.map_image_url,
                 )
                 db.session.add(node)
 
@@ -105,14 +111,12 @@ class URLMappingService:
                     legacy_country_id=country.id,
                     legacy_area_one_id=area_one.id,
                     description=area_one.description,
-                    map_image_url=area_one.map_image_url
+                    map_image_url=area_one.map_image_url,
                 )
                 db.session.add(node)
 
         else:
-            node = GeographicNode.query.filter_by(
-                legacy_country_id=country.id
-            ).first()
+            node = GeographicNode.query.filter_by(legacy_country_id=country.id).first()
 
             if not node:
                 node = GeographicNode(
@@ -121,7 +125,7 @@ class URLMappingService:
                     admin_level=0,  # Country level
                     legacy_country_id=country.id,
                     description=country.description,
-                    map_image_url=country.map_image_url
+                    map_image_url=country.map_image_url,
                 )
                 db.session.add(node)
 
@@ -138,7 +142,7 @@ class URLMappingService:
         current_node = GeographicNode.query.filter_by(
             short_name=path_segments[0],
             admin_level=0,  # Country level
-            parent_id=None  # Root level
+            parent_id=None,  # Root level
         ).first()
 
         if not current_node:
@@ -149,7 +153,7 @@ class URLMappingService:
             child = GeographicNode.query.filter_by(
                 short_name=segment,
                 parent_id=current_node.id,
-                admin_level=i  # Ensure correct admin level
+                admin_level=i,  # Ensure correct admin level
             ).first()
 
             if not child:

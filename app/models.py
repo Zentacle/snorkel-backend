@@ -17,6 +17,7 @@ tags = db.Table(
 
 class GeographicNode(db.Model):
     """Flexible geographic hierarchy node that can represent any level"""
+
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String, nullable=False)
     short_name = db.Column(db.String, nullable=False, unique=True)
@@ -24,8 +25,10 @@ class GeographicNode(db.Model):
     google_place_id = db.Column(db.String)
 
     # Hierarchy relationships
-    parent_id = db.Column(db.Integer, db.ForeignKey('geographic_node.id'), nullable=True)
-    root_id = db.Column(db.Integer, db.ForeignKey('geographic_node.id'), nullable=True)
+    parent_id = db.Column(
+        db.Integer, db.ForeignKey("geographic_node.id"), nullable=True
+    )
+    root_id = db.Column(db.Integer, db.ForeignKey("geographic_node.id"), nullable=True)
 
     # Geographic metadata
     latitude = db.Column(db.Float)
@@ -38,44 +41,64 @@ class GeographicNode(db.Model):
     map_image_url = db.Column(db.String)
 
     # Legacy mapping fields for backwards compatibility
-    legacy_country_id = db.Column(db.Integer, db.ForeignKey('country.id'), nullable=True)
-    legacy_area_one_id = db.Column(db.Integer, db.ForeignKey('area_one.id'), nullable=True)
-    legacy_area_two_id = db.Column(db.Integer, db.ForeignKey('area_two.id'), nullable=True)
-    legacy_locality_id = db.Column(db.Integer, db.ForeignKey('locality.id'), nullable=True)
+    legacy_country_id = db.Column(
+        db.Integer, db.ForeignKey("country.id"), nullable=True
+    )
+    legacy_area_one_id = db.Column(
+        db.Integer, db.ForeignKey("area_one.id"), nullable=True
+    )
+    legacy_area_two_id = db.Column(
+        db.Integer, db.ForeignKey("area_two.id"), nullable=True
+    )
+    legacy_locality_id = db.Column(
+        db.Integer, db.ForeignKey("locality.id"), nullable=True
+    )
 
     # Relationships
-    parent = db.relationship('GeographicNode', remote_side=[id], foreign_keys=[parent_id], backref='children')
-    root = db.relationship('GeographicNode', remote_side=[id], foreign_keys=[root_id], backref='descendants')
-    spots = db.relationship('Spot', backref='geographic_node', lazy=True)
+    parent = db.relationship(
+        "GeographicNode", remote_side=[id], foreign_keys=[parent_id], backref="children"
+    )
+    root = db.relationship(
+        "GeographicNode",
+        remote_side=[id],
+        foreign_keys=[root_id],
+        backref="descendants",
+    )
+    spots = db.relationship("Spot", backref="geographic_node", lazy=True)
     shops = db.relationship(
-        'DiveShop',
-        backref='geographic_node',
+        "DiveShop",
+        backref="geographic_node",
         lazy=True,
-        foreign_keys='DiveShop.geographic_node_id'
+        foreign_keys="DiveShop.geographic_node_id",
     )
 
     # Legacy relationships
-    legacy_country = db.relationship('Country', foreign_keys=[legacy_country_id])
-    legacy_area_one = db.relationship('AreaOne', foreign_keys=[legacy_area_one_id])
-    legacy_area_two = db.relationship('AreaTwo', foreign_keys=[legacy_area_two_id])
-    legacy_locality = db.relationship('Locality', foreign_keys=[legacy_locality_id])
+    legacy_country = db.relationship("Country", foreign_keys=[legacy_country_id])
+    legacy_area_one = db.relationship("AreaOne", foreign_keys=[legacy_area_one_id])
+    legacy_area_two = db.relationship("AreaTwo", foreign_keys=[legacy_area_two_id])
+    legacy_locality = db.relationship("Locality", foreign_keys=[legacy_locality_id])
 
     def get_legacy_url(self):
         """Generate the old-style URL for backwards compatibility"""
-        if self.legacy_country and self.legacy_area_one and self.legacy_area_two and self.legacy_locality:
-            return f'/loc/{self.legacy_country.short_name}/{self.legacy_area_one.short_name}/{self.legacy_area_two.short_name}/{self.legacy_locality.short_name}'
+        if (
+            self.legacy_country
+            and self.legacy_area_one
+            and self.legacy_area_two
+            and self.legacy_locality
+        ):
+            return f"/loc/{self.legacy_country.short_name}/{self.legacy_area_one.short_name}/{self.legacy_area_two.short_name}/{self.legacy_locality.short_name}"
         elif self.legacy_country and self.legacy_area_one and self.legacy_area_two:
-            return f'/loc/{self.legacy_country.short_name}/{self.legacy_area_one.short_name}/{self.legacy_area_two.short_name}'
+            return f"/loc/{self.legacy_country.short_name}/{self.legacy_area_one.short_name}/{self.legacy_area_two.short_name}"
         elif self.legacy_country and self.legacy_area_one:
-            return f'/loc/{self.legacy_country.short_name}/{self.legacy_area_one.short_name}'
+            return f"/loc/{self.legacy_country.short_name}/{self.legacy_area_one.short_name}"
         elif self.legacy_country:
-            return f'/loc/{self.legacy_country.short_name}'
+            return f"/loc/{self.legacy_country.short_name}"
         return None
 
     def get_new_url(self):
         """Generate the new flexible URL"""
         path = self.get_path_to_root()
-        return '/loc/' + '/'.join([node.short_name for node in path])
+        return "/loc/" + "/".join([node.short_name for node in path])
 
     def get_url(self):
         """Return new URL, but can be overridden for legacy compatibility"""
@@ -110,23 +133,23 @@ class GeographicNode(db.Model):
 
     def get_dict(self):
         return {
-            'id': self.id,
-            'name': self.name,
-            'short_name': self.short_name,
-            'url': self.get_url(),
-            'admin_level': self.admin_level,
-            'country_code': self.country_code,
-            'parent': self.parent.get_simple_dict() if self.parent else None,
-            'num_spots': len(self.spots),
-            'num_shops': len(self.shops)
+            "id": self.id,
+            "name": self.name,
+            "short_name": self.short_name,
+            "url": self.get_url(),
+            "admin_level": self.admin_level,
+            "country_code": self.country_code,
+            "parent": self.parent.get_simple_dict() if self.parent else None,
+            "num_spots": len(self.spots),
+            "num_shops": len(self.shops),
         }
 
     def get_simple_dict(self):
         return {
-            'id': self.id,
-            'name': self.name,
-            'short_name': self.short_name,
-            'admin_level': self.admin_level
+            "id": self.id,
+            "name": self.name,
+            "short_name": self.short_name,
+            "admin_level": self.admin_level,
         }
 
 
@@ -353,11 +376,16 @@ class Spot(db.Model):
     area_one_id = db.Column(db.Integer, db.ForeignKey("area_one.id"), nullable=True)
     country_id = db.Column(db.Integer, db.ForeignKey("country.id"), nullable=True)
     noaa_station_id = db.Column(db.String)
-    created = db.Column(db.DateTime, nullable=False,
-                        default=datetime.utcnow)
-    updated = db.Column(db.DateTime, nullable=False, server_default=func.now(
-    ), onupdate=func.current_timestamp())
-    geographic_node_id = db.Column(db.Integer, db.ForeignKey('geographic_node.id'), nullable=True)
+    created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    updated = db.Column(
+        db.DateTime,
+        nullable=False,
+        server_default=func.now(),
+        onupdate=func.current_timestamp(),
+    )
+    geographic_node_id = db.Column(
+        db.Integer, db.ForeignKey("geographic_node.id"), nullable=True
+    )
 
     reviews = db.relationship("Review", backref="spot")
     images = db.relationship("Image", backref="spot")
@@ -428,7 +456,7 @@ class Spot(db.Model):
             url_parts = [node.short_name for node in path]
             # Add spot with name-id for SEO and uniqueness
             url_parts.append(f"{self.get_beach_name_for_url()}-{self.id}")
-            return '/loc/' + '/'.join(url_parts)
+            return "/loc/" + "/".join(url_parts)
         else:
             # Legacy format: /Beach/id/name
             return Spot.create_legacy_url(self.id, self.name)
@@ -442,7 +470,7 @@ class Spot(db.Model):
 
     @classmethod
     def create_legacy_url(cls, id, name):
-        return '/Beach/'+str(id)+'/'+demicrosoft(name).lower()
+        return "/Beach/" + str(id) + "/" + demicrosoft(name).lower()
 
     @classmethod
     def create_url(cls, id, name):
@@ -887,7 +915,9 @@ class DiveShop(db.Model):
     country_id = db.Column(db.Integer, db.ForeignKey("country.id"), nullable=True)
     owner_user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=True)
     stamp_uri = db.Column(db.String, nullable=True)
-    geographic_node_id = db.Column(db.Integer, db.ForeignKey('geographic_node.id'), nullable=True)
+    geographic_node_id = db.Column(
+        db.Integer, db.ForeignKey("geographic_node.id"), nullable=True
+    )
     owner = db.relationship("User", uselist=False)
     created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     updated = db.Column(

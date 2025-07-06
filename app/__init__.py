@@ -565,9 +565,8 @@ def create_app(config_name=None, config_object=None):
 
     # Register new geographic routing system
     from app.routes import geography
+
     app.register_blueprint(geography.bp)
-
-
 
     with app.test_request_context():
         pass

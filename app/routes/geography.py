@@ -1,20 +1,23 @@
-from flask import Blueprint, request, jsonify, abort
-from app.models import GeographicNode, Spot, Country, AreaOne, AreaTwo, Locality
-from app.services.url_mapping import URLMappingService
-from app import cache
-from sqlalchemy.orm import joinedload
-from sqlalchemy import and_, func
 import re
 
-bp = Blueprint('geography', __name__, url_prefix='/loc')
+from flask import Blueprint, abort, jsonify, request
+from sqlalchemy import and_, func
+from sqlalchemy.orm import joinedload
 
-@bp.route('/<path:geographic_path>')
+from app import cache
+from app.models import AreaOne, AreaTwo, Country, GeographicNode, Locality, Spot
+from app.services.url_mapping import URLMappingService
+
+bp = Blueprint("geography", __name__, url_prefix="/loc")
+
+
+@bp.route("/<path:geographic_path>")
 @cache.cached(query_string=True)
 def get_geographic_area(geographic_path):
     """Handle geographic paths like /loc/us/ca/san-diego"""
 
     # Split the path into segments
-    path_segments = geographic_path.strip('/').split('/')
+    path_segments = geographic_path.strip("/").split("/")
 
     # Find the geographic node for this path
     node = URLMappingService.find_node_by_path(path_segments)
@@ -24,7 +27,7 @@ def get_geographic_area(geographic_path):
         if len(path_segments) > 0:
             last_segment = path_segments[-1]
             # Check if last segment matches spot pattern (name-id)
-            spot_match = re.match(r'^(.+)-(\d+)$', last_segment)
+            spot_match = re.match(r"^(.+)-(\d+)$", last_segment)
             if spot_match:
                 spot_name, spot_id = spot_match.groups()
                 return get_spot_by_geographic_path(path_segments[:-1], int(spot_id))
@@ -43,13 +46,10 @@ def get_geographic_area(geographic_path):
         spot_data = spot.get_dict()
         spots_data.append(spot_data)
 
-    return {
-        'area': area_data,
-        'spots': spots_data,
-        'total_spots': len(spots_data)
-    }
+    return {"area": area_data, "spots": spots_data, "total_spots": len(spots_data)}
 
-@bp.route('/<path:geographic_path>/<int:spot_id>')
+
+@bp.route("/<path:geographic_path>/<int:spot_id>")
 @cache.cached()
 def get_spot_by_geographic_path(geographic_path, spot_id):
     """Handle spot URLs like /loc/us/ca/san-diego/la-jolla-cove-123"""
@@ -59,7 +59,9 @@ def get_spot_by_geographic_path(geographic_path, spot_id):
 
     # Verify the geographic path matches the spot's location
     if spot.geographic_node:
-        expected_path = '/'.join([node.short_name for node in spot.geographic_node.get_path_to_root()])
+        expected_path = "/".join(
+            [node.short_name for node in spot.geographic_node.get_path_to_root()]
+        )
         if expected_path != geographic_path:
             abort(404, description="Spot not found at this location")
 
@@ -68,20 +70,20 @@ def get_spot_by_geographic_path(geographic_path, spot_id):
 
     # Add geographic context
     if spot.geographic_node:
-        spot_data['geographic_node'] = spot.geographic_node.get_dict()
+        spot_data["geographic_node"] = spot.geographic_node.get_dict()
 
-    return {'data': spot_data}
+    return {"data": spot_data}
 
-@bp.route('/<path:geographic_path>/<spot_name_id>')
+
+@bp.route("/<path:geographic_path>/<spot_name_id>")
 @cache.cached()
 def get_spot_by_name_id(geographic_path, spot_name_id):
     """Handle spot URLs like /loc/us/ca/san-diego/la-jolla-cove-123"""
 
     # Extract spot ID from the name-id pattern
-    spot_match = re.match(r'^(.+)-(\d+)$', spot_name_id)
+    spot_match = re.match(r"^(.+)-(\d+)$", spot_name_id)
     if not spot_match:
         abort(404, description="Invalid spot URL format")
 
     spot_name, spot_id = spot_match.groups()
     return get_spot_by_geographic_path(geographic_path, int(spot_id))
-
