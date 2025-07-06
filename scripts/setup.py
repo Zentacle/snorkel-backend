@@ -5,9 +5,9 @@ This script automates the setup process for new developers.
 """
 
 import os
-import sys
-import subprocess
 import shutil
+import subprocess
+import sys
 from pathlib import Path
 
 
@@ -19,11 +19,11 @@ def run_command(command, check=True, capture_output=False, env=None):
             env = os.environ.copy()
             env_file = Path(".env")
             if env_file.exists():
-                with open(env_file, 'r') as f:
+                with open(env_file, "r") as f:
                     for line in f:
                         line = line.strip()
-                        if line and not line.startswith('#') and '=' in line:
-                            key, value = line.split('=', 1)
+                        if line and not line.startswith("#") and "=" in line:
+                            key, value = line.split("=", 1)
                             env[key] = value
 
         result = subprocess.run(
@@ -32,7 +32,7 @@ def run_command(command, check=True, capture_output=False, env=None):
             check=check,
             capture_output=capture_output,
             text=True,
-            env=env
+            env=env,
         )
         return result
     except subprocess.CalledProcessError as e:
@@ -71,7 +71,7 @@ def install_dependencies():
     print("📦 Installing dependencies...")
 
     # Determine the correct pip path
-    if os.name == 'nt':  # Windows
+    if os.name == "nt":  # Windows
         pip_path = "venv\\Scripts\\pip"
     else:  # Unix/Linux/macOS
         pip_path = "venv/bin/pip"
@@ -93,7 +93,9 @@ def install_dependencies():
 
         # Try installing without binary wheels first
         print("  Trying installation without binary wheels...")
-        result = run_command(f"{pip_path} install --no-binary :all: -r requirements.txt", check=False)
+        result = run_command(
+            f"{pip_path} install --no-binary :all: -r requirements.txt", check=False
+        )
 
         if result.returncode != 0:
             print("❌ Dependency installation failed. Please try manually:")
@@ -103,7 +105,9 @@ def install_dependencies():
             print("   - macOS: brew install postgresql")
             print("   - Ubuntu: sudo apt-get install python3-dev libpq-dev")
             print("   - CentOS: sudo yum install python3-devel postgresql-devel")
-            print("2. Try installing dependencies one by one to identify the problematic package")
+            print(
+                "2. Try installing dependencies one by one to identify the problematic package"
+            )
             sys.exit(1)
 
     print("✅ Dependencies installed")
@@ -159,7 +163,12 @@ def setup_database():
     else:
         print("📝 Creating database 'snorkel'...")
         run_command("createdb snorkel", check=False)
-        if run_command("psql -lqt | cut -d \\| -f 1 | grep -qw snorkel", check=False).returncode == 0:
+        if (
+            run_command(
+                "psql -lqt | cut -d \\| -f 1 | grep -qw snorkel", check=False
+            ).returncode
+            == 0
+        ):
             print("✅ Database created")
         else:
             print("⚠️  Failed to create database. Please create it manually:")
@@ -170,7 +179,7 @@ def setup_database():
     print("🔄 Running database migrations...")
 
     # Determine the correct flask path
-    if os.name == 'nt':  # Windows
+    if os.name == "nt":  # Windows
         flask_path = "venv\\Scripts\\flask"
     else:  # Unix/Linux/macOS
         flask_path = "venv/bin/flask"
@@ -223,7 +232,7 @@ fi
 echo "Code quality checks completed"
 """
 
-    with open(pre_commit_hook, 'w') as f:
+    with open(pre_commit_hook, "w") as f:
         f.write(hook_content)
 
     # Make the hook executable
@@ -264,7 +273,7 @@ def main():
     print("\nNext steps:")
     print("1. Edit .env file with your configuration values")
     print("2. Activate virtual environment:")
-    if os.name == 'nt':  # Windows
+    if os.name == "nt":  # Windows
         print("   venv\\Scripts\\activate")
     else:  # Unix/Linux/macOS
         print("   source venv/bin/activate")

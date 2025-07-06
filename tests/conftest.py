@@ -1,7 +1,8 @@
-import pytest
 import os
 import tempfile
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
+
+import pytest
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import create_engine
@@ -9,19 +10,19 @@ from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from app import create_app, db
-from app.models import User, Spot, Review, Country, AreaOne, AreaTwo, Locality
+from app.models import AreaOne, AreaTwo, Country, Locality, Review, Spot, User
 
 
 class TestConfig:
     TESTING = True
-    SQLALCHEMY_DATABASE_URI = 'sqlite:///:memory:'
+    SQLALCHEMY_DATABASE_URI = "sqlite:///:memory:"
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     WTF_CSRF_ENABLED = False
-    JWT_SECRET_KEY = 'test-secret-key'
+    JWT_SECRET_KEY = "test-secret-key"
     JWT_ACCESS_TOKEN_EXPIRES = False
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope="session")
 def app():
     """Create and configure a new app instance for each test session."""
     app = create_app(config_object=TestConfig)
@@ -31,19 +32,19 @@ def app():
         yield app
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture(scope="function")
 def client(app):
     """A test client for the app."""
     return app.test_client()
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture(scope="function")
 def runner(app):
     """A test runner for the app's Click commands."""
     return app.test_cli_runner()
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture(scope="function")
 def db_session(app):
     """Create a fresh database session for a test."""
     with app.app_context():
@@ -51,9 +52,7 @@ def db_session(app):
         transaction = connection.begin()
 
         # Create a session using the connection
-        session = scoped_session(
-            sessionmaker(bind=connection, binds={})
-        )
+        session = scoped_session(sessionmaker(bind=connection, binds={}))
 
         # Patch the db session
         db.session = session
@@ -70,15 +69,15 @@ def db_session(app):
 def sample_user(db_session):
     """Create a sample user for testing."""
     user = User(
-        email='test@example.com',
-        first_name='Test',
-        last_name='User',
-        display_name='TestUser',
-        username='testuser',
-        password='hashed_password',
+        email="test@example.com",
+        first_name="Test",
+        last_name="User",
+        display_name="TestUser",
+        username="testuser",
+        password="hashed_password",
         admin=False,
         is_fake=False,
-        unit='imperial'
+        unit="imperial",
     )
     db_session.add(user)
     db_session.commit()
@@ -89,15 +88,15 @@ def sample_user(db_session):
 def admin_user(db_session):
     """Create an admin user for testing."""
     user = User(
-        email='admin@example.com',
-        first_name='Admin',
-        last_name='User',
-        display_name='AdminUser',
-        username='adminuser',
-        password='hashed_password',
+        email="admin@example.com",
+        first_name="Admin",
+        last_name="User",
+        display_name="AdminUser",
+        username="adminuser",
+        password="hashed_password",
         admin=True,
         is_fake=False,
-        unit='imperial'
+        unit="imperial",
     )
     db_session.add(user)
     db_session.commit()
@@ -108,10 +107,10 @@ def admin_user(db_session):
 def sample_country(db_session):
     """Create a sample country for testing."""
     country = Country(
-        name='United States',
-        short_name='us',
-        description='United States of America',
-        url='/us'
+        name="United States",
+        short_name="us",
+        description="United States of America",
+        url="/us",
     )
     db_session.add(country)
     db_session.commit()
@@ -122,11 +121,11 @@ def sample_country(db_session):
 def sample_area_one(db_session, sample_country):
     """Create a sample area one for testing."""
     area_one = AreaOne(
-        name='California',
-        short_name='ca',
-        description='California State',
-        url='/us/ca',
-        country_id=sample_country.id
+        name="California",
+        short_name="ca",
+        description="California State",
+        url="/us/ca",
+        country_id=sample_country.id,
     )
     db_session.add(area_one)
     db_session.commit()
@@ -137,12 +136,12 @@ def sample_area_one(db_session, sample_country):
 def sample_area_two(db_session, sample_country, sample_area_one):
     """Create a sample area two for testing."""
     area_two = AreaTwo(
-        name='Los Angeles County',
-        short_name='la',
-        description='Los Angeles County',
-        url='/us/ca/la',
+        name="Los Angeles County",
+        short_name="la",
+        description="Los Angeles County",
+        url="/us/ca/la",
         country_id=sample_country.id,
-        area_one_id=sample_area_one.id
+        area_one_id=sample_area_one.id,
     )
     db_session.add(area_two)
     db_session.commit()
@@ -153,13 +152,13 @@ def sample_area_two(db_session, sample_country, sample_area_one):
 def sample_locality(db_session, sample_country, sample_area_one, sample_area_two):
     """Create a sample locality for testing."""
     locality = Locality(
-        name='Santa Monica',
-        short_name='santa-monica',
-        description='Santa Monica Beach',
-        url='/us/ca/la/santa-monica',
+        name="Santa Monica",
+        short_name="santa-monica",
+        description="Santa Monica Beach",
+        url="/us/ca/la/santa-monica",
         country_id=sample_country.id,
         area_one_id=sample_area_one.id,
-        area_two_id=sample_area_two.id
+        area_two_id=sample_area_two.id,
     )
     db_session.add(locality)
     db_session.commit()
@@ -170,13 +169,13 @@ def sample_locality(db_session, sample_country, sample_area_one, sample_area_two
 def sample_spot(db_session, sample_locality):
     """Create a sample spot for testing."""
     spot = Spot(
-        name='Santa Monica Beach',
-        description='Beautiful beach for snorkeling',
+        name="Santa Monica Beach",
+        description="Beautiful beach for snorkeling",
         latitude=34.0195,
         longitude=-118.4912,
         locality_id=sample_locality.id,
         is_verified=True,
-        is_deleted=False
+        is_deleted=False,
     )
     db_session.add(spot)
     db_session.commit()
@@ -188,13 +187,13 @@ def sample_review(db_session, sample_user, sample_spot):
     """Create a sample review for testing."""
     review = Review(
         rating=5,
-        text='Amazing snorkeling spot!',
+        text="Amazing snorkeling spot!",
         author_id=sample_user.id,
         beach_id=sample_spot.id,
         visibility=50,
-        activity_type='snorkeling',
-        title='Great Experience',
-        is_private=False
+        activity_type="snorkeling",
+        title="Great Experience",
+        is_private=False,
     )
     db_session.add(review)
     db_session.commit()
@@ -207,7 +206,7 @@ def auth_headers(sample_user):
     from flask_jwt_extended import create_access_token
 
     token = create_access_token(identity=sample_user.id)
-    return {'Authorization': f'Bearer {token}'}
+    return {"Authorization": f"Bearer {token}"}
 
 
 @pytest.fixture
@@ -216,13 +215,13 @@ def admin_auth_headers(admin_user):
     from flask_jwt_extended import create_access_token
 
     token = create_access_token(identity=admin_user.id)
-    return {'Authorization': f'Bearer {token}'}
+    return {"Authorization": f"Bearer {token}"}
 
 
 @pytest.fixture
 def mock_amplitude():
     """Mock Amplitude analytics."""
-    with patch('app.Amplitude') as mock:
+    with patch("app.Amplitude") as mock:
         mock_instance = MagicMock()
         mock.return_value = mock_instance
         yield mock_instance
@@ -231,7 +230,7 @@ def mock_amplitude():
 @pytest.fixture
 def mock_sendgrid():
     """Mock SendGrid email service."""
-    with patch('app.SendGridAPIClient') as mock:
+    with patch("app.SendGridAPIClient") as mock:
         mock_instance = MagicMock()
         mock.return_value = mock_instance
         yield mock_instance
@@ -240,7 +239,7 @@ def mock_sendgrid():
 @pytest.fixture
 def mock_boto3():
     """Mock AWS Boto3 services."""
-    with patch('app.boto3') as mock:
+    with patch("app.boto3") as mock:
         mock_client = MagicMock()
         mock.client.return_value = mock_client
         yield mock_client
@@ -249,14 +248,14 @@ def mock_boto3():
 @pytest.fixture
 def mock_requests():
     """Mock HTTP requests."""
-    with patch('app.requests') as mock:
+    with patch("app.requests") as mock:
         yield mock
 
 
 @pytest.fixture
 def mock_cache():
     """Mock Flask-Caching."""
-    with patch('app.cache') as mock:
+    with patch("app.cache") as mock:
         yield mock
 
 
@@ -264,17 +263,18 @@ def mock_cache():
 @pytest.fixture
 def user_factory(db_session):
     """Factory for creating test users."""
+
     def _create_user(**kwargs):
         defaults = {
-            'email': 'test@example.com',
-            'first_name': 'Test',
-            'last_name': 'User',
-            'display_name': 'TestUser',
-            'username': 'testuser',
-            'password': 'hashed_password',
-            'admin': False,
-            'is_fake': False,
-            'unit': 'imperial'
+            "email": "test@example.com",
+            "first_name": "Test",
+            "last_name": "User",
+            "display_name": "TestUser",
+            "username": "testuser",
+            "password": "hashed_password",
+            "admin": False,
+            "is_fake": False,
+            "unit": "imperial",
         }
         defaults.update(kwargs)
 
@@ -289,14 +289,15 @@ def user_factory(db_session):
 @pytest.fixture
 def spot_factory(db_session):
     """Factory for creating test spots."""
+
     def _create_spot(**kwargs):
         defaults = {
-            'name': 'Test Spot',
-            'description': 'Test spot description',
-            'latitude': 34.0195,
-            'longitude': -118.4912,
-            'is_verified': True,
-            'is_deleted': False
+            "name": "Test Spot",
+            "description": "Test spot description",
+            "latitude": 34.0195,
+            "longitude": -118.4912,
+            "is_verified": True,
+            "is_deleted": False,
         }
         defaults.update(kwargs)
 
@@ -311,14 +312,15 @@ def spot_factory(db_session):
 @pytest.fixture
 def review_factory(db_session):
     """Factory for creating test reviews."""
+
     def _create_review(**kwargs):
         defaults = {
-            'rating': 5,
-            'text': 'Test review',
-            'visibility': 50,
-            'activity_type': 'snorkeling',
-            'title': 'Test Review',
-            'is_private': False
+            "rating": 5,
+            "text": "Test review",
+            "visibility": 50,
+            "activity_type": "snorkeling",
+            "title": "Test Review",
+            "is_private": False,
         }
         defaults.update(kwargs)
 

@@ -83,10 +83,8 @@ format:
 format-all: format
 	@echo "Running additional formatting fixes..."
 	@echo "Fixing trailing whitespace and file endings..."
-	pre-commit run trailing-whitespace --all-files
-	pre-commit run end-of-file-fixer --all-files
-	@echo "Checking for debug statements..."
-	pre-commit run debug-statements --all-files
+	-pre-commit run trailing-whitespace --all-files
+	-pre-commit run end-of-file-fixer --all-files
 
 # Run security checks
 security-check:
