@@ -2,17 +2,21 @@
 """
 Fast migration script to create geographic nodes from existing hierarchy
 Uses batch operations and bulk inserts for performance
+Handles duplicate data gracefully by merging nodes
 """
 
-import sys
 import os
+import sys
+from collections import defaultdict
+
 from sqlalchemy import func
 
 # Add the parent directory to Python path so we can import app
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app import create_app, db
-from app.models import Country, AreaOne, AreaTwo, Locality, GeographicNode, Spot
+from app.models import AreaOne, AreaTwo, Country, GeographicNode, Locality, Spot
+
 
 def migrate_existing_hierarchy_fast():
     """Migrate existing geographic hierarchy to new system using batch operations"""
@@ -119,6 +123,10 @@ def migrate_existing_hierarchy_fast():
 
         print("All geographic nodes created!")
 
+        # Step 3: Merge duplicate nodes before setting relationships
+        print("Merging duplicate nodes...")
+        merge_duplicate_nodes()
+
 def create_additional_nodes():
     """Create additional geographic nodes from existing data"""
 
@@ -202,6 +210,206 @@ def create_node_from_combination(combination):
 
     return None
 
+def merge_duplicate_nodes():
+    """Merge duplicate geographic nodes to prevent constraint violations"""
+
+    print("Detecting and merging duplicate nodes...")
+
+    # Find duplicates by (admin_level, short_name) combination
+    duplicates = find_duplicate_nodes()
+
+    if not duplicates:
+        print("No duplicate nodes found.")
+        return
+
+    print(f"Found {len(duplicates)} groups of duplicate nodes to merge")
+
+    total_merged = 0
+    for duplicate_group in duplicates:
+        merged_count = merge_duplicate_group(duplicate_group)
+        total_merged += merged_count
+
+    print(f"Successfully merged {total_merged} duplicate nodes")
+
+def find_duplicate_nodes():
+    """Find groups of duplicate nodes that would cause constraint violations"""
+
+    # Find duplicates that would violate the unique constraint (parent_id, short_name)
+    # We need to find nodes with the same short_name that would end up with the same parent_id
+
+    duplicate_groups = []
+
+    # Get all nodes grouped by short_name
+    short_name_groups = db.session.query(
+        GeographicNode.short_name,
+        func.count(GeographicNode.id).label('count')
+    ).group_by(GeographicNode.short_name).having(
+        func.count(GeographicNode.id) > 1
+    ).all()
+
+    for short_name, count in short_name_groups:
+        # Get all nodes with this short_name
+        nodes = GeographicNode.query.filter_by(short_name=short_name).order_by(GeographicNode.id).all()
+
+        # Group by their potential parent context (legacy hierarchy)
+        parent_contexts = {}
+        for node in nodes:
+            # Create a key based on the legacy hierarchy that would determine the parent
+            if node.admin_level == 0:  # Country - no parent
+                context_key = "root"
+            elif node.admin_level == 1:  # AreaOne - parent is country
+                context_key = f"country_{node.legacy_country_id}"
+            elif node.admin_level == 2:  # AreaTwo - parent is area_one
+                context_key = f"area_one_{node.legacy_area_one_id}"
+            elif node.admin_level == 3:  # Locality - parent is area_two
+                context_key = f"area_two_{node.legacy_area_two_id}"
+            else:
+                context_key = "unknown"
+
+            if context_key not in parent_contexts:
+                parent_contexts[context_key] = []
+            parent_contexts[context_key].append(node)
+
+        # Check if any context has multiple nodes (these would be real duplicates)
+        for context_key, context_nodes in parent_contexts.items():
+            if len(context_nodes) > 1:
+                duplicate_groups.append(context_nodes)
+                print(f"  Found {len(context_nodes)} duplicates for short_name='{short_name}' in context '{context_key}'")
+
+    return duplicate_groups
+
+def merge_duplicate_group(duplicate_nodes):
+    """Merge a group of duplicate nodes into one"""
+
+    if len(duplicate_nodes) <= 1:
+        return 0
+
+    # Keep the first node (lowest ID) as the primary node
+    primary_node = duplicate_nodes[0]
+    nodes_to_merge = duplicate_nodes[1:]
+
+    print(f"  Merging {len(nodes_to_merge)} duplicates into node ID {primary_node.id} ({primary_node.name})")
+
+    # Merge legacy IDs from all duplicate nodes into the primary node
+    for node in nodes_to_merge:
+        # Merge legacy IDs if they're not already set in primary
+        if node.legacy_country_id and not primary_node.legacy_country_id:
+            primary_node.legacy_country_id = node.legacy_country_id
+        if node.legacy_area_one_id and not primary_node.legacy_area_one_id:
+            primary_node.legacy_area_one_id = node.legacy_area_one_id
+        if node.legacy_area_two_id and not primary_node.legacy_area_two_id:
+            primary_node.legacy_area_two_id = node.legacy_area_two_id
+        if node.legacy_locality_id and not primary_node.legacy_locality_id:
+            primary_node.legacy_locality_id = node.legacy_locality_id
+
+        # Merge other fields if they're not set in primary
+        if node.google_name and not primary_node.google_name:
+            primary_node.google_name = node.google_name
+        if node.description and not primary_node.description:
+            primary_node.description = node.description
+        if node.map_image_url and not primary_node.map_image_url:
+            primary_node.map_image_url = node.map_image_url
+        if node.latitude and not primary_node.latitude:
+            primary_node.latitude = node.latitude
+        if node.longitude and not primary_node.longitude:
+            primary_node.longitude = node.longitude
+        if node.country_code and not primary_node.country_code:
+            primary_node.country_code = node.country_code
+
+    # Delete the duplicate nodes
+    for node in nodes_to_merge:
+        db.session.delete(node)
+
+    # Commit the changes
+    db.session.commit()
+
+    return len(nodes_to_merge)
+
+def handle_potential_duplicates(updates, admin_level):
+    """Handle potential duplicates before setting parent relationships"""
+
+    print(f"  Checking for potential duplicates in admin_level {admin_level} updates...")
+
+    # Group updates by parent_id and short_name
+    parent_short_name_groups = {}
+    for node_id, parent_id in updates:
+        # Get the node to find its short_name
+        node = GeographicNode.query.get(node_id)
+        if node:
+            key = (parent_id, node.short_name)
+            if key not in parent_short_name_groups:
+                parent_short_name_groups[key] = []
+            parent_short_name_groups[key].append(node_id)
+
+    # Find groups with multiple nodes (potential duplicates)
+    safe_updates = []
+    duplicates_found = 0
+
+    for (parent_id, short_name), node_ids in parent_short_name_groups.items():
+        if len(node_ids) > 1:
+            # We have duplicates - merge them
+            print(f"    Found {len(node_ids)} duplicates for parent_id={parent_id}, short_name='{short_name}'")
+            duplicates_found += len(node_ids) - 1
+
+            # Keep the first node, merge others into it
+            primary_node_id = node_ids[0]
+            nodes_to_merge = node_ids[1:]
+
+            # Merge the duplicate nodes
+            merge_duplicate_nodes_by_ids(primary_node_id, nodes_to_merge)
+
+            # Only add the primary node to safe updates
+            safe_updates.append((primary_node_id, parent_id))
+        else:
+            # No duplicates, safe to proceed
+            safe_updates.append((node_ids[0], parent_id))
+
+    if duplicates_found > 0:
+        print(f"    Merged {duplicates_found} duplicate nodes during parent relationship setup")
+
+    return safe_updates
+
+def merge_duplicate_nodes_by_ids(primary_node_id, duplicate_node_ids):
+    """Merge duplicate nodes by their IDs"""
+
+    primary_node = GeographicNode.query.get(primary_node_id)
+    if not primary_node:
+        return
+
+    for duplicate_id in duplicate_node_ids:
+        duplicate_node = GeographicNode.query.get(duplicate_id)
+        if not duplicate_node:
+            continue
+
+        # Merge legacy IDs from duplicate into primary
+        if duplicate_node.legacy_country_id and not primary_node.legacy_country_id:
+            primary_node.legacy_country_id = duplicate_node.legacy_country_id
+        if duplicate_node.legacy_area_one_id and not primary_node.legacy_area_one_id:
+            primary_node.legacy_area_one_id = duplicate_node.legacy_area_one_id
+        if duplicate_node.legacy_area_two_id and not primary_node.legacy_area_two_id:
+            primary_node.legacy_area_two_id = duplicate_node.legacy_area_two_id
+        if duplicate_node.legacy_locality_id and not primary_node.legacy_locality_id:
+            primary_node.legacy_locality_id = duplicate_node.legacy_locality_id
+
+        # Merge other fields if they're not set in primary
+        if duplicate_node.google_name and not primary_node.google_name:
+            primary_node.google_name = duplicate_node.google_name
+        if duplicate_node.description and not primary_node.description:
+            primary_node.description = duplicate_node.description
+        if duplicate_node.map_image_url and not primary_node.map_image_url:
+            primary_node.map_image_url = duplicate_node.map_image_url
+        if duplicate_node.latitude and not primary_node.latitude:
+            primary_node.latitude = duplicate_node.latitude
+        if duplicate_node.longitude and not primary_node.longitude:
+            primary_node.longitude = duplicate_node.longitude
+        if duplicate_node.country_code and not primary_node.country_code:
+            primary_node.country_code = duplicate_node.country_code
+
+        # Delete the duplicate node
+        db.session.delete(duplicate_node)
+
+    db.session.commit()
+
 def build_hierarchy_relationships_fast():
     """Build parent-child relationships between geographic nodes using efficient queries"""
 
@@ -236,7 +444,7 @@ def build_hierarchy_relationships_fast():
         db.session.commit()
         print(f"Set {len(area_one_updates)} area_one parent relationships")
 
-        # Build area_one -> area_two relationships
+                # Build area_one -> area_two relationships
         print("Setting area_two parents...")
         area_twos = GeographicNode.query.filter_by(admin_level=2).all()
         area_two_updates = []
@@ -250,14 +458,18 @@ def build_hierarchy_relationships_fast():
                 if area_one_node:
                     area_two_updates.append((area_two.id, area_one_node.id))
 
+        # Handle potential duplicates before bulk update
+        print("Checking for potential duplicates in area_two updates...")
+        safe_updates = handle_potential_duplicates(area_two_updates, 2)
+
         # Bulk update area_twos
-        for area_two_id, parent_id in area_two_updates:
+        for area_two_id, parent_id in safe_updates:
             db.session.execute(
                 "UPDATE geographic_node SET parent_id = :parent_id WHERE id = :area_two_id",
                 {'parent_id': parent_id, 'area_two_id': area_two_id}
             )
         db.session.commit()
-        print(f"Set {len(area_two_updates)} area_two parent relationships")
+        print(f"Set {len(safe_updates)} area_two parent relationships")
 
         # Build area_two -> locality relationships
         print("Setting locality parents...")
@@ -273,14 +485,18 @@ def build_hierarchy_relationships_fast():
                 if area_two_node:
                     locality_updates.append((locality.id, area_two_node.id))
 
+        # Handle potential duplicates before bulk update
+        print("Checking for potential duplicates in locality updates...")
+        safe_locality_updates = handle_potential_duplicates(locality_updates, 3)
+
         # Bulk update localities
-        for locality_id, parent_id in locality_updates:
+        for locality_id, parent_id in safe_locality_updates:
             db.session.execute(
                 "UPDATE geographic_node SET parent_id = :parent_id WHERE id = :locality_id",
                 {'parent_id': parent_id, 'locality_id': locality_id}
             )
         db.session.commit()
-        print(f"Set {len(locality_updates)} locality parent relationships")
+        print(f"Set {len(safe_locality_updates)} locality parent relationships")
 
         # Step 2: Fix parent relationships for deeper nodes
         print("Fixing parent relationships for deeper nodes...")

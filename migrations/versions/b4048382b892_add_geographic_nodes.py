@@ -5,8 +5,8 @@ Revises: f85c26c91798
 Create Date: 2025-07-05 14:13:56.938428
 
 """
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 
 # revision identifiers, used by Alembic.
 revision = 'b4048382b892'
@@ -23,11 +23,11 @@ def upgrade():
         sa.Column('google_name', sa.String()),
         sa.Column('google_place_id', sa.String()),
         sa.Column('parent_id', sa.Integer(), nullable=True),
-        sa.Column('root_id', sa.Integer(), nullable=True),
+        sa.Column('root_id', sa.Integer(), nullable=False),
         sa.Column('latitude', sa.Float()),
         sa.Column('longitude', sa.Float()),
         sa.Column('country_code', sa.String(2)),
-        sa.Column('admin_level', sa.Integer()),
+        sa.Column('admin_level', sa.Integer(), nullable=False),
         sa.Column('description', sa.String()),
         sa.Column('map_image_url', sa.String()),
         sa.Column('legacy_country_id', sa.Integer(), nullable=True),
