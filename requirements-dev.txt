@@ -2,7 +2,6 @@ bandit==1.7.5
 
 # Code quality and linting
 black==24.10.0
-eradicate==3.0.0
 factory-boy==3.3.0
 faker==20.1.0
 flake8==6.1.0
