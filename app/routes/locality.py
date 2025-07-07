@@ -28,9 +28,7 @@ def get_locality():
             table.locality_id,
             func.count(table.id).label("count"),
         )
-        .group_by(
-            table.area_one_id, table.country_id, table.area_two_id, table.locality_id
-        )
+        .group_by(table.area_one_id, table.country_id, table.area_two_id, table.locality_id)
         .subquery()
     )
     localities = (
@@ -50,17 +48,11 @@ def get_locality():
         .order_by(db.desc("count"))
     )
     if country_short_name:
-        localities = localities.filter(
-            Locality.country.has(short_name=country_short_name)
-        )
+        localities = localities.filter(Locality.country.has(short_name=country_short_name))
     if area_one_short_name:
-        localities = localities.filter(
-            Locality.area_one.has(short_name=area_one_short_name)
-        )
+        localities = localities.filter(Locality.area_one.has(short_name=area_one_short_name))
     if area_two_short_name:
-        localities = localities.filter(
-            Locality.area_two.has(short_name=area_two_short_name)
-        )
+        localities = localities.filter(Locality.area_two.has(short_name=area_two_short_name))
     localities = (
         localities.options(joinedload("country"))
         .options(joinedload("area_one"))
@@ -71,12 +63,15 @@ def get_locality():
     data = []
     for locality, count in localities:
         locality_data = locality.get_dict()
-        if locality_data.get("country"):
-            locality_data["country"] = locality_data.get("country").get_simple_dict()
-        if locality_data.get("area_one"):
-            locality_data["area_one"] = locality_data.get("area_one").get_simple_dict()
-        if locality_data.get("area_two"):
-            locality_data["area_two"] = locality_data.get("area_two").get_simple_dict()
+        # Include the country data from the loaded relationship
+        if locality.country:
+            locality_data["country"] = locality.country.get_simple_dict()
+        # Include the area_one data from the loaded relationship
+        if locality.area_one:
+            locality_data["area_one"] = locality.area_one.get_simple_dict()
+        # Include the area_two data from the loaded relationship
+        if locality.area_two:
+            locality_data["area_two"] = locality.area_two.get_simple_dict()
         locality_data["num_spots"] = count
         data.append(locality_data)
     return {"data": data}
@@ -117,26 +112,19 @@ def get_area_two():
         .order_by(db.desc("count"))
     )
     if country_short_name:
-        localities = localities.filter(
-            AreaTwo.country.has(short_name=country_short_name)
-        )
+        localities = localities.filter(AreaTwo.country.has(short_name=country_short_name))
     if area_one_short_name:
-        localities = localities.filter(
-            AreaTwo.area_one.has(short_name=area_one_short_name)
-        )
-    localities = (
-        localities.options(joinedload("country"))
-        .options(joinedload("area_one"))
-        .limit(limit)
-        .all()
-    )
+        localities = localities.filter(AreaTwo.area_one.has(short_name=area_one_short_name))
+    localities = localities.options(joinedload("country")).options(joinedload("area_one")).limit(limit).all()
     data = []
     for locality, count in localities:
         locality_data = locality.get_dict()
-        if locality_data.get("country"):
-            locality_data["country"] = locality_data.get("country").get_simple_dict()
-        if locality_data.get("area_one"):
-            locality_data["area_one"] = locality_data.get("area_one").get_simple_dict()
+        # Include the country data from the loaded relationship
+        if locality.country:
+            locality_data["country"] = locality.country.get_simple_dict()
+        # Include the area_one data from the loaded relationship
+        if locality.area_one:
+            locality_data["area_one"] = locality.area_one.get_simple_dict()
         locality_data["num_spots"] = count
         data.append(locality_data)
     return {"data": data}
@@ -151,9 +139,7 @@ def get_area_one():
         table = DiveShop
     country_short_name = request.args.get("country")
     sq = (
-        db.session.query(
-            table.country_id, table.area_one_id, func.count(table.id).label("count")
-        )
+        db.session.query(table.country_id, table.area_one_id, func.count(table.id).label("count"))
         .group_by(table.area_one_id, table.country_id)
         .subquery()
     )
@@ -169,15 +155,14 @@ def get_area_one():
         .order_by(db.desc("count"))
     )
     if country_short_name:
-        localities = localities.filter(
-            AreaOne.country.has(short_name=country_short_name)
-        )
+        localities = localities.filter(AreaOne.country.has(short_name=country_short_name))
     localities = localities.options(joinedload("country")).limit(limit).all()
     data = []
     for locality, count in localities:
         locality_data = locality.get_dict()
-        if locality_data.get("country"):
-            locality_data["country"] = locality_data.get("country").get_simple_dict()
+        # Include the country data from the loaded relationship
+        if locality.country:
+            locality_data["country"] = locality.country.get_simple_dict()
         locality_data["num_spots"] = count
         data.append(locality_data)
     return {"data": data}
@@ -190,11 +175,7 @@ def get_country():
     table = Spot
     if request.args.get("shops"):
         table = DiveShop
-    sq = (
-        db.session.query(table.country_id, func.count(table.id).label("count"))
-        .group_by(table.country_id)
-        .subquery()
-    )
+    sq = db.session.query(table.country_id, func.count(table.id).label("count")).group_by(table.country_id).subquery()
     localities = (
         db.session.query(Country, sq.c.count)
         .join(sq, sq.c.country_id == Country.id)
