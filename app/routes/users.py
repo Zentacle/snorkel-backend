@@ -11,11 +11,7 @@ bp = Blueprint("users", __name__, url_prefix="/users")
 def users_nearby():
     latitude = request.args.get("latitude")
     longitude = request.args.get("longitude")
-    query = (
-        User.query.filter(User.latitude.is_not(None))
-        .order_by(User.distance(latitude, longitude))
-        .limit(10)
-    )
+    query = User.query.filter(User.latitude.is_not(None)).order_by(User.distance(latitude, longitude)).limit(10)
     results = query.all()
     return {"data": [result.get_dict() for result in results]}
 
@@ -47,10 +43,7 @@ def getAllData():
         return {"data": output, "count": len(output)}
     else:
         users = (
-            db.session.query(User, db.func.count(User.reviews).label("num_reviews"))
-            .join(Review)
-            .group_by(User)
-            .all()
+            db.session.query(User, db.func.count(User.reviews).label("num_reviews")).join(Review).group_by(User).all()
         )
     output = []
     for user, num_reviews in users:

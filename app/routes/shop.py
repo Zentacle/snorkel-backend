@@ -174,18 +174,16 @@ def get_spots():
         if request.args.get("ssg"):
             spot_data["beach_name_for_url"] = spot.get_beach_name_for_url()
         if not spot.location_google and spot.latitude and spot.longitude:
-            spot_data["location_google"] = (
-                "http://maps.google.com/maps?q=%(latitude)f,%(longitude)f"
-                % {"latitude": spot.latitude, "longitude": spot.longitude}
-            )
+            spot_data["location_google"] = "http://maps.google.com/maps?q=%(latitude)f,%(longitude)f" % {
+                "latitude": spot.latitude,
+                "longitude": spot.longitude,
+            }
         output.append(spot_data)
     resp = {"data": output}
     if area:
         area_data = area.get_dict()
         if area_data.get("area_two"):
-            area_data["area_two"] = area_data.get("area_two").get_dict(
-                area.country, area.area_one
-            )
+            area_data["area_two"] = area_data.get("area_two").get_dict(area.country, area.area_one)
         if area_data.get("area_one"):
             area_data["area_one"] = area_data.get("area_one").get_dict(area.country)
         if area_data.get("country"):
@@ -232,11 +230,7 @@ def fetch_dive_shop(id):
 
 @bp.route("<int:id>/reviews", methods=["GET"])
 def fetch_dive_shop_reviews(id):
-    dive_shop = (
-        DiveShop.query.options(joinedload(DiveShop.reviews).subqueryload(Review.spot))
-        .filter_by(id=id)
-        .first()
-    )
+    dive_shop = DiveShop.query.options(joinedload(DiveShop.reviews).subqueryload(Review.spot)).filter_by(id=id).first()
     data = dive_shop.get_dict()
     data["reviews"] = []
     if dive_shop.country:
@@ -487,9 +481,7 @@ def nearby_locations():
         temp_data = result.get_simple_dict()
         if result.locality and result.locality.url:
             temp_data["locality"] = {"url": result.locality.url + "/shop"}
-        temp_data["location_city"] = (
-            f"{result.city}, {result.state if result.state else result.country_name}"
-        )
+        temp_data["location_city"] = f"{result.city}, {result.state if result.state else result.country_name}"
         data.append(temp_data)
     return {"data": data}
 
@@ -502,9 +494,7 @@ def get_typeahea_nearby():
     limit = request.args.get("limit") if request.args.get("limit") else 25
     results = []
     try:
-        query = DiveShop.query.order_by(DiveShop.distance(latitude, longitude)).limit(
-            limit
-        )
+        query = DiveShop.query.order_by(DiveShop.distance(latitude, longitude)).limit(limit)
         results = query.all()
     except Exception as e:
         newrelic.agent.record_exception(e)

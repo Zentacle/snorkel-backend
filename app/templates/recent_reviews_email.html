@@ -1,0 +1,44 @@
+<div style='padding: 0 8px'>Hi {{ first_name }},</div>
+<div style='padding: 0 8px'>Check out the most recent reviews and dive logs posted on Zentacle!</div>
+{% for review in reviews %}
+  {% set name = review.spot.name %}
+  {% set city_location = review.spot.location_city %}
+  {% set profile_pic = review.user.profile_pic %}
+  {% set display_name = review.user.display_name %}
+  {% set formatted_date = review.date_posted.strftime('%B %d') %}
+  {% set hero_img = review.spot.hero_img %}
+  {% set text = review.text %}
+  {% set beach_url = 'https://www.zentacle.com' + review.spot.get_url() %}
+  <div style='padding: 8px;margin-bottom: 8px;'>
+    <a href='{{ beach_url }}' style='font-size: 20px;font-weight: 500;margin-bottom: 8px;text-decoration:none'>
+      {{ name }} in {{ city_location }}
+    </a>
+    <div style='display: flex;margin-bottom: 8px;align-items: center;'>
+      <div style='height: 16px;width: 16px;border-radius: 100%;overflow: hidden;margin-right: 2px;'>
+        <img style='height: 100%;width: 100%;' src='{{ profile_pic }}' />
+      </div>
+      <div>
+        {{ display_name }} -
+      </div>
+      {% for i in range(5) %}
+        <img style='height: 16px;width: auto;margin: 0 4px;' src='https://www.zentacle.com/_next/image?url=%2Ffullstar.png&w=64&q=75' />
+      {% endfor %}
+      <div>
+        on {{ formatted_date }}
+      </div>
+    </div>
+    <div style='display: flex;'>
+      <a href='{{ beach_url }}' style='flex: 0 0 80px;height: 78px;width: 78px;margin-right: 8px;overflow: hidden;border-radius: 8px;'>
+        <img style='height: 100%;width: 100%;' src='{{ hero_img }}' />
+      </a>
+      <div>
+        <div style='flex: 0 0 40px;overflow: hidden;text-overflow: ellipsis;margin-bottom: 8px;'>
+          {{ text }}
+        </div>
+        <a style='background-color: #0087D3;border-radius: 32px;color: white;padding: 8px 16px;text-align: center;text-decoration: none;' href='{{ beach_url }}'>
+          See more
+        </a>
+      </div>
+    </div>
+  </div>
+{% endfor %}

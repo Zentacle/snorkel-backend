@@ -1,7 +1,5 @@
-from sqlalchemy.orm import joinedload
-
 from app import db
-from app.models import AreaOne, AreaTwo, Country, GeographicNode, Locality
+from app.models import GeographicNode
 
 
 class URLMappingService:
@@ -59,9 +57,7 @@ class URLMappingService:
         # Find or create the appropriate geographic node
         if locality:
             # This is the most specific level
-            node = GeographicNode.query.filter_by(
-                legacy_locality_id=locality.id
-            ).first()
+            node = GeographicNode.query.filter_by(legacy_locality_id=locality.id).first()
 
             if not node:
                 node = GeographicNode(
@@ -79,9 +75,7 @@ class URLMappingService:
                 db.session.add(node)
 
         elif area_two:
-            node = GeographicNode.query.filter_by(
-                legacy_area_two_id=area_two.id
-            ).first()
+            node = GeographicNode.query.filter_by(legacy_area_two_id=area_two.id).first()
 
             if not node:
                 node = GeographicNode(
@@ -98,9 +92,7 @@ class URLMappingService:
                 db.session.add(node)
 
         elif area_one:
-            node = GeographicNode.query.filter_by(
-                legacy_area_one_id=area_one.id
-            ).first()
+            node = GeographicNode.query.filter_by(legacy_area_one_id=area_one.id).first()
 
             if not node:
                 node = GeographicNode(

@@ -25,9 +25,7 @@ def get_spot(beach_id):
     )
     spot_data = spot.get_dict()
     if spot.locality:
-        spot_data["locality"] = spot.locality.get_dict(
-            spot.country, spot.area_one, spot.area_two
-        )
+        spot_data["locality"] = spot.locality.get_dict(spot.country, spot.area_one, spot.area_two)
     if spot.area_two:
         spot_data["area_two"] = spot.area_two.get_dict(spot.country, spot.area_one)
     if spot.area_one:
@@ -81,7 +79,12 @@ def get_tides():
     station_id = request.args.get("station_id")
     begin_date = request.args.get("begin_date")
     end_date = request.args.get("end_date")
-    endpoint = f"https://api.tidesandcurrents.noaa.gov/api/prod/datagetter?product=predictions&begin_date={begin_date}&end_date={end_date}&datum=MLLW&station={station_id}&time_zone=GMT&units=english&interval=hilo&format=json&application=NOS.COOPS.TAC.TidePred"
+    endpoint = (
+        f"https://api.tidesandcurrents.noaa.gov/api/prod/datagetter?"
+        f"product=predictions&begin_date={begin_date}&end_date={end_date}&"
+        f"datum=MLLW&station={station_id}&time_zone=GMT&units=english&"
+        f"interval=hilo&format=json&application=NOS.COOPS.TAC.TidePred"
+    )
     resp = requests.get(endpoint).json()
     return resp
 
@@ -102,9 +105,7 @@ def geocode(beach_id):
     response = r.json()
     if response.get("status") == "OK":
         address_components = response.get("results")[0].get("address_components")
-        locality, area_2, area_1, country, geographic_node = get_localities(
-            address_components
-        )
+        locality, area_2, area_1, country, geographic_node = get_localities(address_components)
         if country:
             spot.locality = locality
             spot.area_one = area_1

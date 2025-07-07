@@ -5,12 +5,7 @@ from datetime import datetime
 import bcrypt
 from flask import Blueprint, abort, request
 from flask.helpers import make_response
-from flask_jwt_extended import (
-    create_access_token,
-    create_refresh_token,
-    set_access_cookies,
-    set_refresh_cookies,
-)
+from flask_jwt_extended import create_access_token, create_refresh_token, set_access_cookies, set_refresh_cookies
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
 from sqlalchemy import func
@@ -60,9 +55,7 @@ def reset_password():
             abort(401, "Link expired. Try reseting your password again")
         user_id = reset_obj.user_id
         user = User.query.filter_by(id=user_id).first()
-        hashed_password = bcrypt.hashpw(
-            password.encode("utf-8"), bcrypt.gensalt()
-        ).decode("utf-8")
+        hashed_password = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
         user.password = hashed_password
         db.session.commit()
         refresh_token = create_refresh_token(identity=user.id)

@@ -28,20 +28,14 @@ def search_location():
         "inputtype": "textsearch",
         "fields": "name,formatted_address,place_id",
     }
-    r = requests.get(
-        "https://maps.googleapis.com/maps/api/place/textsearch/json", params=params
-    )
+    r = requests.get("https://maps.googleapis.com/maps/api/place/textsearch/json", params=params)
     return r.json()
 
 
 @bp.route("/autocomplete")
 def search_autocomplete():
     search_term = request.args.get("q").lower()
-    spots = (
-        Spot.query.filter(func.lower(Spot.name).like("%" + search_term + "%"))
-        .limit(5)
-        .all()
-    )
+    spots = Spot.query.filter(func.lower(Spot.name).like("%" + search_term + "%")).limit(5).all()
     output = []
     for spot in spots:
         spot_data = {
@@ -100,33 +94,15 @@ def get_typeahead():
     if beach_only:
         return {"data": results}
 
-    dive_shops = (
-        DiveShop.query.filter(DiveShop.name.ilike("%" + query + "%")).limit(10).all()
-    )
+    dive_shops = DiveShop.query.filter(DiveShop.name.ilike("%" + query + "%")).limit(10).all()
     for shop in dive_shops:
         result = typeahead_from_shop(shop)
         results.append(result)
 
-    countries = (
-        Country.query.filter(unaccent(Country.name).ilike("%" + query + "%"))
-        .limit(10)
-        .all()
-    )
-    area_ones = (
-        AreaOne.query.filter(unaccent(AreaOne.name).ilike("%" + query + "%"))
-        .limit(10)
-        .all()
-    )
-    area_twos = (
-        AreaTwo.query.filter(unaccent(AreaTwo.name).ilike("%" + query + "%"))
-        .limit(10)
-        .all()
-    )
-    localities = (
-        Locality.query.filter(unaccent(Locality.name).ilike("%" + query + "%"))
-        .limit(10)
-        .all()
-    )
+    countries = Country.query.filter(unaccent(Country.name).ilike("%" + query + "%")).limit(10).all()
+    area_ones = AreaOne.query.filter(unaccent(AreaOne.name).ilike("%" + query + "%")).limit(10).all()
+    area_twos = AreaTwo.query.filter(unaccent(AreaTwo.name).ilike("%" + query + "%")).limit(10).all()
+    localities = Locality.query.filter(unaccent(Locality.name).ilike("%" + query + "%")).limit(10).all()
     for loc in countries:
         url = loc.get_url()
         segments = url.split("/")

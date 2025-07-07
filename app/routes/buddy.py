@@ -47,12 +47,7 @@ def get_buddies():
     locality_id = request.args.get("locality")
 
     if not area_one_id and not area_two_id and not country_id and not locality_id:
-        dive_partners = (
-            User.query.join(DivePartnerAd)
-            .filter(User.id == DivePartnerAd.user_id)
-            .limit(10)
-            .all()
-        )
+        dive_partners = User.query.join(DivePartnerAd).filter(User.id == DivePartnerAd.user_id).limit(10).all()
         partners = []
         for partner in dive_partners:
             partner_dict = partner.get_dict()
@@ -63,21 +58,9 @@ def get_buddies():
         DivePartnerAd.query.options(joinedload("user"))
         .filter(
             or_(
-                (
-                    DivePartnerAd.area_one_id == area_one_id
-                    if area_one_id
-                    else sql.false()
-                ),
-                (
-                    DivePartnerAd.area_two_id == area_two_id
-                    if area_two_id
-                    else sql.false()
-                ),
-                (
-                    DivePartnerAd.locality_id == locality_id
-                    if locality_id
-                    else sql.false()
-                ),
+                (DivePartnerAd.area_one_id == area_one_id if area_one_id else sql.false()),
+                (DivePartnerAd.area_two_id == area_two_id if area_two_id else sql.false()),
+                (DivePartnerAd.locality_id == locality_id if locality_id else sql.false()),
                 DivePartnerAd.country_id == country_id if country_id else sql.false(),
             )
         )

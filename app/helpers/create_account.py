@@ -6,12 +6,7 @@ import requests
 from amplitude import Amplitude, BaseEvent
 from flask import abort
 from flask.helpers import make_response
-from flask_jwt_extended import (
-    create_access_token,
-    create_refresh_token,
-    set_access_cookies,
-    set_refresh_cookies,
-)
+from flask_jwt_extended import create_access_token, create_refresh_token, set_access_cookies, set_refresh_cookies
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
 from sqlalchemy import func
@@ -35,9 +30,7 @@ def create_account(
 ):
     newrelic.agent.capture_request_params()
     password = (
-        bcrypt.hashpw(unencrypted_password.encode("utf-8"), bcrypt.gensalt()).decode(
-            "utf-8"
-        )
+        bcrypt.hashpw(unencrypted_password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
         if unencrypted_password
         else None
     )

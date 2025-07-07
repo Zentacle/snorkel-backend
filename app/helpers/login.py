@@ -2,12 +2,7 @@ import os
 
 from amplitude import Amplitude, BaseEvent
 from flask.helpers import make_response
-from flask_jwt_extended import (
-    create_access_token,
-    create_refresh_token,
-    set_access_cookies,
-    set_refresh_cookies,
-)
+from flask_jwt_extended import create_access_token, create_refresh_token, set_access_cookies, set_refresh_cookies
 
 
 def login(user):

@@ -28,9 +28,7 @@ def get_locality():
             table.locality_id,
             func.count(table.id).label("count"),
         )
-        .group_by(
-            table.area_one_id, table.country_id, table.area_two_id, table.locality_id
-        )
+        .group_by(table.area_one_id, table.country_id, table.area_two_id, table.locality_id)
         .subquery()
     )
     localities = (
@@ -50,17 +48,11 @@ def get_locality():
         .order_by(db.desc("count"))
     )
     if country_short_name:
-        localities = localities.filter(
-            Locality.country.has(short_name=country_short_name)
-        )
+        localities = localities.filter(Locality.country.has(short_name=country_short_name))
     if area_one_short_name:
-        localities = localities.filter(
-            Locality.area_one.has(short_name=area_one_short_name)
-        )
+        localities = localities.filter(Locality.area_one.has(short_name=area_one_short_name))
     if area_two_short_name:
-        localities = localities.filter(
-            Locality.area_two.has(short_name=area_two_short_name)
-        )
+        localities = localities.filter(Locality.area_two.has(short_name=area_two_short_name))
     localities = (
         localities.options(joinedload("country"))
         .options(joinedload("area_one"))
@@ -117,19 +109,10 @@ def get_area_two():
         .order_by(db.desc("count"))
     )
     if country_short_name:
-        localities = localities.filter(
-            AreaTwo.country.has(short_name=country_short_name)
-        )
+        localities = localities.filter(AreaTwo.country.has(short_name=country_short_name))
     if area_one_short_name:
-        localities = localities.filter(
-            AreaTwo.area_one.has(short_name=area_one_short_name)
-        )
-    localities = (
-        localities.options(joinedload("country"))
-        .options(joinedload("area_one"))
-        .limit(limit)
-        .all()
-    )
+        localities = localities.filter(AreaTwo.area_one.has(short_name=area_one_short_name))
+    localities = localities.options(joinedload("country")).options(joinedload("area_one")).limit(limit).all()
     data = []
     for locality, count in localities:
         locality_data = locality.get_dict()
@@ -151,9 +134,7 @@ def get_area_one():
         table = DiveShop
     country_short_name = request.args.get("country")
     sq = (
-        db.session.query(
-            table.country_id, table.area_one_id, func.count(table.id).label("count")
-        )
+        db.session.query(table.country_id, table.area_one_id, func.count(table.id).label("count"))
         .group_by(table.area_one_id, table.country_id)
         .subquery()
     )
@@ -169,9 +150,7 @@ def get_area_one():
         .order_by(db.desc("count"))
     )
     if country_short_name:
-        localities = localities.filter(
-            AreaOne.country.has(short_name=country_short_name)
-        )
+        localities = localities.filter(AreaOne.country.has(short_name=country_short_name))
     localities = localities.options(joinedload("country")).limit(limit).all()
     data = []
     for locality, count in localities:
@@ -190,11 +169,7 @@ def get_country():
     table = Spot
     if request.args.get("shops"):
         table = DiveShop
-    sq = (
-        db.session.query(table.country_id, func.count(table.id).label("count"))
-        .group_by(table.country_id)
-        .subquery()
-    )
+    sq = db.session.query(table.country_id, func.count(table.id).label("count")).group_by(table.country_id).subquery()
     localities = (
         db.session.query(Country, sq.c.count)
         .join(sq, sq.c.country_id == Country.id)

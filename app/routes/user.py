@@ -147,11 +147,7 @@ def user_apple_signup():
     request.json.get("code")
     id_token = request.json.get("id_token")
     request.json.get("state")
-    audience = (
-        request.json.get("audience")
-        if request.json.get("audience")
-        else os.environ.get("APPLE_APP_ID")
-    )
+    audience = request.json.get("audience") if request.json.get("audience") else os.environ.get("APPLE_APP_ID")
     app_name = request.json.get("app")
     email = None
 
@@ -167,9 +163,7 @@ def user_apple_signup():
     public_key = RSAAlgorithm.from_jwk(json.dumps(jwk))
 
     try:
-        token = jwt.decode(
-            id_token, public_key, audience=audience, algorithms=["RS256"]
-        )
+        token = jwt.decode(id_token, public_key, audience=audience, algorithms=["RS256"])
     except jwt.exceptions.ExpiredSignatureError:
         raise Exception("That token has expired")
     except jwt.exceptions.InvalidAudienceError:
@@ -188,16 +182,8 @@ def user_apple_signup():
     user_body = request.json.get("user")
     if user_body:
         email = user_body.get("email") if user_body.get("email") else email
-        first_name = (
-            user_body.get("name").get("firstName")
-            if user_body.get("name").get("firstName")
-            else email
-        )
-        last_name = (
-            user_body.get("name").get("lastName")
-            if user_body.get("name").get("lastName")
-            else ""
-        )
+        first_name = user_body.get("name").get("firstName") if user_body.get("name").get("firstName") else email
+        last_name = user_body.get("name").get("lastName") if user_body.get("name").get("lastName") else ""
         display_name = first_name + " " + last_name
 
         return create_account(
@@ -243,9 +229,7 @@ def user_google_signup():
     userid = None
     try:
         # Specify the CLIENT_ID of the app that accesses the backend:
-        idinfo = id_token.verify_oauth2_token(
-            token, google_requests.Request(), os.environ.get("GOOGLE_CLIENT_ID")
-        )
+        idinfo = id_token.verify_oauth2_token(token, google_requests.Request(), os.environ.get("GOOGLE_CLIENT_ID"))
 
         # Or, if multiple clients access the backend server:
         # idinfo = id_token.verify_oauth2_token(token, requests.Request())
@@ -320,9 +304,7 @@ def user_finish_signup():
     if user.password:
         abort(401, "This user has already registered a password")
     unencrypted_password = request.json.get("password")
-    password = bcrypt.hashpw(
-        unencrypted_password.encode("utf-8"), bcrypt.gensalt()
-    ).decode("utf-8")
+    password = bcrypt.hashpw(unencrypted_password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
     user.password = password
     db.session.commit()
     auth_token = create_access_token(identity=user.id)
@@ -382,9 +364,7 @@ def user_login():
     email = request.json.get("email")
     password = request.json.get("password")
 
-    user = User.query.filter(
-        or_(func.lower(User.email) == email.lower(), User.username == email)
-    ).first()
+    user = User.query.filter(or_(func.lower(User.email) == email.lower(), User.username == email)).first()
     if not user:
         abort(400, "Wrong password or user does not exist")
     if bcrypt.checkpw(password.encode("utf-8"), user.password.encode("utf-8")):
@@ -407,7 +387,8 @@ def patch_user():
     ---
     patch:
         summary: Update user profile
-        description: Update user profile fields. Include the fields you want to change in the request body. Phone numbers will be automatically formatted to E.164 format.
+        description: Update user profile fields. Include the fields you want to change in the request body.
+            Phone numbers will be automatically formatted to E.164 format.
         parameters:
           - name: id
             in: body
@@ -522,9 +503,7 @@ def patch_user():
             )
             response = r.json()
             if response.get("status") == "OK":
-                address_components = response.get("results")[0].get(
-                    "address_components"
-                )
+                address_components = response.get("results")[0].get("address_components")
                 components = format_localities(address_components)
                 if components.get("locality") and components.get("area_1"):
                     city_name = components.get("locality").get("long_name")
@@ -608,7 +587,10 @@ def get_user():
         if not user:
             abort(
                 422,
-                "Include a username or user id in the request. If you are trying to get the logged in user, use /user/me",
+                (
+                    "Include a username or user id in the request. "
+                    "If you are trying to get the logged in user, use /user/me"
+                ),
             )
     if username:
         user = User.query.filter(func.lower(User.username) == username.lower()).first()
@@ -618,10 +600,7 @@ def get_user():
         abort(404, f"User username={username}, user_id={user_id} doesn't exist")
 
     reviews = (
-        Review.query.filter_by(author_id=user.id)
-        .options(joinedload("images"))
-        .order_by(Review.date_dived.desc())
-        .all()
+        Review.query.filter_by(author_id=user.id).options(joinedload("images")).order_by(Review.date_dived.desc()).all()
     )
     user_data = user.get_dict()
     reviews_data = []

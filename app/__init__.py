@@ -222,9 +222,7 @@ def create_app(config_name=None, config_object=None):
     def get_emails():
         if not get_current_user().admin:
             abort(403, "You must be an admin to that")
-        users = User.query.filter(
-            and_(not_(User.email.contains("zentacle.com")), User.is_fake.is_not(True))
-        )
+        users = User.query.filter(and_(not_(User.email.contains("zentacle.com")), User.is_fake.is_not(True)))
         output = []
         for user in users:
             data = {
@@ -329,13 +327,9 @@ def create_app(config_name=None, config_object=None):
         region_url = request.args.get("region_url")
         destination_url = request.args.get("destination_url")
         if region_url:
-            spots = Spot.query.filter(
-                Spot.shorediving_data.has(region_url=region_url)
-            ).all()
+            spots = Spot.query.filter(Spot.shorediving_data.has(region_url=region_url)).all()
         elif destination_url:
-            spots = Spot.query.filter(
-                Spot.shorediving_data.has(destination_url=destination_url)
-            ).all()
+            spots = Spot.query.filter(Spot.shorediving_data.has(destination_url=destination_url)).all()
         else:
             abort(401, "No destination or region")
         if country_short_name:
@@ -404,11 +398,7 @@ def create_app(config_name=None, config_object=None):
         user_id = int(event.get("app_user_id"))
         user = User.query.filter_by(id=user_id).first_or_404()
 
-        if (
-            event_type == "INITIAL_PURCHASE"
-            or event_type == "RENEWAL"
-            or event_type == "UNCANCELLATION"
-        ):
+        if event_type == "INITIAL_PURCHASE" or event_type == "RENEWAL" or event_type == "UNCANCELLATION":
             setattr(user, "has_pro", True)
             sg = SendGridAPIClient(os.environ.get("SENDGRID_API_KEY"))
             data = {
@@ -428,11 +418,7 @@ def create_app(config_name=None, config_object=None):
                 return response.body
             except Exception as e:
                 raise e
-        elif (
-            event_type == "CANCELLATION"
-            or event_type == "EXPIRATION"
-            or event_type == "SUBSCRIPTION_PAUSED"
-        ):
+        elif event_type == "CANCELLATION" or event_type == "EXPIRATION" or event_type == "SUBSCRIPTION_PAUSED":
             setattr(user, "has_pro", False)
         db.session.commit()
 
@@ -461,9 +447,7 @@ def create_app(config_name=None, config_object=None):
         sig_header = request.headers["STRIPE_SIGNATURE"]
 
         try:
-            event = stripe.Webhook.construct_event(
-                payload, sig_header, os.environ.get("STRIPE_ENDPOINT_SECRET")
-            )
+            event = stripe.Webhook.construct_event(payload, sig_header, os.environ.get("STRIPE_ENDPOINT_SECRET"))
         except ValueError as e:
             # Invalid payload
             raise e
