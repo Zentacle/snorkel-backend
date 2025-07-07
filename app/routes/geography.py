@@ -1,19 +1,11 @@
 import re
 
-from flask import Blueprint, abort, jsonify, request
-from sqlalchemy import and_, func, text
+from flask import Blueprint, abort, request
+from sqlalchemy import func, text
 from sqlalchemy.orm import joinedload
 
 from app import cache, db
-from app.models import (
-    AreaOne,
-    AreaTwo,
-    Country,
-    DiveShop,
-    GeographicNode,
-    Locality,
-    Spot,
-)
+from app.models import DiveShop, GeographicNode, Spot
 from app.services.url_mapping import URLMappingService
 
 bp = Blueprint("geography", __name__, url_prefix="/loc")
@@ -92,9 +84,7 @@ def get_geographic_area(geographic_path):
 
     # Get spots if requested
     if content_type in ["spots", "all"]:
-        spots_query = Spot.query.filter(
-            Spot.geographic_node_id.in_(descendant_node_ids)
-        )
+        spots_query = Spot.query.filter(Spot.geographic_node_id.in_(descendant_node_ids))
         spots_query = spots_query.filter(Spot.is_verified.isnot(False))
         spots_query = spots_query.filter(Spot.is_deleted.isnot(True))
 
@@ -138,9 +128,7 @@ def get_geographic_area(geographic_path):
 
     # Get dive shops if requested
     if content_type in ["shops", "all"]:
-        shops_query = DiveShop.query.filter(
-            DiveShop.geographic_node_id.in_(descendant_node_ids)
-        )
+        shops_query = DiveShop.query.filter(DiveShop.geographic_node_id.in_(descendant_node_ids))
 
         # Apply sorting at database level
         if sort == "top":
@@ -162,9 +150,7 @@ def get_geographic_area(geographic_path):
         shops_query = shops_query.offset(offset).limit(limit)
 
         # Eager load relationships
-        shops_query = shops_query.options(
-            joinedload(DiveShop.geographic_node), joinedload(DiveShop.reviews)
-        )
+        shops_query = shops_query.options(joinedload(DiveShop.geographic_node), joinedload(DiveShop.reviews))
 
         dive_shops = shops_query.all()
 
@@ -194,9 +180,7 @@ def get_spot_by_geographic_path(geographic_path, spot_id):
 
     # Verify the geographic path matches the spot's location
     if spot.geographic_node:
-        expected_path = "/".join(
-            [node.short_name for node in spot.geographic_node.get_path_to_root()]
-        )
+        expected_path = "/".join([node.short_name for node in spot.geographic_node.get_path_to_root()])
         if expected_path != geographic_path:
             abort(404, description="Spot not found at this location")
 
@@ -255,9 +239,7 @@ def get_geographic_stats(geographic_path):
         Spot.is_deleted.isnot(True),
     ).count()
 
-    shops_count = DiveShop.query.filter(
-        DiveShop.geographic_node_id.in_(descendant_node_ids)
-    ).count()
+    shops_count = DiveShop.query.filter(DiveShop.geographic_node_id.in_(descendant_node_ids)).count()
 
     # Get child geographic nodes
     child_nodes = GeographicNode.query.filter_by(parent_id=node.id).all()

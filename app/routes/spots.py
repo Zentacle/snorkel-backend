@@ -94,11 +94,7 @@ def get_spots():
     area = None
     spot = None
     sd_spot = None
-    if (
-        request.args.get("beach_id")
-        or request.args.get("region")
-        or request.args.get("sd_id")
-    ):
+    if request.args.get("beach_id") or request.args.get("region") or request.args.get("sd_id"):
         if request.args.get("beach_id"):
             beach_id = request.args.get("beach_id")
             spot = (
@@ -139,11 +135,7 @@ def get_spots():
         elif request.args.get("sd_id"):
             is_shorediving = True
             fsite = request.args.get("sd_id")
-            sd_spot = (
-                ShoreDivingData.query.options(joinedload("spot"))
-                .filter_by(id=fsite)
-                .first_or_404()
-            )
+            sd_spot = ShoreDivingData.query.options(joinedload("spot")).filter_by(id=fsite).first_or_404()
             spot = (
                 Spot.query.options(joinedload("locality"))
                 .options(joinedload("area_two"))
@@ -161,23 +153,19 @@ def get_spots():
             spot_data["locality"] = None
         else:
             if spot.locality:
-                spot_data["locality"] = spot.locality.get_dict(
-                    spot.country, spot.area_one, spot.area_two
-                )
+                spot_data["locality"] = spot.locality.get_dict(spot.country, spot.area_one, spot.area_two)
             if spot.area_two:
-                spot_data["area_two"] = spot.area_two.get_dict(
-                    spot.country, spot.area_one
-                )
+                spot_data["area_two"] = spot.area_two.get_dict(spot.country, spot.area_one)
             if spot.area_one:
                 spot_data["area_one"] = spot.area_one.get_dict(spot.country)
             if spot.country:
                 spot_data["country"] = spot.country.get_dict()
         beach_id = spot.id
         if not spot.location_google and spot.latitude and spot.longitude:
-            spot_data["location_google"] = (
-                "http://maps.google.com/maps?q=%(latitude)f,%(longitude)f"
-                % {"latitude": spot.latitude, "longitude": spot.longitude}
-            )
+            spot_data["location_google"] = "http://maps.google.com/maps?q=%(latitude)f,%(longitude)f" % {
+                "latitude": spot.latitude,
+                "longitude": spot.longitude,
+            }
         spot_data["ratings"] = get_summary_reviews_helper(beach_id)
         return {"data": spot_data}
     query = Spot.query
@@ -286,18 +274,16 @@ def get_spots():
         if spot.shorediving_data:
             spot_data["sd_url"] = spot.shorediving_data.get_url()
         if not spot.location_google and spot.latitude and spot.longitude:
-            spot_data["location_google"] = (
-                "http://maps.google.com/maps?q=%(latitude)f,%(longitude)f"
-                % {"latitude": spot.latitude, "longitude": spot.longitude}
-            )
+            spot_data["location_google"] = "http://maps.google.com/maps?q=%(latitude)f,%(longitude)f" % {
+                "latitude": spot.latitude,
+                "longitude": spot.longitude,
+            }
         output.append(spot_data)
     resp = {"data": output}
     if area:
         area_data = area.get_dict()
         if area_data.get("area_two"):
-            area_data["area_two"] = area_data.get("area_two").get_dict(
-                area.country, area.area_one
-            )
+            area_data["area_two"] = area_data.get("area_two").get_dict(area.country, area.area_one)
         if area_data.get("area_one"):
             area_data["area_one"] = area_data.get("area_one").get_dict(area.country)
         if area_data.get("country"):
@@ -485,11 +471,7 @@ def add_spot_wdscript():
     latitude = request.json.get("latitude")
     longitude = request.json.get("longitude")
     max_depth = request.json.get("max_depth")
-    difficulty = (
-        request.json.get("difficulty")
-        if request.json.get("difficulty") != "null"
-        else None
-    )
+    difficulty = request.json.get("difficulty") if request.json.get("difficulty") != "null" else None
     tags = request.json.get("tags") if request.json.get("tags") else []
 
     sd_data = WannaDiveData.query.filter_by(url=url).first()
@@ -631,9 +613,7 @@ def add_spot():
     if not name or not location_city:
         abort(422, "Please enter a name and location")
 
-    spot = Spot.query.filter(
-        and_(Spot.name == name, Spot.location_city == location_city)
-    ).first()
+    spot = Spot.query.filter(and_(Spot.name == name, Spot.location_city == location_city)).first()
     if spot:
         abort(409, "Spot already exists")
 
@@ -658,10 +638,8 @@ def add_spot():
         if response.get("status") == "OK":
             result = response.get("result")
             if latitude and longitude:
-                location_google = (
-                    "http://maps.google.com/maps?q={latitude},{longitude}".format(
-                        latitude=latitude, longitude=longitude
-                    )
+                location_google = "http://maps.google.com/maps?q={latitude},{longitude}".format(
+                    latitude=latitude, longitude=longitude
                 )
             else:
                 location_google = result.get("url")
@@ -705,8 +683,7 @@ def add_spot():
             "description": description,
             "location": location_city,
             "url": "https://www.zentacle.com" + spot.get_url(),
-            "approve_url": "https://www.zentacle.com/api/spots/approve?id="
-            + str(spot.id),
+            "approve_url": "https://www.zentacle.com/api/spots/approve?id=" + str(spot.id),
         }
         if not os.environ.get("FLASK_DEBUG"):
             try:
@@ -716,9 +693,7 @@ def add_spot():
                 newrelic.agent.record_exception(e)
                 print(e.body)
     if user:
-        message = Mail(
-            from_email=("hello@zentacle.com", "Zentacle"), to_emails=user.email
-        )
+        message = Mail(from_email=("hello@zentacle.com", "Zentacle"), to_emails=user.email)
         message.reply_to = "mayank@zentacle.com"
         message.template_id = "d-2280f0af94dd4a93aea15c5ec95e1760"
         message.dynamic_template_data = {
@@ -751,9 +726,7 @@ def approve_spot():
     spot.id
     user = spot.submitter
     if user:
-        message = Mail(
-            from_email=("hello@zentacle.com", "Zentacle"), to_emails=user.email
-        )
+        message = Mail(from_email=("hello@zentacle.com", "Zentacle"), to_emails=user.email)
         message.reply_to = "mayank@zentacle.com"
         message.template_id = "d-7b9577485616413c95f6d7e2829c52c6"
         message.dynamic_template_data = {
@@ -825,18 +798,8 @@ def patch_spot():
             response = r.json()
             if response.get("status") == "OK":
                 if not updates.get("latitude") or not updates.get("longitude"):
-                    latitude = (
-                        response.get("result")
-                        .get("geometry")
-                        .get("location")
-                        .get("lat")
-                    )
-                    longitude = (
-                        response.get("result")
-                        .get("geometry")
-                        .get("location")
-                        .get("lng")
-                    )
+                    latitude = response.get("result").get("geometry").get("location").get("lat")
+                    longitude = response.get("result").get("geometry").get("location").get("lng")
                     url = response.get("result").get("url")
                     spot.latitude = latitude
                     spot.longitude = longitude
@@ -853,10 +816,8 @@ def patch_spot():
     if updates.get("latitude") and updates.get("longitude"):
         latitude = updates.get("latitude")
         longitude = updates.get("longitude")
-        spot.location_google = (
-            "http://maps.google.com/maps?q={latitude},{longitude}".format(
-                latitude=latitude, longitude=longitude
-            )
+        spot.location_google = "http://maps.google.com/maps?q={latitude},{longitude}".format(
+            latitude=latitude, longitude=longitude
         )
     db.session.commit()
     spot.id
@@ -969,11 +930,7 @@ def nearby_locations():
         beach_id = request.args.get("beach_id")
         if not beach_id:
             abort(422, "Include a lat/lng or a beach_id")
-        spot = (
-            Spot.query.options(joinedload(Spot.shorediving_data))
-            .filter_by(id=beach_id)
-            .first_or_404()
-        )
+        spot = Spot.query.options(joinedload(Spot.shorediving_data)).filter_by(id=beach_id).first_or_404()
         startlat = spot.latitude
         startlng = spot.longitude
         spot_id = spot.id
@@ -983,11 +940,7 @@ def nearby_locations():
         if spot.shorediving_data:
             try:
                 spots = (
-                    Spot.query.filter(
-                        Spot.shorediving_data.has(
-                            destination_url=spot.shorediving_data.destination_url
-                        )
-                    )
+                    Spot.query.filter(Spot.shorediving_data.has(destination_url=spot.shorediving_data.destination_url))
                     .limit(limit)
                     .all()
                 )
@@ -996,9 +949,7 @@ def nearby_locations():
                 return {"msg": str(e)}
         else:
             try:
-                spots = (
-                    Spot.query.filter_by(country_id=spot.country_id).limit(limit).all()
-                )
+                spots = Spot.query.filter_by(country_id=spot.country_id).limit(limit).all()
             except AttributeError as e:
                 newrelic.agent.record_exception(e)
                 return {"msg": str(e)}
@@ -1082,12 +1033,7 @@ def add_shorediving_pic():
 
     shorediving = ShoreDivingData.query.filter_by(id=id).first_or_404()
     if not shorediving.spot.hero_img:
-        shorediving.spot.hero_img = (
-            "https://"
-            + os.environ.get("S3_BUCKET_NAME")
-            + ".s3.amazonaws.com/"
-            + pic_url
-        )
+        shorediving.spot.hero_img = "https://" + os.environ.get("S3_BUCKET_NAME") + ".s3.amazonaws.com/" + pic_url
     else:
         abort(401, "Location already has a hero image")
     db.session.commit()

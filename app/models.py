@@ -25,9 +25,7 @@ class GeographicNode(db.Model):
     google_place_id = db.Column(db.String)
 
     # Hierarchy relationships
-    parent_id = db.Column(
-        db.Integer, db.ForeignKey("geographic_node.id"), nullable=True
-    )
+    parent_id = db.Column(db.Integer, db.ForeignKey("geographic_node.id"), nullable=True)
     root_id = db.Column(db.Integer, db.ForeignKey("geographic_node.id"), nullable=True)
 
     # Geographic metadata
@@ -44,23 +42,13 @@ class GeographicNode(db.Model):
     map_image_url = db.Column(db.String)
 
     # Legacy mapping fields for backwards compatibility
-    legacy_country_id = db.Column(
-        db.Integer, db.ForeignKey("country.id"), nullable=True
-    )
-    legacy_area_one_id = db.Column(
-        db.Integer, db.ForeignKey("area_one.id"), nullable=True
-    )
-    legacy_area_two_id = db.Column(
-        db.Integer, db.ForeignKey("area_two.id"), nullable=True
-    )
-    legacy_locality_id = db.Column(
-        db.Integer, db.ForeignKey("locality.id"), nullable=True
-    )
+    legacy_country_id = db.Column(db.Integer, db.ForeignKey("country.id"), nullable=True)
+    legacy_area_one_id = db.Column(db.Integer, db.ForeignKey("area_one.id"), nullable=True)
+    legacy_area_two_id = db.Column(db.Integer, db.ForeignKey("area_two.id"), nullable=True)
+    legacy_locality_id = db.Column(db.Integer, db.ForeignKey("locality.id"), nullable=True)
 
     # Relationships
-    parent = db.relationship(
-        "GeographicNode", remote_side=[id], foreign_keys=[parent_id], backref="children"
-    )
+    parent = db.relationship("GeographicNode", remote_side=[id], foreign_keys=[parent_id], backref="children")
     root = db.relationship(
         "GeographicNode",
         remote_side=[id],
@@ -83,15 +71,19 @@ class GeographicNode(db.Model):
 
     def get_legacy_url(self):
         """Generate the old-style URL for backwards compatibility"""
-        if (
-            self.legacy_country
-            and self.legacy_area_one
-            and self.legacy_area_two
-            and self.legacy_locality
-        ):
-            return f"/loc/{self.legacy_country.short_name}/{self.legacy_area_one.short_name}/{self.legacy_area_two.short_name}/{self.legacy_locality.short_name}"
+        if self.legacy_country and self.legacy_area_one and self.legacy_area_two and self.legacy_locality:
+            return (
+                f"/loc/{self.legacy_country.short_name}/"
+                f"{self.legacy_area_one.short_name}/"
+                f"{self.legacy_area_two.short_name}/"
+                f"{self.legacy_locality.short_name}"
+            )
         elif self.legacy_country and self.legacy_area_one and self.legacy_area_two:
-            return f"/loc/{self.legacy_country.short_name}/{self.legacy_area_one.short_name}/{self.legacy_area_two.short_name}"
+            return (
+                f"/loc/{self.legacy_country.short_name}/"
+                f"{self.legacy_area_one.short_name}/"
+                f"{self.legacy_area_two.short_name}"
+            )
         elif self.legacy_country and self.legacy_area_one:
             return f"/loc/{self.legacy_country.short_name}/{self.legacy_area_one.short_name}"
         elif self.legacy_country:
@@ -176,14 +168,7 @@ class ShoreDivingData(db.Model):
         }
 
     def get_url(self):
-        return (
-            "/Earth/"
-            + self.region_url
-            + "/"
-            + self.destination_url
-            + "/"
-            + self.name_url
-        )
+        return "/Earth/" + self.region_url + "/" + self.destination_url + "/" + self.name_url
 
     def get_region_dict(self):
         return {
@@ -313,9 +298,7 @@ class User(db.Model):
         if not data.get("bio"):
             data["bio"] = "Looking for a dive buddy!"
         if not data.get("profile_pic"):
-            data["profile_pic"] = (
-                "https://www.zentacle.com/image/profile_pic/placeholder"
-            )
+            data["profile_pic"] = "https://www.zentacle.com/image/profile_pic/placeholder"
 
         return data
 
@@ -326,14 +309,7 @@ class User(db.Model):
         return math.sqrt(
             (
                 69.1 * (self.latitude - latitude) ** 2
-                + (
-                    (
-                        69.1
-                        * (self.longitude - longitude)
-                        * math.cos(self.latitude / 57.3)
-                    )
-                    ** 2
-                )
+                + ((69.1 * (self.longitude - longitude) * math.cos(self.latitude / 57.3)) ** 2)
             )
         )
 
@@ -344,9 +320,7 @@ class User(db.Model):
                 func.pow(69.1 * (self.latitude - latitude), 2)
                 + (
                     func.pow(
-                        69.1
-                        * (self.longitude - longitude)
-                        * func.cos(self.latitude / 57.3),
+                        69.1 * (self.longitude - longitude) * func.cos(self.latitude / 57.3),
                         2,
                     )
                 )
@@ -386,22 +360,14 @@ class Spot(db.Model):
         server_default=func.now(),
         onupdate=func.current_timestamp(),
     )
-    geographic_node_id = db.Column(
-        db.Integer, db.ForeignKey("geographic_node.id"), nullable=True
-    )
+    geographic_node_id = db.Column(db.Integer, db.ForeignKey("geographic_node.id"), nullable=True)
 
     reviews = db.relationship("Review", backref="spot")
     images = db.relationship("Image", backref="spot")
     submitter = db.relationship("User", uselist=False)
-    shorediving_data = db.relationship(
-        "ShoreDivingData", back_populates="spot", uselist=False
-    )
-    wannadive_data = db.relationship(
-        "WannaDiveData", back_populates="spot", uselist=False
-    )
-    tags = db.relationship(
-        "Tag", secondary=tags, lazy="subquery", backref=db.backref("spot", lazy=True)
-    )
+    shorediving_data = db.relationship("ShoreDivingData", back_populates="spot", uselist=False)
+    wannadive_data = db.relationship("WannaDiveData", back_populates="spot", uselist=False)
+    tags = db.relationship("Tag", secondary=tags, lazy="subquery", backref=db.backref("spot", lazy=True))
 
     def get_simple_dict(self):
         data = {}
@@ -505,8 +471,7 @@ class Spot(db.Model):
         confidence_score = func.case(
             (
                 self.num_reviews > 0,
-                rating_float
-                - z * (std_dev / func.sqrt(func.cast(self.num_reviews, db.Float))),
+                rating_float - z * (std_dev / func.sqrt(func.cast(self.num_reviews, db.Float))),
             ),
             else_=0.0,
         )
@@ -520,14 +485,7 @@ class Spot(db.Model):
         return math.sqrt(
             (
                 69.1 * (self.latitude - latitude) ** 2
-                + (
-                    (
-                        69.1
-                        * (self.longitude - longitude)
-                        * math.cos(self.latitude / 57.3)
-                    )
-                    ** 2
-                )
+                + ((69.1 * (self.longitude - longitude) * math.cos(self.latitude / 57.3)) ** 2)
             )
         )
 
@@ -538,9 +496,7 @@ class Spot(db.Model):
                 func.pow(69.1 * (self.latitude - latitude), 2)
                 + (
                     func.pow(
-                        69.1
-                        * (self.longitude - longitude)
-                        * func.cos(self.latitude / 57.3),
+                        69.1 * (self.longitude - longitude) * func.cos(self.latitude / 57.3),
                         2,
                     )
                 )
@@ -554,14 +510,7 @@ class Spot(db.Model):
         return math.sqrt(
             (
                 69.1 * (self.latitude - latitude) ** 2
-                + (
-                    (
-                        69.1
-                        * (self.longitude - longitude)
-                        * math.cos(self.latitude / 57.3)
-                    )
-                    ** 2
-                )
+                + ((69.1 * (self.longitude - longitude) * math.cos(self.latitude / 57.3)) ** 2)
             )
         )
 
@@ -569,10 +518,7 @@ class Spot(db.Model):
     def sqlite3_distance(self, latitude, longitude):
         return func.abs(
             (69.1 * (self.latitude - latitude) * 69.1 * (self.latitude - latitude))
-            + (
-                (69.1 * (self.longitude - longitude))
-                * (69.1 * (self.longitude - longitude))
-            )
+            + ((69.1 * (self.longitude - longitude)) * (69.1 * (self.longitude - longitude)))
         )
 
 
@@ -608,9 +554,7 @@ class Review(db.Model):
 
     dive_shop = db.relationship("DiveShop", backref="reviews", uselist=False)
     images = db.relationship("Image", backref=db.backref("review", lazy=True))
-    shorediving_data = db.relationship(
-        "ShoreDivingReview", back_populates="review", uselist=False
-    )
+    shorediving_data = db.relationship("ShoreDivingReview", back_populates="review", uselist=False)
 
     def get_simple_dict(self):
         keys = [
@@ -638,12 +582,7 @@ class Review(db.Model):
             data[column_name] = value
 
         # Handle special cases
-        if (
-            not data.get("title")
-            and hasattr(self, "spot")
-            and self.spot
-            and self.spot.name
-        ):
+        if not data.get("title") and hasattr(self, "spot") and self.spot and self.spot.name:
             data["title"] = self.spot.name
 
         # Remove relationship objects that shouldn't be serialized
@@ -706,22 +645,13 @@ class Locality(db.Model):
 
         if country and area_one:
             data["url"] = self.get_url(country, area_one, area_two)
-        elif (
-            hasattr(self, "country")
-            and hasattr(self, "area_one")
-            and self.country
-            and self.area_one
-        ):
+        elif hasattr(self, "country") and hasattr(self, "area_one") and self.country and self.area_one:
             data["url"] = self.get_url(self.country, self.area_one, self.area_two)
 
         return data
 
     def get_short_name(self):
-        return (
-            self.short_name.lower()
-            if self.short_name
-            else demicrosoft(self.name).lower()
-        )
+        return self.short_name.lower() if self.short_name else demicrosoft(self.name).lower()
 
     def get_url(self, country, area_one, area_two):
         area_one_short_name = area_one.short_name if area_one else "_"
@@ -773,26 +703,14 @@ class AreaTwo(db.Model):
 
         if country and area_one:
             data["url"] = self.get_url(country, area_one)
-        elif (
-            hasattr(self, "country")
-            and hasattr(self, "area_one")
-            and self.country
-            and self.area_one
-        ):
+        elif hasattr(self, "country") and hasattr(self, "area_one") and self.country and self.area_one:
             data["url"] = self.get_url(self.country, self.area_one)
 
         return data
 
     def get_url(self, country, area_one):
         area_one_short_name = area_one.short_name if area_one else "_"
-        return (
-            "/loc/"
-            + country.short_name
-            + "/"
-            + area_one_short_name
-            + "/"
-            + self.short_name
-        )
+        return "/loc/" + country.short_name + "/" + area_one_short_name + "/" + self.short_name
 
 
 # State
@@ -941,9 +859,7 @@ class DiveShop(db.Model):
     country_id = db.Column(db.Integer, db.ForeignKey("country.id"), nullable=True)
     owner_user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=True)
     stamp_uri = db.Column(db.String, nullable=True)
-    geographic_node_id = db.Column(
-        db.Integer, db.ForeignKey("geographic_node.id"), nullable=True
-    )
+    geographic_node_id = db.Column(db.Integer, db.ForeignKey("geographic_node.id"), nullable=True)
     owner = db.relationship("User", uselist=False)
     created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     updated = db.Column(
@@ -1000,11 +916,7 @@ class DiveShop(db.Model):
             "description": (
                 self.description
                 if self.description
-                else (
-                    self.description_v2
-                    if self.description_v2
-                    else self.auto_description
-                )
+                else (self.description_v2 if self.description_v2 else self.auto_description)
             ),
             "hours": self.hours,
             "country_name": self.country_name,
@@ -1072,14 +984,7 @@ class DiveShop(db.Model):
         return math.sqrt(
             (
                 69.1 * (self.latitude - latitude) ** 2
-                + (
-                    (
-                        69.1
-                        * (self.longitude - longitude)
-                        * math.cos(self.latitude / 57.3)
-                    )
-                    ** 2
-                )
+                + ((69.1 * (self.longitude - longitude) * math.cos(self.latitude / 57.3)) ** 2)
             )
         )
 
@@ -1090,9 +995,7 @@ class DiveShop(db.Model):
                 func.pow(69.1 * (self.latitude - latitude), 2)
                 + (
                     func.pow(
-                        69.1
-                        * (self.longitude - longitude)
-                        * func.cos(self.latitude / 57.3),
+                        69.1 * (self.longitude - longitude) * func.cos(self.latitude / 57.3),
                         2,
                     )
                 )

@@ -74,9 +74,7 @@ def add_review():
 
     beach_id = request.json.get("beach_id")
     sd_id = request.json.get("sd_id")
-    visibility = (
-        request.json.get("visibility") if request.json.get("visibility") != "" else None
-    )
+    visibility = request.json.get("visibility") if request.json.get("visibility") != "" else None
     text = request.json.get("text") if request.json.get("text") else ""
     title = request.json.get("title")
     rating = request.json.get("rating")
@@ -121,9 +119,7 @@ def add_review():
         else:
             text += f" I {activity} with {len(unique_buddies)} other buddies."
 
-        buddy_message = Mail(
-            from_email=("hello@zentacle.com", "Zentacle"), to_emails=unique_buddies
-        )
+        buddy_message = Mail(from_email=("hello@zentacle.com", "Zentacle"), to_emails=unique_buddies)
         buddy_message.template_id = "d-8869844be6034dd09f0d7cc27e27aa8c"
         buddy_message.dynamic_template_data = {
             "display_name": user.display_name,
@@ -187,7 +183,10 @@ def add_review():
                             "type": "section",
                             "text": {
                                 "type": "mrkdwn",
-                                "text": f"New review on <https://www.zentacle.com/{spot.get_url()}|{spot.name}> by {user.first_name}",
+                                "text": (
+                                    f"New review on <https://www.zentacle.com/{spot.get_url()}|{spot.name}> "
+                                    f"by {user.first_name}"
+                                ),
                             },
                         },
                         {
@@ -239,9 +238,7 @@ def get_review():
     """
     review_id = request.args.get("review_id")
     if review_id:
-        review = (
-            Review.query.options(joinedload("images")).filter_by(id=review_id).first()
-        )
+        review = Review.query.options(joinedload("images")).filter_by(id=review_id).first()
         spot = review.spot
         data = review.get_dict()
         dive_shop = {}
@@ -257,9 +254,7 @@ def get_review():
     else:
         sd_id = request.args.get("sd_review_id")
         if sd_id:
-            review = Review.query.filter(
-                Review.shorediving_data.has(shorediving_id=sd_id)
-            ).first()
+            review = Review.query.filter(Review.shorediving_data.has(shorediving_id=sd_id)).first()
             if review:
                 data = review.get_dict()
                 data["user"] = review.user.get_dict()
@@ -314,7 +309,8 @@ def patch_review():
     ---
     patch:
         summary: patch review
-        description: patch review. include the id and any specific params of the review that you want to change in the body
+        description: patch review. include the id and any specific params of the review that you want to
+            change in the body
         parameters:
           - name: id
             in: body
@@ -478,11 +474,7 @@ def delete_review():
     keep_images = request.args.get("keep_images")
 
     user = get_current_user()
-    review = (
-        Review.query.filter_by(id=review_id)
-        .options(joinedload(Review.images))
-        .first_or_404()
-    )
+    review = Review.query.filter_by(id=review_id).options(joinedload(Review.images)).first_or_404()
     if review.author_id != user.id and not user.admin:
         abort(403, "You are not allowed to do that")
     beach_id = review.beach_id
@@ -542,9 +534,7 @@ def add_shore_review():
         )
         db.session.add(user)
 
-    visibility = (
-        request.json.get("visibility") if request.json.get("visibility") != "" else None
-    )
+    visibility = request.json.get("visibility") if request.json.get("visibility") != "" else None
     text = request.json.get("review_text")
     rating = max([snorkel, beginner, intermediate, advanced, night])
     activity_type = "scuba"
@@ -559,9 +549,7 @@ def add_shore_review():
     if not activity_type:
         abort(422, "Please select scuba or snorkel")
 
-    shorediving_data = ShoreDivingReview.query.filter_by(
-        shorediving_id=shorediving_id
-    ).first()
+    shorediving_data = ShoreDivingReview.query.filter_by(shorediving_id=shorediving_id).first()
     if shorediving_data:
         if shorediving_data.entry:
             abort(409, "Shorediving entry already exists")
