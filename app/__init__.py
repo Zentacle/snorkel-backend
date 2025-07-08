@@ -222,9 +222,7 @@ def create_app(config_name=None, config_object=None):
     def get_emails():
         if not get_current_user().admin:
             abort(403, "You must be an admin to that")
-        users = User.query.filter(
-            and_(not_(User.email.contains("zentacle.com")), User.is_fake.is_not(True))
-        )
+        users = User.query.filter(and_(not_(User.email.contains("zentacle.com")), User.is_fake.is_not(True)))
         output = []
         for user in users:
             data = {
@@ -329,13 +327,9 @@ def create_app(config_name=None, config_object=None):
         region_url = request.args.get("region_url")
         destination_url = request.args.get("destination_url")
         if region_url:
-            spots = Spot.query.filter(
-                Spot.shorediving_data.has(region_url=region_url)
-            ).all()
+            spots = Spot.query.filter(Spot.shorediving_data.has(region_url=region_url)).all()
         elif destination_url:
-            spots = Spot.query.filter(
-                Spot.shorediving_data.has(destination_url=destination_url)
-            ).all()
+            spots = Spot.query.filter(Spot.shorediving_data.has(destination_url=destination_url)).all()
         else:
             abort(401, "No destination or region")
         if country_short_name:
@@ -404,12 +398,10 @@ def create_app(config_name=None, config_object=None):
         user_id = int(event.get("app_user_id"))
         user = User.query.filter_by(id=user_id).first_or_404()
 
-        if (
-            event_type == "INITIAL_PURCHASE"
-            or event_type == "RENEWAL"
-            or event_type == "UNCANCELLATION"
-        ):
+        if event_type == "INITIAL_PURCHASE" or event_type == "RENEWAL" or event_type == "UNCANCELLATION":
             setattr(user, "has_pro", True)
+
+            # Add to SendGrid contacts
             sg = SendGridAPIClient(os.environ.get("SENDGRID_API_KEY"))
             data = {
                 "contacts": [
@@ -424,16 +416,34 @@ def create_app(config_name=None, config_object=None):
             }
 
             try:
-                response = sg.client.marketing.contacts.put(request_body=data)
-                return response.body
+                sg.client.marketing.contacts.put(request_body=data)
             except Exception as e:
-                raise e
-        elif (
-            event_type == "CANCELLATION"
-            or event_type == "EXPIRATION"
-            or event_type == "SUBSCRIPTION_PAUSED"
-        ):
+                print(f"Error adding to SendGrid contacts: {e}")
+
+            # Schedule welcome email and trial reminder
+            try:
+                from app.helpers.email_scheduler import schedule_trial_reminder_email, schedule_welcome_email
+
+                # Schedule welcome email (immediate)
+                schedule_welcome_email(user_id)
+
+                # Schedule trial reminder email (6 days later)
+                schedule_trial_reminder_email(user_id)
+
+            except Exception as e:
+                print(f"Error scheduling emails: {e}")
+
+        elif event_type == "CANCELLATION" or event_type == "EXPIRATION" or event_type == "SUBSCRIPTION_PAUSED":
             setattr(user, "has_pro", False)
+
+            # Cancel any pending trial reminder emails
+            try:
+                from app.helpers.email_scheduler import cancel_scheduled_emails
+
+                cancel_scheduled_emails(user_id, "trial_reminder")
+            except Exception as e:
+                print(f"Error canceling scheduled emails: {e}")
+
         db.session.commit()
 
         return "OK"
@@ -461,9 +471,7 @@ def create_app(config_name=None, config_object=None):
         sig_header = request.headers["STRIPE_SIGNATURE"]
 
         try:
-            event = stripe.Webhook.construct_event(
-                payload, sig_header, os.environ.get("STRIPE_ENDPOINT_SECRET")
-            )
+            event = stripe.Webhook.construct_event(payload, sig_header, os.environ.get("STRIPE_ENDPOINT_SECRET"))
         except ValueError as e:
             # Invalid payload
             raise e
@@ -567,6 +575,35 @@ def create_app(config_name=None, config_object=None):
     from app.routes import geography
 
     app.register_blueprint(geography.bp)
+
+    # CLI Commands
+    @app.cli.command("process-emails")
+    def process_emails():
+        """Process all due scheduled emails"""
+        from app.helpers.email_scheduler import process_due_emails
+
+        print("Processing scheduled emails...")
+        result = process_due_emails()
+
+        print(f"Processed {result['total_processed']} emails:")
+        print(f"  - Sent: {result['sent']}")
+        print(f"  - Failed: {result['failed']}")
+
+    @app.cli.command("check-scheduler-health")
+    def check_scheduler_health():
+        """Check if the email scheduler is running properly"""
+        from app.helpers.email_scheduler import check_scheduler_health
+
+        print("Checking scheduler health...")
+        result = check_scheduler_health()
+
+        print(f"Scheduler Health Check:")
+        print(f"  - Overdue emails: {result['overdue_emails']}")
+        print(f"  - Recent activity: {result['recent_activity']} emails in last 2 hours")
+        print(f"  - Healthy: {result['healthy']}")
+
+        if not result["healthy"]:
+            exit(1)  # Exit with error code for monitoring
 
     with app.test_request_context():
         pass
