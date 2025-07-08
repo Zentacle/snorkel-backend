@@ -1,14 +1,6 @@
-from app.models import (
-    AreaOne,
-    AreaTwo,
-    Country,
-    Image,
-    Locality,
-    Review,
-    Spot,
-    Tag,
-    User,
-)
+import uuid
+
+from app.models import AreaOne, AreaTwo, Country, Image, Locality, Review, Spot, Tag, User
 
 
 class TestUser:
@@ -16,12 +8,14 @@ class TestUser:
 
     def test_user_creation(self, db_session):
         """Test creating a new user."""
+        test_email = f"test_{uuid.uuid4()}@example.com"
+        test_username = f"user_{uuid.uuid4()}"
         user = User(
-            email="test@example.com",
+            email=test_email,
             first_name="Test",
             last_name="User",
             display_name="TestUser",
-            username="testuser",
+            username=test_username,
             password="hashed_password",
             admin=False,
             is_fake=False,
@@ -31,11 +25,11 @@ class TestUser:
         db_session.commit()
 
         assert user.id is not None
-        assert user.email == "test@example.com"
+        assert user.email == test_email
         assert user.first_name == "Test"
         assert user.last_name == "User"
         assert user.display_name == "TestUser"
-        assert user.username == "testuser"
+        assert user.username == test_username
         assert user.admin is False
         assert user.is_fake is False
         assert user.unit == "imperial"
@@ -57,15 +51,12 @@ class TestUser:
         assert user_dict["first_name"] == "Test"
         assert user_dict["last_name"] == "User"
         assert user_dict["display_name"] == "TestUser"
-        assert user_dict["username"] == "testuser"
+        assert user_dict["username"] == sample_user.username
         assert user_dict["unit"] == "imperial"
 
         # Check default values
         assert user_dict["bio"] == "Looking for a dive buddy!"
-        assert (
-            user_dict["profile_pic"]
-            == "https://www.zentacle.com/image/profile_pic/placeholder"
-        )
+        assert user_dict["profile_pic"] == "https://www.zentacle.com/image/profile_pic/placeholder"
 
     def test_user_distance_calculation(self, sample_user):
         """Test user distance calculation."""
@@ -81,14 +72,14 @@ class TestUser:
 
     def test_user_username_lowercase(self, db_session):
         """Test that username is stored in lowercase."""
-        user = User(
-            email="test@example.com", username="TestUser", password="hashed_password"
-        )
+        test_email = f"test_{uuid.uuid4()}@example.com"
+        test_username = f"user_{uuid.uuid4()}"
+        user = User(email=test_email, username=test_username, password="hashed_password")
         db_session.add(user)
         db_session.commit()
 
         user_dict = user.get_dict()
-        assert user_dict["username"] == "testuser"
+        assert user_dict["username"] == test_username.lower()
 
 
 class TestSpot:
@@ -149,9 +140,7 @@ class TestSpot:
     def test_spot_url_creation(self, sample_spot):
         """Test spot URL creation."""
         url = Spot.create_url(sample_spot.id, sample_spot.name)
-        expected_url = (
-            f'/Beach/{sample_spot.id}/{sample_spot.name.lower().replace(" ", "-")}'
-        )
+        expected_url = f'/Beach/{sample_spot.id}/{sample_spot.name.lower().replace(" ", "-")}'
         assert url == expected_url
 
 
@@ -315,9 +304,7 @@ class TestAreaTwo:
 
     def test_area_two_get_dict(self, sample_area_two, sample_country, sample_area_one):
         """Test area two get_dict method."""
-        area_dict = sample_area_two.get_dict(
-            country=sample_country, area_one=sample_area_one
-        )
+        area_dict = sample_area_two.get_dict(country=sample_country, area_one=sample_area_one)
 
         assert area_dict["id"] == sample_area_two.id
         assert area_dict["name"] == "Los Angeles County"
@@ -329,9 +316,7 @@ class TestAreaTwo:
 class TestLocality:
     """Test cases for Locality model."""
 
-    def test_locality_creation(
-        self, db_session, sample_country, sample_area_one, sample_area_two
-    ):
+    def test_locality_creation(self, db_session, sample_country, sample_area_one, sample_area_two):
         """Test creating a new locality."""
         locality = Locality(
             name="Santa Monica",
@@ -354,9 +339,7 @@ class TestLocality:
         assert locality.area_one_id == sample_area_one.id
         assert locality.area_two_id == sample_area_two.id
 
-    def test_locality_get_dict(
-        self, sample_locality, sample_country, sample_area_one, sample_area_two
-    ):
+    def test_locality_get_dict(self, sample_locality, sample_country, sample_area_one, sample_area_two):
         """Test locality get_dict method."""
         locality_dict = sample_locality.get_dict(
             country=sample_country, area_one=sample_area_one, area_two=sample_area_two
