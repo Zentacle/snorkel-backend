@@ -1,5 +1,5 @@
 import os
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 import requests
 from sendgrid import SendGridAPIClient
@@ -38,7 +38,7 @@ def schedule_welcome_email(user_id, template_id=None):
     scheduled_email = ScheduledEmail(
         user_id=user_id,
         email_type="welcome_pro",
-        scheduled_for=datetime.utcnow(),
+        scheduled_for=datetime.now(timezone.utc),
         template_id=template_id,
         dynamic_template_data={
             "first_name": user.first_name,
@@ -63,7 +63,7 @@ def schedule_trial_reminder_email(user_id, template_id=None):
         template_id = "d-8eab44c4ce364ae9b4fc45217b4b9a95"
 
     # Schedule for 6 days from now
-    scheduled_for = datetime.utcnow() + timedelta(days=6)
+    scheduled_for = datetime.now(timezone.utc) + timedelta(days=6)
 
     scheduled_email = ScheduledEmail(
         user_id=user_id,
@@ -99,7 +99,7 @@ def send_scheduled_email(scheduled_email):
         sg.send(message)
 
         # Mark as sent
-        scheduled_email.sent_at = datetime.utcnow()
+        scheduled_email.sent_at = datetime.now(timezone.utc)
         db.session.commit()
 
         return True
@@ -113,7 +113,7 @@ def send_scheduled_email(scheduled_email):
 
 def process_due_emails():
     """Process all emails that are due to be sent"""
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
 
     # Get all unsent emails that are due
     due_emails = ScheduledEmail.query.filter(
@@ -139,7 +139,7 @@ def process_due_emails():
 
 def check_scheduler_health():
     """Check if scheduler is running properly by looking for recent activity"""
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
 
     # Check for emails that should have been sent but weren't
     overdue_emails = ScheduledEmail.query.filter(
