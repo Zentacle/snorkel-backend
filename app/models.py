@@ -69,6 +69,12 @@ class GeographicNode(db.Model):
     legacy_area_two = db.relationship("AreaTwo", foreign_keys=[legacy_area_two_id])
     legacy_locality = db.relationship("Locality", foreign_keys=[legacy_locality_id])
 
+    __table_args__ = (
+        db.Index("ix_geographic_node_parent_id", "parent_id"),
+        db.Index("ix_geographic_node_admin_level", "admin_level"),
+        db.Index("ix_geographic_node_short_name_admin_level", "short_name", "admin_level"),
+    )
+
     def get_legacy_url(self):
         """Generate the old-style URL for backwards compatibility"""
         if self.legacy_country and self.legacy_area_one and self.legacy_area_two and self.legacy_locality:
@@ -368,6 +374,14 @@ class Spot(db.Model):
     shorediving_data = db.relationship("ShoreDivingData", back_populates="spot", uselist=False)
     wannadive_data = db.relationship("WannaDiveData", back_populates="spot", uselist=False)
     tags = db.relationship("Tag", secondary=tags, lazy="subquery", backref=db.backref("spot", lazy=True))
+
+    __table_args__ = (
+        db.Index("ix_spot_geographic_node_id", "geographic_node_id"),
+        db.Index("ix_spot_geographic_verified_deleted", "geographic_node_id", "is_verified", "is_deleted"),
+        db.Index("ix_spot_num_reviews", "num_reviews"),
+        db.Index("ix_spot_rating", "rating"),
+        db.Index("ix_spot_last_review_date", "last_review_date"),
+    )
 
     def get_simple_dict(self):
         data = {}
@@ -867,6 +881,13 @@ class DiveShop(db.Model):
         nullable=False,
         server_default=func.now(),
         onupdate=func.current_timestamp(),
+    )
+
+    __table_args__ = (
+        db.Index("ix_dive_shop_geographic_node_id", "geographic_node_id"),
+        db.Index("ix_dive_shop_rating", "rating"),
+        db.Index("ix_dive_shop_num_reviews", "num_reviews"),
+        db.Index("ix_dive_shop_created", "created"),
     )
 
     def get_typeahead_dict(self):
