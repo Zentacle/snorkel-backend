@@ -181,14 +181,21 @@ def get_spots():
     if locality_name:
         area_two_spot_query = Spot.area_two.has(short_name=area_two_name)
         area_two_area_query = Locality.area_two.has(short_name=area_two_name)
+        area_one_spot_query = Spot.area_one.has(short_name=area_one_name)
+        area_one_area_query = Locality.area_one.has(short_name=area_one_name)
+
         if area_two_name == "_":
             area_two_spot_query = sql.true()
             area_two_area_query = sql.true()
+        if area_one_name == "_":
+            area_one_spot_query = sql.true()
+            area_one_area_query = sql.true()
+
         query = query.filter(
             and_(
                 Spot.locality.has(short_name=locality_name),
                 area_two_spot_query,
-                Spot.area_one.has(short_name=area_one_name),
+                area_one_spot_query,
                 Spot.country.has(short_name=country_name),
             )
         )
@@ -199,7 +206,7 @@ def get_spots():
             .filter(
                 Locality.short_name == locality_name,
                 area_two_area_query,
-                Locality.area_one.has(short_name=area_one_name),
+                area_one_area_query,
                 Locality.country.has(short_name=country_name),
             )
             .first_or_404()
