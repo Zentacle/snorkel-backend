@@ -576,6 +576,11 @@ def create_app(config_name=None, config_object=None):
 
     app.register_blueprint(geography.bp)
 
+    # Register maps routing system
+    from app.routes import maps
+
+    app.register_blueprint(maps.bp)
+
     # CLI Commands
     @app.cli.command("process-emails")
     def process_emails():
