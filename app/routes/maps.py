@@ -94,7 +94,9 @@ def get_static_map():
     ---
     get:
         summary: Get a static map image from Google Maps
-        description: Returns a static map image for the given coordinates, with S3 caching to avoid repeated API calls
+        description: |
+            Returns a static map image file for the given coordinates,
+            with S3 caching to avoid repeated API calls
         parameters:
             - name: latitude
               in: query
@@ -123,7 +125,7 @@ def get_static_map():
               required: false
         responses:
             200:
-                description: Returns the map image
+                description: Returns the map image file directly
                 content:
                   image/png:
                     schema:
@@ -156,22 +158,26 @@ def get_static_map():
 
     # Check if map already exists in S3
     if check_s3_map_exists(s3_key):
-        # Return the S3 URL for the cached map
-        map_url = get_s3_map_url(s3_key)
-        return {"url": map_url, "cached": True}
+        # Fetch the cached map from S3 and return it directly
+        try:
+            s3_client = get_s3_client()
+            bucket_name = os.environ.get("S3_BUCKET_NAME")
+            response = s3_client.get_object(Bucket=bucket_name, Key=s3_key)
+            map_data = response["Body"].read()
+            return send_file(io.BytesIO(map_data), mimetype="image/png", as_attachment=False)
+        except Exception:
+            # If fetching from S3 fails, fall through to generate new map
+            pass
 
     try:
         # Fetch map from Google Maps API
         map_data = fetch_google_maps_image(latitude, longitude, size, scale, maptype)
 
-        # Upload to S3 for caching
-        if upload_map_to_s3(map_data, s3_key):
-            # Return the S3 URL
-            map_url = get_s3_map_url(s3_key)
-            return {"url": map_url, "cached": False}
-        else:
-            # If S3 upload fails, return the image data directly
-            return send_file(io.BytesIO(map_data), mimetype="image/png", as_attachment=False)
+        # Upload to S3 for caching (best effort)
+        upload_map_to_s3(map_data, s3_key)
+
+        # Always return the image data directly
+        return send_file(io.BytesIO(map_data), mimetype="image/png", as_attachment=False)
 
     except Exception as e:
         abort(500, description=f"Failed to generate map: {str(e)}")
