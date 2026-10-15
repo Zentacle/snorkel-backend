@@ -20,9 +20,15 @@ class GeographicNode(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String, nullable=False)
-    short_name = db.Column(db.String, nullable=False, unique=True)
+    # unique per parent (see uq_geographic_node_parent_short_name), not globally
+    short_name = db.Column(db.String, nullable=False)
     google_name = db.Column(db.String)
     google_place_id = db.Column(db.String)
+
+    # Public URL path, e.g. /loc/pt/beja/_/vila-nova-de-milfontes. Stored, not
+    # derived from the tree, so existing URLs never change when the hierarchy
+    # is reshaped (see LOCATION_MIGRATION.md).
+    path = db.Column(db.String, unique=True)
 
     # Hierarchy relationships
     parent_id = db.Column(db.Integer, db.ForeignKey("geographic_node.id"), nullable=True)
@@ -70,31 +76,20 @@ class GeographicNode(db.Model):
     legacy_locality = db.relationship("Locality", foreign_keys=[legacy_locality_id])
 
     __table_args__ = (
+        db.UniqueConstraint("parent_id", "short_name", name="uq_geographic_node_parent_short_name"),
         db.Index("ix_geographic_node_parent_id", "parent_id"),
         db.Index("ix_geographic_node_admin_level", "admin_level"),
         db.Index("ix_geographic_node_short_name_admin_level", "short_name", "admin_level"),
     )
 
+    def get_legacy_area(self):
+        """The most specific legacy location row this node was created from."""
+        return self.legacy_locality or self.legacy_area_two or self.legacy_area_one or self.legacy_country
+
     def get_legacy_url(self):
-        """Generate the old-style URL for backwards compatibility"""
-        if self.legacy_country and self.legacy_area_one and self.legacy_area_two and self.legacy_locality:
-            return (
-                f"/loc/{self.legacy_country.short_name}/"
-                f"{self.legacy_area_one.short_name}/"
-                f"{self.legacy_area_two.short_name}/"
-                f"{self.legacy_locality.short_name}"
-            )
-        elif self.legacy_country and self.legacy_area_one and self.legacy_area_two:
-            return (
-                f"/loc/{self.legacy_country.short_name}/"
-                f"{self.legacy_area_one.short_name}/"
-                f"{self.legacy_area_two.short_name}"
-            )
-        elif self.legacy_country and self.legacy_area_one:
-            return f"/loc/{self.legacy_country.short_name}/{self.legacy_area_one.short_name}"
-        elif self.legacy_country:
-            return f"/loc/{self.legacy_country.short_name}"
-        return None
+        """The URL the legacy API serves for this place today, "_" gaps included."""
+        legacy_area = self.get_legacy_area()
+        return legacy_area.get_dict().get("url") if legacy_area else None
 
     def get_new_url(self):
         """Generate the new flexible URL"""
@@ -102,8 +97,9 @@ class GeographicNode(db.Model):
         return "/loc/" + "/".join([node.short_name for node in path])
 
     def get_url(self):
-        """Return new URL, but can be overridden for legacy compatibility"""
-        return self.get_new_url()
+        """The stored public path; falls back to the tree-derived path for new
+        nodes that haven't been given one yet."""
+        return self.path or self.get_new_url()
 
     def get_path_to_root(self):
         """Get ordered list from root to this node"""
@@ -432,17 +428,21 @@ class Spot(db.Model):
         return data
 
     def get_url(self):
-        """Get the new geographic-based URL if available, otherwise fall back to legacy"""
-        if self.geographic_node:
-            # New format: /loc/country/state/city/spot-name-id
-            path = self.geographic_node.get_path_to_root()
-            url_parts = [node.short_name for node in path]
-            # Add spot with name-id for SEO and uniqueness
-            url_parts.append(f"{self.get_beach_name_for_url()}-{self.id}")
-            return "/loc/" + "/".join(url_parts)
-        else:
-            # Legacy format: /Beach/id/name
-            return Spot.create_legacy_url(self.id, self.name)
+        """The public URL: /Beach/<id>/<slug>.
+
+        Pinned on purpose: dive site URLs rank in search, so they must not
+        change when a spot is assigned a geographic node (see
+        LOCATION_MIGRATION.md).
+        """
+        return Spot.create_legacy_url(self.id, self.name)
+
+    def get_geographic_url(self):
+        """Node-based URL (/loc/<node path>/<slug>-<id>). Not linked publicly."""
+        if not self.geographic_node:
+            return None
+        url_parts = [node.short_name for node in self.geographic_node.get_path_to_root()]
+        url_parts.append(f"{self.get_beach_name_for_url()}-{self.id}")
+        return "/loc/" + "/".join(url_parts)
 
     def get_legacy_url(self):
         """Get the legacy URL format for backwards compatibility"""
