@@ -25,7 +25,6 @@ SHOP_EDITABLE_FIELDS = {
     "fareharbor_url",
     "email",
     "phone",
-    "whatsapp",
     "address1",
     "address2",
     "city",

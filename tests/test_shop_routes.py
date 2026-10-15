@@ -38,7 +38,6 @@ def test_owner_can_update_full_shop_details(client, owned_shop, auth_headers):
         "city": "Johannesburg South",
         "zip": "2190",
         "phone": "+27 10 335 1000",
-        "whatsapp": "+27 82 557 3822",
         "email": "shop@scubaevolution.co.za",
         "website": "https://scubaevolution.co.za/",
         "latitude": "-26.28",
@@ -52,7 +51,6 @@ def test_owner_can_update_full_shop_details(client, owned_shop, auth_headers):
     assert resp.status_code == 200, resp.get_json()
     data = resp.get_json()["data"]
     assert data["full_address"].startswith("Shop U44, Glenvista Shopping Centre")
-    assert data["whatsapp"] == "+27 82 557 3822"
     assert data["latitude"] == -26.28
     assert [h["shopDayName"] for h in data["hours"]] == ["Monday", "Saturday"]
     assert data["padi_data"]["rentals"] == []

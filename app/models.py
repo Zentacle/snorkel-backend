@@ -860,7 +860,6 @@ class DiveShop(db.Model):
     longitude = db.Column(db.Float)
     email = db.Column(db.String)
     phone = db.Column(db.String)
-    whatsapp = db.Column(db.String)
     location_google = db.Column(db.String)
     rating = db.Column(db.Float)
     num_reviews = db.Column(db.Integer)
@@ -935,7 +934,6 @@ class DiveShop(db.Model):
             "owner_user_id": self.owner_user_id,
             "stamp_uri": self.stamp_uri,
             "phone": self.phone,
-            "whatsapp": self.whatsapp,
             "padi_store_id": self.padi_store_id,
             "username": self.username,
             "description": (
