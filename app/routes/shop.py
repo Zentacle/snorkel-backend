@@ -1,5 +1,6 @@
 import io
 import os
+import re
 
 import boto3
 import newrelic.agent
@@ -14,6 +15,121 @@ from app.helpers.get_localities import get_localities
 from app.models import AreaOne, AreaTwo, Country, DiveShop, Locality, Review, Spot
 
 bp = Blueprint("shop", __name__, url_prefix="/shop")
+
+# Fields a shop owner (or admin) can change through PATCH /shop/patch/<id>
+SHOP_EDITABLE_FIELDS = {
+    "name",
+    "username",
+    "description",
+    "website",
+    "fareharbor_url",
+    "email",
+    "phone",
+    "address1",
+    "address2",
+    "city",
+    "state",
+    "zip",
+    "country_name",
+    "latitude",
+    "longitude",
+    "hours",
+    "padi_data",
+    "logo_img",
+    "hero_img",
+    "stamp_uri",
+}
+# Fields that affect PADI attribution, ownership or location hierarchy
+SHOP_ADMIN_FIELDS = {
+    "padi_store_id",
+    "owner_user_id",
+    "locality_id",
+    "area_one_id",
+    "area_two_id",
+    "country_id",
+}
+SHOP_FLOAT_FIELDS = {"latitude", "longitude"}
+SHOP_INT_FIELDS = {"owner_user_id", "locality_id", "area_one_id", "area_two_id", "country_id"}
+# padi_data keys that hold editable string lists (images and anything else are preserved)
+PADI_DATA_LIST_KEYS = {"coursesOffered", "languages", "rentals", "diveTypes", "features"}
+# padi_data keys that hold a single string, e.g. "PADI 5 Star Dive Center"
+PADI_DATA_STRING_KEYS = {"padiRating"}
+# padi_data keys only admins can change
+PADI_DATA_ADMIN_KEYS = {"padiRating"}
+WEEKDAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+HOUR_PATTERN = re.compile(r"^([01]?\d|2[0-3]):[0-5]\d$")
+
+
+def _clean_string(key, value):
+    if value is None:
+        return None
+    if not isinstance(value, (str, int)):
+        abort(400, f"{key} must be a string")
+    value = str(value).strip()
+    return value or None
+
+
+def _validate_float(key, value):
+    if value is None or value == "":
+        return None
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        abort(400, f"{key} must be a number")
+
+
+def _validate_int(key, value):
+    if value is None or value == "":
+        return None
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        abort(400, f"{key} must be an integer")
+
+
+def _validate_hours(hours):
+    """Hours are a list of {shopDayName, shopHourOpen, shopHourClose}; days not listed are closed."""
+    if hours is None:
+        return None
+    if not isinstance(hours, list):
+        abort(400, "hours must be a list")
+    cleaned = []
+    for entry in hours:
+        if not isinstance(entry, dict):
+            abort(400, "each hours entry must be an object")
+        day = str(entry.get("shopDayName", "")).strip().capitalize()
+        open_time = str(entry.get("shopHourOpen", "")).strip()
+        close_time = str(entry.get("shopHourClose", "")).strip()
+        if day not in WEEKDAYS:
+            abort(400, f"invalid day: {entry.get('shopDayName')}")
+        if not HOUR_PATTERN.match(open_time) or not HOUR_PATTERN.match(close_time):
+            abort(400, f"hours for {day} must be HH:MM (24h)")
+        cleaned.append({"shopDayName": day, "shopHourOpen": open_time, "shopHourClose": close_time})
+    cleaned.sort(key=lambda entry: WEEKDAYS.index(entry["shopDayName"]))
+    return cleaned or None
+
+
+def _merge_padi_data(existing, updates):
+    if not isinstance(updates, dict):
+        abort(400, "padi_data must be an object")
+    unknown = set(updates) - PADI_DATA_LIST_KEYS - PADI_DATA_STRING_KEYS
+    if unknown:
+        abort(400, f"Unknown padi_data fields: {', '.join(sorted(unknown))}")
+    # build a new dict so SQLAlchemy sees the JSON column change
+    merged = dict(existing or {})
+    for key, items in updates.items():
+        if key in PADI_DATA_STRING_KEYS:
+            if items is not None and not isinstance(items, str):
+                abort(400, f"padi_data.{key} must be a string")
+            # kept even when blank so an admin can explicitly clear it
+            merged[key] = (items or "").strip()
+            continue
+        if items is None:
+            items = []
+        if not isinstance(items, list) or not all(isinstance(item, str) for item in items):
+            abort(400, f"padi_data.{key} must be a list of strings")
+        merged[key] = [item.strip() for item in items if item.strip()]
+    return merged
 
 
 @bp.route("/get", methods=["GET"])
@@ -339,10 +455,37 @@ def update_dive_shop(id):
     if dive_shop.owner_user_id != user.id and not user.admin:
         abort(403, "Only shop owner and admin can perform this action")
 
-    updates = request.json
-    for key in updates.keys():
-        setattr(dive_shop, key, updates.get(key))
-    db.session.commit()
+    updates = request.json or {}
+    # the edit form echoes the id back; it is never writable
+    updates.pop("id", None)
+
+    unknown = [key for key in updates if key not in SHOP_EDITABLE_FIELDS and key not in SHOP_ADMIN_FIELDS]
+    if unknown:
+        abort(400, f"Unknown or read-only fields: {', '.join(sorted(unknown))}")
+    admin_only = [key for key in updates if key in SHOP_ADMIN_FIELDS]
+    if isinstance(updates.get("padi_data"), dict):
+        admin_only += [f"padi_data.{key}" for key in updates["padi_data"] if key in PADI_DATA_ADMIN_KEYS]
+    if admin_only and not user.admin:
+        abort(403, f"Only admins can edit: {', '.join(sorted(admin_only))}")
+
+    for key, value in updates.items():
+        if key == "hours":
+            value = _validate_hours(value)
+        elif key == "padi_data":
+            value = _merge_padi_data(dive_shop.padi_data, value)
+        elif key in SHOP_FLOAT_FIELDS:
+            value = _validate_float(key, value)
+        elif key in SHOP_INT_FIELDS:
+            value = _validate_int(key, value)
+        else:
+            value = _clean_string(key, value)
+        setattr(dive_shop, key, value)
+
+    try:
+        db.session.commit()
+    except exc.IntegrityError:
+        db.session.rollback()
+        abort(409, "Another shop already uses that PADI store id")
     data = dive_shop.get_dict()
 
     return {"data": data}

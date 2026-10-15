@@ -934,6 +934,8 @@ class DiveShop(db.Model):
             "owner_user_id": self.owner_user_id,
             "stamp_uri": self.stamp_uri,
             "phone": self.phone,
+            "padi_store_id": self.padi_store_id,
+            "username": self.username,
             "description": (
                 self.description
                 if self.description
