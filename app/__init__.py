@@ -571,11 +571,6 @@ def create_app(config_name=None, config_object=None):
 
     app.register_blueprint(password_routes.bp)
 
-    # Register new geographic routing system
-    from app.routes import geography
-
-    app.register_blueprint(geography.bp)
-
     # Register maps routing system
     from app.routes import maps
 
