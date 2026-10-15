@@ -143,11 +143,6 @@ class GeographicNode(db.Model):
             "parent": self.parent.get_simple_dict() if self.parent else None,
             "num_spots": len(self.spots),
             "num_shops": len(self.shops),
-            "google_name": self.google_name,
-            "latitude": self.latitude,
-            "longitude": self.longitude,
-            "description": self.description,
-            "map_image_url": self.map_image_url,
         }
 
     def get_simple_dict(self):
