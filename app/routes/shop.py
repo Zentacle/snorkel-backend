@@ -52,10 +52,6 @@ SHOP_FLOAT_FIELDS = {"latitude", "longitude"}
 SHOP_INT_FIELDS = {"owner_user_id", "locality_id", "area_one_id", "area_two_id", "country_id"}
 # padi_data keys that hold editable string lists (images and anything else are preserved)
 PADI_DATA_LIST_KEYS = {"coursesOffered", "languages", "rentals", "diveTypes", "features"}
-# padi_data keys that hold a single string, e.g. "PADI 5 Star Dive Center"
-PADI_DATA_STRING_KEYS = {"padiRating"}
-# padi_data keys only admins can change
-PADI_DATA_ADMIN_KEYS = {"padiRating"}
 WEEKDAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
 HOUR_PATTERN = re.compile(r"^([01]?\d|2[0-3]):[0-5]\d$")
 
@@ -112,18 +108,12 @@ def _validate_hours(hours):
 def _merge_padi_data(existing, updates):
     if not isinstance(updates, dict):
         abort(400, "padi_data must be an object")
-    unknown = set(updates) - PADI_DATA_LIST_KEYS - PADI_DATA_STRING_KEYS
+    unknown = set(updates) - PADI_DATA_LIST_KEYS
     if unknown:
         abort(400, f"Unknown padi_data fields: {', '.join(sorted(unknown))}")
     # build a new dict so SQLAlchemy sees the JSON column change
     merged = dict(existing or {})
     for key, items in updates.items():
-        if key in PADI_DATA_STRING_KEYS:
-            if items is not None and not isinstance(items, str):
-                abort(400, f"padi_data.{key} must be a string")
-            # kept even when blank so an admin can explicitly clear it
-            merged[key] = (items or "").strip()
-            continue
         if items is None:
             items = []
         if not isinstance(items, list) or not all(isinstance(item, str) for item in items):
@@ -463,8 +453,6 @@ def update_dive_shop(id):
     if unknown:
         abort(400, f"Unknown or read-only fields: {', '.join(sorted(unknown))}")
     admin_only = [key for key in updates if key in SHOP_ADMIN_FIELDS]
-    if isinstance(updates.get("padi_data"), dict):
-        admin_only += [f"padi_data.{key}" for key in updates["padi_data"] if key in PADI_DATA_ADMIN_KEYS]
     if admin_only and not user.admin:
         abort(403, f"Only admins can edit: {', '.join(sorted(admin_only))}")
 

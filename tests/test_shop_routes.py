@@ -74,19 +74,12 @@ def test_unknown_fields_rejected(client, owned_shop, auth_headers):
 
 def test_admin_fields_require_admin(client, owned_shop, auth_headers):
     assert patch(client, owned_shop, {"padi_store_id": "1"}, auth_headers).status_code == 403
-    resp = patch(client, owned_shop, {"padi_data": {"padiRating": "PADI 5 Star Dive Center"}}, auth_headers)
-    assert resp.status_code == 403
 
 
-def test_admin_can_set_and_clear_padi_rating(client, owned_shop, admin_auth_headers):
-    resp = patch(client, owned_shop, {"padi_data": {"padiRating": "PADI 5 Star Dive Center"}}, admin_auth_headers)
+def test_admin_can_set_padi_store_id(client, owned_shop, admin_auth_headers):
+    resp = patch(client, owned_shop, {"padi_store_id": "99999"}, admin_auth_headers)
     assert resp.status_code == 200
-    padi_data = resp.get_json()["data"]["padi_data"]
-    assert padi_data["padiRating"] == "PADI 5 Star Dive Center"
-    assert padi_data["rentals"] == ["BCD", "Regulator"]
-
-    resp = patch(client, owned_shop, {"padi_data": {"padiRating": ""}}, admin_auth_headers)
-    assert resp.get_json()["data"]["padi_data"]["padiRating"] == ""
+    assert resp.get_json()["data"]["padi_store_id"] == "99999"
 
 
 @pytest.mark.parametrize(
@@ -104,6 +97,7 @@ def test_invalid_hours_rejected(client, owned_shop, auth_headers, hours):
 
 def test_invalid_padi_data_rejected(client, owned_shop, auth_headers):
     assert patch(client, owned_shop, {"padi_data": {"images": []}}, auth_headers).status_code == 400
+    assert patch(client, owned_shop, {"padi_data": {"padiRating": "x"}}, auth_headers).status_code == 400
     assert patch(client, owned_shop, {"padi_data": {"rentals": "BCD"}}, auth_headers).status_code == 400
 
 
