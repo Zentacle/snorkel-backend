@@ -666,4 +666,4 @@ if __name__ == "__main__":
     print("\n=== PROCESS COMPLETE ===")
     print("✅ Duplicates have been merged and constraints added.")
     print("✅ Your existing geographic tables are now clean and protected from future duplicates.")
-    print("✅ You can now proceed with migration to the new GeographicNode structure.")
+    print("✅ You can now build places: python scripts/build_places.py (see LOCATION_MIGRATION.md).")
