@@ -375,6 +375,9 @@ class Spot(db.Model):
     )
     # most specific place; ancestors are implied by Place.lineage
     place_id = db.Column(db.Integer, db.ForeignKey("place.id"), nullable=True)
+    # set when this spot was merged into another (and deleted), so its URL
+    # can redirect to the surviving spot
+    merged_into_id = db.Column(db.Integer, db.ForeignKey("spot.id"), nullable=True)
 
     reviews = db.relationship("Review", backref="spot")
     images = db.relationship("Image", backref="spot")
@@ -382,6 +385,7 @@ class Spot(db.Model):
     shorediving_data = db.relationship("ShoreDivingData", back_populates="spot", uselist=False)
     wannadive_data = db.relationship("WannaDiveData", back_populates="spot", uselist=False)
     tags = db.relationship("Tag", secondary=tags, lazy="subquery", backref=db.backref("spot", lazy=True))
+    merged_into = db.relationship("Spot", remote_side=[id], uselist=False)
 
     __table_args__ = (
         db.Index("ix_spot_place_id", "place_id"),
@@ -437,6 +441,16 @@ class Spot(db.Model):
 
         data["url"] = "/Beach/" + str(self.id) + "/" + demicrosoft(self.name).lower()
         return data
+
+    def get_surviving_spot(self):
+        """For a spot deleted by a merge, the live spot it was merged into
+        (following chains of merges); otherwise None."""
+        seen = set()
+        spot = self
+        while spot.is_deleted and spot.merged_into and spot.id not in seen:
+            seen.add(spot.id)
+            spot = spot.merged_into
+        return spot if spot is not self and not spot.is_deleted else None
 
     def get_url(self):
         """The public URL: /Beach/<id>/<slug>. Dive site URLs rank in search,
