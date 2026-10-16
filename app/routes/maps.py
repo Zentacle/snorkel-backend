@@ -22,10 +22,14 @@ def get_s3_client():
     )
 
 
-def generate_map_key(latitude, longitude, size="600x300", scale="2", maptype="terrain"):
+def generate_map_key(latitude, longitude, size="600x300", scale="2", maptype="terrain", zoom=None, marker=True):
     """Generate a unique S3 key for the map based on parameters."""
-    # Create a hash of the parameters to ensure uniqueness
+    # Create a hash of the parameters to ensure uniqueness. Default zoom and
+    # marker keep the original key, so maps cached before these options exist
+    # are still found.
     params_string = f"{latitude}_{longitude}_{size}_{scale}_{maptype}"
+    if zoom is not None or not marker:
+        params_string += f"_z{zoom}_m{int(marker)}"
     hash_object = hashlib.md5(params_string.encode())
     return f"maps/{hash_object.hexdigest()}.png"
 
@@ -62,7 +66,7 @@ def upload_map_to_s3(map_data, s3_key):
         return False
 
 
-def fetch_google_maps_image(latitude, longitude, size="600x300", scale="2", maptype="terrain"):
+def fetch_google_maps_image(latitude, longitude, size="600x300", scale="2", maptype="terrain", zoom=None, marker=True):
     """Fetch static map image from Google Maps API."""
     google_api_key = os.environ.get("GOOGLE_API_KEY")
     if not google_api_key:
@@ -76,8 +80,13 @@ def fetch_google_maps_image(latitude, longitude, size="600x300", scale="2", mapt
         "maptype": maptype,
         "key": google_api_key,
         "style": "feature:poi|visibility:off",
-        "markers": f"color:blue|label:1|{latitude},{longitude}",
     }
+    if marker:
+        params["markers"] = f"color:blue|label:1|{latitude},{longitude}"
+    if zoom is not None or not marker:
+        # an explicit center/zoom lets callers place their own pins on the image
+        params["center"] = f"{latitude},{longitude}"
+        params["zoom"] = zoom if zoom is not None else 12
 
     try:
         response = requests.get(base_url, params=params, timeout=30)
@@ -123,6 +132,16 @@ def get_static_map():
               description: Map type (default: terrain)
               type: string
               required: false
+            - name: zoom
+              in: query
+              description: Zoom level 0-21 (default chosen by Google around the marker)
+              type: integer
+              required: false
+            - name: marker
+              in: query
+              description: 0 for no marker, e.g. when the caller draws its own pins (default 1)
+              type: integer
+              required: false
         responses:
             200:
                 description: Returns the map image file directly
@@ -142,6 +161,8 @@ def get_static_map():
     size = request.args.get("size", "600x300")
     scale = request.args.get("scale", "2")
     maptype = request.args.get("maptype", "terrain")
+    zoom = request.args.get("zoom", type=int)
+    marker = request.args.get("marker", "1") != "0"
 
     # Validate required parameters
     if latitude is None or longitude is None:
@@ -152,9 +173,11 @@ def get_static_map():
         abort(400, description="latitude must be between -90 and 90")
     if not (-180 <= longitude <= 180):
         abort(400, description="longitude must be between -180 and 180")
+    if zoom is not None and not (0 <= zoom <= 21):
+        abort(400, description="zoom must be between 0 and 21")
 
     # Generate S3 key for caching
-    s3_key = generate_map_key(latitude, longitude, size, scale, maptype)
+    s3_key = generate_map_key(latitude, longitude, size, scale, maptype, zoom, marker)
 
     # Check if map already exists in S3
     if check_s3_map_exists(s3_key):
@@ -171,7 +194,7 @@ def get_static_map():
 
     try:
         # Fetch map from Google Maps API
-        map_data = fetch_google_maps_image(latitude, longitude, size, scale, maptype)
+        map_data = fetch_google_maps_image(latitude, longitude, size, scale, maptype, zoom, marker)
 
         # Upload to S3 for caching (best effort)
         upload_map_to_s3(map_data, s3_key)
