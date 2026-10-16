@@ -14,6 +14,8 @@ import math
 import time
 from collections import Counter, defaultdict
 
+from sqlalchemy.exc import IntegrityError
+
 from app.helpers.geocoding import reverse_geocode
 from app.helpers.get_localities import get_localities
 from app.models import DiveShop, Spot, db
@@ -95,6 +97,7 @@ def backfill_locations(model, apply=False, use_google=False, limit=None, max_km=
     index = LocatedIndex()
     report = Counter(targets=len(targets), skipped_no_coordinates=no_coords, nearby=0, google=0, needs_google=0)
     unresolved = []
+    failed = []
     google_statuses = Counter()
     samples = []
 
@@ -124,17 +127,32 @@ def backfill_locations(model, apply=False, use_google=False, limit=None, max_km=
             continue
         status, components = reverse_geocode(item.latitude, item.longitude)
         google_statuses[status] += 1
-        locality, area_two, area_one, country = get_localities(components) if components else (None,) * 4
-        if country:
-            item.country, item.area_one, item.area_two, item.locality = country, area_one, area_two, locality
-            db.session.flush()
-            index.add(item)
-            report["google"] += 1
-            if len(samples) < 30:
-                where = ", ".join(row.name for row in (locality, area_two, area_one, country) if row)
-                samples.append((item.id, item.name, "google", where))
-        else:
+        if not components:
             unresolved.append(item.id)
+        else:
+            # one bad location row must not stop the run: isolate each item.
+            # Flush first so earlier work (e.g. pass 1) isn't inside the savepoint.
+            db.session.flush()
+            country = None
+            savepoint = db.session.begin_nested()
+            try:
+                locality, area_two, area_one, country = get_localities(components)
+                if country:
+                    item.country, item.area_one, item.area_two, item.locality = country, area_one, area_two, locality
+                db.session.flush()
+                savepoint.commit()
+            except IntegrityError as error:
+                savepoint.rollback()
+                failed.append((item.id, str(error.orig).splitlines()[0]))
+            else:
+                if country:
+                    index.add(item)
+                    report["google"] += 1
+                    if len(samples) < 30:
+                        where = ", ".join(row.name for row in (locality, area_two, area_one, country) if row)
+                        samples.append((item.id, item.name, "google", where))
+                else:
+                    unresolved.append(item.id)
         if apply and i % COMMIT_EVERY == 0:
             db.session.commit()
         time.sleep(sleep)
@@ -151,5 +169,6 @@ def backfill_locations(model, apply=False, use_google=False, limit=None, max_km=
         "estimated_google_cost_usd": round(report["needs_google"] * GOOGLE_COST_PER_CALL_USD, 2),
         "google_statuses": dict(google_statuses),
         "unresolved_ids": unresolved,
+        "failed": failed,
         "samples": samples,
     }

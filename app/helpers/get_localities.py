@@ -82,13 +82,13 @@ def get_localities(address_components):
     if area_2_slug:
         area_2_name = area_2_component.get("long_name")
         area_2_url = f"/loc/{in_country}/{area_1_path}/{area_2_slug}"
+        in_place = and_(AreaTwo.country.has(short_name=in_country), _same_parent(AreaTwo.area_one_id, area_1))
         area_2 = AreaTwo.query.filter(
             or_(
-                and_(
-                    AreaTwo.google_name == area_2_name,
-                    AreaTwo.country.has(short_name=in_country),
-                    _same_parent(AreaTwo.area_one_id, area_1),
-                ),
+                # the database's unique key: Google may name the same county
+                # differently over time (language, renames)
+                and_(AreaTwo.short_name == area_2_slug, in_place),
+                and_(AreaTwo.google_name == area_2_name, in_place),
                 AreaTwo.url == area_2_url,
             )
         ).first()
@@ -110,13 +110,18 @@ def get_localities(address_components):
     if locality_slug:
         locality_name = locality_component.get("long_name")
         locality_url = f"/loc/{in_country}/{area_1_path}/{area_2_path}/{locality_slug}"
+        in_country_and_region = and_(
+            Locality.country.has(short_name=in_country), _same_parent(Locality.area_one_id, area_1)
+        )
         locality = Locality.query.filter(
             or_(
+                # the database's unique key
                 and_(
-                    Locality.google_name == locality_name,
-                    Locality.country.has(short_name=in_country),
-                    _same_parent(Locality.area_one_id, area_1),
+                    Locality.short_name == locality_slug,
+                    in_country_and_region,
+                    _same_parent(Locality.area_two_id, area_2),
                 ),
+                and_(Locality.google_name == locality_name, in_country_and_region),
                 Locality.url == locality_url,
             )
         ).first()

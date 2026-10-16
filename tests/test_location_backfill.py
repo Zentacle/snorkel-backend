@@ -182,3 +182,47 @@ def test_shops_are_backfilled_from_nearby_spots(db_session, located, no_google):
     report = backfill_locations(DiveShop, apply=True)
     assert report["nearby"] == 1
     assert shop.locality_id == located.locality_id
+
+
+# --- matching the database's unique keys
+
+
+def test_county_found_by_slug_even_when_google_renames_it(db_session):
+    first = get_localities(components(area_two="Province of Agrigento", area_one=("Sicily", "Sicily")))
+    first[1].short_name = "ag"
+    db_session.commit()
+    renamed = [
+        {
+            "long_name": "Free municipal consortium of Agrigento",
+            "short_name": "AG",
+            "types": ["administrative_area_level_2"],
+        },
+        {"long_name": "Sicily", "short_name": "Sicily", "types": ["administrative_area_level_1"]},
+        {"long_name": "United States", "short_name": "US", "types": ["country"]},
+    ]
+    second = get_localities(renamed)
+    assert second[1] is first[1]
+    assert AreaTwo.query.count() == 1
+
+
+def test_one_failing_item_is_skipped_and_reported(db_session, located, monkeypatch, sample_locality):
+    a = unlocated(db_session, "Bad", 19.64, -155.99)
+    b = unlocated(db_session, "Good", 40.0, -100.0)
+    near = unlocated(db_session, "Near", 21.66, -158.06)  # pass 1 nearby match must survive
+
+    def fake_get_localities(components):
+        if components == "bad":
+            # violates the unique url constraint
+            return (Locality(name="Dup", short_name="dup", url=sample_locality.url), None, None, located.country)
+        return (None, None, None, located.country)
+
+    monkeypatch.setattr(location_backfill, "reverse_geocode", lambda lat, lng: ("OK", "bad" if lat < 20 else "good"))
+    monkeypatch.setattr(location_backfill, "get_localities", fake_get_localities)
+    monkeypatch.setattr(location_backfill.time, "sleep", lambda s: None)
+
+    report = backfill_locations(Spot, apply=True, use_google=True)
+    assert [item_id for item_id, _ in report["failed"]] == [a.id]
+    assert report["google"] == 1 and report["nearby"] == 1
+    assert b.country_id == located.country_id
+    assert near.locality_id == located.locality_id
+    assert a.country_id is None
