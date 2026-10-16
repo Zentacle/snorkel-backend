@@ -15,143 +15,150 @@ tags = db.Table(
 )
 
 
-class GeographicNode(db.Model):
-    """Flexible geographic hierarchy node that can represent any level"""
+PLACE_KINDS = (
+    "country",
+    "region",  # state / province / large region
+    "county",
+    "city",
+    "island",
+    "atoll",
+    "marine_park",
+    "body_of_water",
+    "area",  # anything else (a coastline, a bay, a dive area)
+)
+
+LEGACY_PLACE_TYPES = ("country", "area_one", "area_two", "locality")
+
+
+class Place(db.Model):
+    """A node in the location tree (country > region > ... > city, any depth).
+
+    See LOCATION_MIGRATION.md. Two rules:
+    - `path` is the public URL and is stored, never derived from the tree, so
+      reshaping the tree can't change a URL.
+    - `lineage` is the chain of ancestor ids including this place
+      ("/1/5/23/"), so "everything inside this place" is one indexed
+      prefix query.
+    """
 
     id = db.Column(db.Integer, primary_key=True)
+    parent_id = db.Column(db.Integer, db.ForeignKey("place.id"), nullable=True)
+    kind = db.Column(db.String, nullable=False)
     name = db.Column(db.String, nullable=False)
-    short_name = db.Column(db.String, nullable=False, unique=True)
+    slug = db.Column(db.String, nullable=False)
+    path = db.Column(db.String, nullable=False, unique=True)
+    lineage = db.Column(db.String, nullable=False, default="")
+    depth = db.Column(db.Integer, nullable=False, default=0)
+
+    country_code = db.Column(db.String(2))
     google_name = db.Column(db.String)
     google_place_id = db.Column(db.String)
-
-    # Hierarchy relationships
-    parent_id = db.Column(db.Integer, db.ForeignKey("geographic_node.id"), nullable=True)
-    root_id = db.Column(db.Integer, db.ForeignKey("geographic_node.id"), nullable=True)
-
-    # Geographic metadata
     latitude = db.Column(db.Float)
     longitude = db.Column(db.Float)
-    country_code = db.Column(db.String(2))  # ISO country code
-    admin_level = db.Column(
-        db.Integer,
-        nullable=False,
-    )  # 0=country, 1=state/province, 2=county, 3=city
-
-    # Content
     description = db.Column(db.String)
     map_image_url = db.Column(db.String)
 
-    # Legacy mapping fields for backwards compatibility
-    legacy_country_id = db.Column(db.Integer, db.ForeignKey("country.id"), nullable=True)
-    legacy_area_one_id = db.Column(db.Integer, db.ForeignKey("area_one.id"), nullable=True)
-    legacy_area_two_id = db.Column(db.Integer, db.ForeignKey("area_two.id"), nullable=True)
-    legacy_locality_id = db.Column(db.Integer, db.ForeignKey("locality.id"), nullable=True)
+    # The legacy Country/AreaOne/AreaTwo/Locality row this place was built
+    # from, while both systems exist.
+    legacy_type = db.Column(db.String)
+    legacy_id = db.Column(db.Integer)
 
-    # Relationships
-    parent = db.relationship("GeographicNode", remote_side=[id], foreign_keys=[parent_id], backref="children")
-    root = db.relationship(
-        "GeographicNode",
-        remote_side=[id],
-        foreign_keys=[root_id],
-        backref="descendants",
-    )
-    spots = db.relationship("Spot", backref="geographic_node", lazy=True)
-    shops = db.relationship(
-        "DiveShop",
-        backref="geographic_node",
-        lazy=True,
-        foreign_keys="DiveShop.geographic_node_id",
+    created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    updated = db.Column(
+        db.DateTime,
+        nullable=False,
+        server_default=func.now(),
+        onupdate=func.current_timestamp(),
     )
 
-    # Legacy relationships
-    legacy_country = db.relationship("Country", foreign_keys=[legacy_country_id])
-    legacy_area_one = db.relationship("AreaOne", foreign_keys=[legacy_area_one_id])
-    legacy_area_two = db.relationship("AreaTwo", foreign_keys=[legacy_area_two_id])
-    legacy_locality = db.relationship("Locality", foreign_keys=[legacy_locality_id])
+    parent = db.relationship("Place", remote_side=[id], backref="children")
+    spots = db.relationship("Spot", backref="place", lazy=True)
+    shops = db.relationship("DiveShop", backref="place", lazy=True)
 
     __table_args__ = (
-        db.Index("ix_geographic_node_parent_id", "parent_id"),
-        db.Index("ix_geographic_node_admin_level", "admin_level"),
-        db.Index("ix_geographic_node_short_name_admin_level", "short_name", "admin_level"),
+        db.UniqueConstraint("parent_id", "slug", name="uq_place_parent_slug"),
+        db.UniqueConstraint("legacy_type", "legacy_id", name="uq_place_legacy"),
+        db.Index("ix_place_parent_id", "parent_id"),
+        # text_pattern_ops so "lineage LIKE '/1/5/%'" can use the index
+        db.Index("ix_place_lineage", "lineage", postgresql_ops={"lineage": "text_pattern_ops"}),
     )
 
-    def get_legacy_url(self):
-        """Generate the old-style URL for backwards compatibility"""
-        if self.legacy_country and self.legacy_area_one and self.legacy_area_two and self.legacy_locality:
-            return (
-                f"/loc/{self.legacy_country.short_name}/"
-                f"{self.legacy_area_one.short_name}/"
-                f"{self.legacy_area_two.short_name}/"
-                f"{self.legacy_locality.short_name}"
-            )
-        elif self.legacy_country and self.legacy_area_one and self.legacy_area_two:
-            return (
-                f"/loc/{self.legacy_country.short_name}/"
-                f"{self.legacy_area_one.short_name}/"
-                f"{self.legacy_area_two.short_name}"
-            )
-        elif self.legacy_country and self.legacy_area_one:
-            return f"/loc/{self.legacy_country.short_name}/{self.legacy_area_one.short_name}"
-        elif self.legacy_country:
-            return f"/loc/{self.legacy_country.short_name}"
-        return None
+    @classmethod
+    def create(cls, name, slug, kind, parent=None, path=None, **fields):
+        """Add a place under `parent`. The path defaults to the parent's path
+        plus the slug; pass `path` to keep an existing URL."""
+        if kind not in PLACE_KINDS:
+            raise ValueError(f"Unknown place kind: {kind}")
+        place = cls(
+            name=name,
+            slug=slug,
+            kind=kind,
+            parent=parent,
+            path=path or f"{parent.path if parent else '/loc'}/{slug}",
+            **fields,
+        )
+        db.session.add(place)
+        db.session.flush()  # assigns id, needed for lineage
+        place._set_lineage()
+        return place
 
-    def get_new_url(self):
-        """Generate the new flexible URL"""
-        path = self.get_path_to_root()
-        return "/loc/" + "/".join([node.short_name for node in path])
+    def _set_lineage(self):
+        prefix = self.parent.lineage if self.parent else "/"
+        self.lineage = f"{prefix}{self.id}/"
+        self.depth = self.lineage.count("/") - 2
 
-    def get_url(self):
-        """Return new URL, but can be overridden for legacy compatibility"""
-        return self.get_new_url()
+    def move_to(self, new_parent):
+        """Re-parent this place and its subtree. Paths (URLs) don't change."""
+        if new_parent and new_parent.lineage.startswith(self.lineage):
+            raise ValueError("Can't move a place inside itself")
+        old_lineage = self.lineage
+        self.parent = new_parent
+        self._set_lineage()
+        for place in Place.query.filter(Place.lineage.startswith(old_lineage), Place.id != self.id).all():
+            place.lineage = self.lineage + place.lineage[len(old_lineage) :]
+            place.depth = place.lineage.count("/") - 2
 
-    def get_path_to_root(self):
-        """Get ordered list from root to this node"""
-        path = []
-        current = self
-        while current:
-            path.insert(0, current)
-            current = current.parent
-        return path
+    def get_ancestor_ids(self):
+        """Ids from the root down to the parent."""
+        return [int(i) for i in self.lineage.strip("/").split("/")[:-1] if i]
 
     def get_ancestors(self):
-        """Get all ancestors (excluding self)"""
-        ancestors = []
-        current = self.parent
-        while current:
-            ancestors.append(current)
-            current = current.parent
-        return ancestors
+        ids = self.get_ancestor_ids()
+        by_id = {place.id: place for place in Place.query.filter(Place.id.in_(ids)).all()} if ids else {}
+        return [by_id[i] for i in ids if i in by_id]
 
-    def get_descendants(self, level=None):
-        """Get all descendants, optionally filtered by level"""
-        descendants = []
-        for child in self.children:
-            if level is None or child.admin_level == level:
-                descendants.append(child)
-            descendants.extend(child.get_descendants(level))
-        return descendants
+    def subtree_ids_query(self):
+        """Ids of this place and everything inside it, as a subquery."""
+        return db.session.query(Place.id).filter(Place.lineage.startswith(self.lineage))
 
-    def get_dict(self):
-        return {
-            "id": self.id,
-            "name": self.name,
-            "short_name": self.short_name,
-            "url": self.get_url(),
-            "admin_level": self.admin_level,
-            "country_code": self.country_code,
-            "parent": self.parent.get_simple_dict() if self.parent else None,
-            "num_spots": len(self.spots),
-            "num_shops": len(self.shops),
-        }
+    def get_url(self):
+        return self.path
 
     def get_simple_dict(self):
         return {
             "id": self.id,
             "name": self.name,
-            "short_name": self.short_name,
-            "admin_level": self.admin_level,
+            "slug": self.slug,
+            "kind": self.kind,
+            "url": self.path,
         }
+
+    def get_dict(self):
+        data = self.get_simple_dict()
+        data.update(
+            {
+                "parent_id": self.parent_id,
+                "depth": self.depth,
+                "country_code": self.country_code,
+                "google_name": self.google_name,
+                "latitude": self.latitude,
+                "longitude": self.longitude,
+                "description": self.description,
+                "map_image_url": self.map_image_url,
+                "breadcrumbs": [ancestor.get_simple_dict() for ancestor in self.get_ancestors()],
+            }
+        )
+        return data
 
 
 class ShoreDivingData(db.Model):
@@ -366,7 +373,11 @@ class Spot(db.Model):
         server_default=func.now(),
         onupdate=func.current_timestamp(),
     )
-    geographic_node_id = db.Column(db.Integer, db.ForeignKey("geographic_node.id"), nullable=True)
+    # most specific place; ancestors are implied by Place.lineage
+    place_id = db.Column(db.Integer, db.ForeignKey("place.id"), nullable=True)
+    # set when this spot was merged into another (and deleted), so its URL
+    # can redirect to the surviving spot
+    merged_into_id = db.Column(db.Integer, db.ForeignKey("spot.id"), nullable=True)
 
     reviews = db.relationship("Review", backref="spot")
     images = db.relationship("Image", backref="spot")
@@ -374,10 +385,10 @@ class Spot(db.Model):
     shorediving_data = db.relationship("ShoreDivingData", back_populates="spot", uselist=False)
     wannadive_data = db.relationship("WannaDiveData", back_populates="spot", uselist=False)
     tags = db.relationship("Tag", secondary=tags, lazy="subquery", backref=db.backref("spot", lazy=True))
+    merged_into = db.relationship("Spot", remote_side=[id], uselist=False)
 
     __table_args__ = (
-        db.Index("ix_spot_geographic_node_id", "geographic_node_id"),
-        db.Index("ix_spot_geographic_verified_deleted", "geographic_node_id", "is_verified", "is_deleted"),
+        db.Index("ix_spot_place_id", "place_id"),
         db.Index("ix_spot_num_reviews", "num_reviews"),
         db.Index("ix_spot_rating", "rating"),
         db.Index("ix_spot_last_review_date", "last_review_date"),
@@ -431,18 +442,20 @@ class Spot(db.Model):
         data["url"] = "/Beach/" + str(self.id) + "/" + demicrosoft(self.name).lower()
         return data
 
+    def get_surviving_spot(self):
+        """For a spot deleted by a merge, the live spot it was merged into
+        (following chains of merges); otherwise None."""
+        seen = set()
+        spot = self
+        while spot.is_deleted and spot.merged_into and spot.id not in seen:
+            seen.add(spot.id)
+            spot = spot.merged_into
+        return spot if spot is not self and not spot.is_deleted else None
+
     def get_url(self):
-        """Get the new geographic-based URL if available, otherwise fall back to legacy"""
-        if self.geographic_node:
-            # New format: /loc/country/state/city/spot-name-id
-            path = self.geographic_node.get_path_to_root()
-            url_parts = [node.short_name for node in path]
-            # Add spot with name-id for SEO and uniqueness
-            url_parts.append(f"{self.get_beach_name_for_url()}-{self.id}")
-            return "/loc/" + "/".join(url_parts)
-        else:
-            # Legacy format: /Beach/id/name
-            return Spot.create_legacy_url(self.id, self.name)
+        """The public URL: /Beach/<id>/<slug>. Dive site URLs rank in search,
+        so they stay put whatever happens to the location tree."""
+        return Spot.create_legacy_url(self.id, self.name)
 
     def get_legacy_url(self):
         """Get the legacy URL format for backwards compatibility"""
@@ -873,7 +886,7 @@ class DiveShop(db.Model):
     country_id = db.Column(db.Integer, db.ForeignKey("country.id"), nullable=True)
     owner_user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=True)
     stamp_uri = db.Column(db.String, nullable=True)
-    geographic_node_id = db.Column(db.Integer, db.ForeignKey("geographic_node.id"), nullable=True)
+    place_id = db.Column(db.Integer, db.ForeignKey("place.id"), nullable=True)
     owner = db.relationship("User", uselist=False)
     created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     updated = db.Column(
@@ -884,7 +897,7 @@ class DiveShop(db.Model):
     )
 
     __table_args__ = (
-        db.Index("ix_dive_shop_geographic_node_id", "geographic_node_id"),
+        db.Index("ix_dive_shop_place_id", "place_id"),
         db.Index("ix_dive_shop_rating", "rating"),
         db.Index("ix_dive_shop_num_reviews", "num_reviews"),
         db.Index("ix_dive_shop_created", "created"),

@@ -5,6 +5,7 @@ from flask import Blueprint, request
 from sqlalchemy.orm import joinedload
 
 from app import cache, db, get_summary_reviews_helper
+from app.helpers.deleted_spot import deleted_spot_response
 from app.helpers.get_localities import get_localities
 from app.models import Spot
 
@@ -23,22 +24,17 @@ def get_spot(beach_id):
         .filter_by(id=beach_id)
         .first_or_404()
     )
+    if spot.is_deleted:
+        return deleted_spot_response(spot)
     spot_data = spot.get_dict()
     if spot.locality:
-        spot_data["locality"] = spot.locality.get_dict(
-            spot.country, spot.area_one, spot.area_two
-        )
+        spot_data["locality"] = spot.locality.get_dict(spot.country, spot.area_one, spot.area_two)
     if spot.area_two:
         spot_data["area_two"] = spot.area_two.get_dict(spot.country, spot.area_one)
     if spot.area_one:
         spot_data["area_one"] = spot.area_one.get_dict(spot.country)
     if spot.country:
         spot_data["country"] = spot.country.get_dict()
-
-    # Add new geographic URL if available
-    if spot.geographic_node:
-        spot_data["geographic_url"] = spot.get_url()
-        spot_data["geographic_node"] = spot.geographic_node.get_dict()
 
     spot_data["ratings"] = get_summary_reviews_helper(beach_id)
     return {"data": spot_data}
@@ -81,7 +77,12 @@ def get_tides():
     station_id = request.args.get("station_id")
     begin_date = request.args.get("begin_date")
     end_date = request.args.get("end_date")
-    endpoint = f"https://api.tidesandcurrents.noaa.gov/api/prod/datagetter?product=predictions&begin_date={begin_date}&end_date={end_date}&datum=MLLW&station={station_id}&time_zone=GMT&units=english&interval=hilo&format=json&application=NOS.COOPS.TAC.TidePred"
+    endpoint = (
+        "https://api.tidesandcurrents.noaa.gov/api/prod/datagetter"
+        f"?product=predictions&begin_date={begin_date}&end_date={end_date}"
+        f"&datum=MLLW&station={station_id}&time_zone=GMT"
+        "&units=english&interval=hilo&format=json&application=NOS.COOPS.TAC.TidePred"
+    )
     resp = requests.get(endpoint).json()
     return resp
 
@@ -102,15 +103,12 @@ def geocode(beach_id):
     response = r.json()
     if response.get("status") == "OK":
         address_components = response.get("results")[0].get("address_components")
-        locality, area_2, area_1, country, geographic_node = get_localities(
-            address_components
-        )
+        locality, area_2, area_1, country = get_localities(address_components)
         if country:
             spot.locality = locality
             spot.area_one = area_1
             spot.area_two = area_2
             spot.country = country
-            spot.geographic_node = geographic_node
             db.session.add(spot)
             db.session.commit()
             spot.id

@@ -11,6 +11,7 @@ from sqlalchemy.orm import joinedload
 
 from app import cache, db, get_summary_reviews_helper
 from app.helpers.area_lookup import get_area
+from app.helpers.deleted_spot import deleted_spot_response
 from app.helpers.get_localities import get_localities
 from app.helpers.get_nearby_spots import get_nearby_spots
 from app.models import (
@@ -145,6 +146,10 @@ def get_spots():
                 .filter_by(id=sd_spot.spot_id)
                 .first()
             )
+        if not spot:
+            abort(404, "Spot not found")
+        if spot.is_deleted:
+            return deleted_spot_response(spot)
         spot_data = spot.get_dict()
         if is_shorediving and sd_spot:
             spot_data["sd_url"] = sd_spot.get_url()
@@ -272,10 +277,6 @@ def get_spots():
             area_data["country"] = area.country.get_dict()
 
         resp["area"] = area_data
-
-        # Add new geographic URL if available
-        if hasattr(area, "geographic_node") and area.geographic_node:
-            resp["geographic_url"] = area.geographic_node.get_url()
 
     return resp
 
@@ -1098,6 +1099,7 @@ def merge_spot():
         if tag not in orig.tags:
             orig.tags.append(tag)
     dupe.is_deleted = True
+    dupe.merged_into = orig
     db.session.commit()
     orig.id
     return {"data": orig.get_dict()}
