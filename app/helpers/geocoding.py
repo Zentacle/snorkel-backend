@@ -6,6 +6,17 @@ import requests
 GEOCODE_URL = "https://maps.googleapis.com/maps/api/geocode/json"
 
 
+def _most_specific_with_country(results):
+    """Address components of the first (most specific) result that includes a
+    country. At sea, Google's first result is often only a plus code (a grid
+    reference with no country), followed by e.g. just the country."""
+    for result in results:
+        components = result.get("address_components", [])
+        if any("country" in component.get("types", []) for component in components):
+            return components
+    return None
+
+
 def reverse_geocode(latitude, longitude, retries=3):
     """Google reverse geocoding. Returns (status, address_components).
 
@@ -27,6 +38,6 @@ def reverse_geocode(latitude, longitude, retries=3):
             time.sleep(2**attempt)
             continue
         if status == "OK":
-            return status, response["results"][0].get("address_components", [])
+            return status, _most_specific_with_country(response["results"])
         return status, None
     return "OVER_QUERY_LIMIT", None
