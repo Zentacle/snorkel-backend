@@ -161,6 +161,21 @@ class Place(db.Model):
         return data
 
 
+class PlaceRedirect(db.Model):
+    """An old location URL that now permanently redirects to a place: the URL
+    of a duplicate merged into it, or a pre-cleanup URL (e.g. with "_")."""
+
+    id = db.Column(db.Integer, primary_key=True)
+    path = db.Column(db.String, nullable=False, unique=True)
+    place_id = db.Column(db.Integer, db.ForeignKey("place.id"), nullable=False)
+    reason = db.Column(db.String)  # "merged_duplicate", "clean_path", ...
+    created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+
+    place = db.relationship("Place", backref="redirects")
+
+    __table_args__ = (db.Index("ix_place_redirect_place_id", "place_id"),)
+
+
 class ShoreDivingData(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String)

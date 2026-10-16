@@ -5,7 +5,7 @@ from sqlalchemy.exc import IntegrityError
 
 from app.helpers.get_localities import get_localities
 from app.helpers.places import build_places_from_legacy, get_place_by_path
-from app.models import DiveShop, Locality, Place, Spot
+from app.models import AreaOne, AreaTwo, DiveShop, Locality, Place, PlaceRedirect, Spot
 
 
 @pytest.fixture
@@ -166,7 +166,7 @@ def test_rebuild_is_idempotent(legacy, sample_area_one):
     assert Place.query.count() == 5
 
 
-def test_duplicate_urls_are_reported_not_written(db_session, legacy, sample_country, sample_area_one):
+def test_same_url_duplicate_is_merged(db_session, legacy, sample_country, sample_area_one):
     clash = Locality(
         name="Vila Nova copy",
         short_name="vila-nova",
@@ -174,11 +174,89 @@ def test_duplicate_urls_are_reported_not_written(db_session, legacy, sample_coun
         area_one_id=sample_area_one.id,
     )
     db_session.add(clash)
+    db_session.flush()
+    spot = Spot(name="On the copy", is_verified=True, country_id=sample_country.id, locality_id=clash.id)
+    db_session.add(spot)
     db_session.commit()
 
     report = build_places_from_legacy(apply=True)
-    assert report["duplicate_path"] == [(("locality", clash.id), "/loc/us/ca/_/vila-nova")]
+    assert report["merged"] == [(("locality", clash.id), "/loc/us/ca/_/vila-nova", "/loc/us/ca/_/vila-nova")]
+    assert report["redirects_added"] == 0  # same URL: nothing to redirect
     assert Place.query.count() == 5
+    assert spot.place.path == "/loc/us/ca/_/vila-nova"
+
+
+def test_same_place_at_two_levels_is_merged_with_a_redirect(db_session, sample_country):
+    """Kaafu Atoll as a region (/loc/mv/kaafu-atoll) and as a county with no
+    region (/loc/mv/_/kaafu-atoll): same slug under the same parent."""
+    region = AreaOne(
+        name="Kaafu Atoll", short_name="kaafu-atoll", country_id=sample_country.id, url="/loc/us/kaafu-atoll"
+    )
+    db_session.add(region)
+    db_session.flush()
+    county = AreaTwo(name="Kaafu Atoll", short_name="kaafu-atoll", country_id=sample_country.id)
+    db_session.add(county)
+    db_session.flush()
+    spot = Spot(name="Banana Reef", is_verified=True, country_id=sample_country.id, area_two_id=county.id)
+    db_session.add(spot)
+    db_session.commit()
+
+    report = build_places_from_legacy(apply=True)
+    assert report["merged"] == [(("area_two", county.id), "/loc/us/_/kaafu-atoll", "/loc/us/kaafu-atoll")]
+    assert report["redirects_added"] == 1
+    redirect = PlaceRedirect.query.one()
+    assert (redirect.path, redirect.place.path, redirect.reason) == (
+        "/loc/us/_/kaafu-atoll",
+        "/loc/us/kaafu-atoll",
+        "merged_duplicate",
+    )
+    assert spot.place.path == "/loc/us/kaafu-atoll"
+
+    # re-running doesn't duplicate anything
+    again = build_places_from_legacy(apply=True)
+    assert again["created"] == 0 and again["redirects_added"] == 0
+    assert PlaceRedirect.query.count() == 1
+
+
+def test_broken_stored_url_is_replaced_by_the_computed_one(db_session, sample_country):
+    town = Locality(name="San Juan", short_name="san-juan", country_id=sample_country.id, url="/loc/us/None/_/san-juan")
+    db_session.add(town)
+    db_session.commit()
+    build_places_from_legacy(apply=True)
+    assert get_place_by_path("/loc/us/_/_/san-juan").parent.path == "/loc/us"
+
+
+def test_county_without_region_gets_a_url(db_session, sample_country):
+    """Counties with no region have no stored URL (e.g. Tuamotus Islands)."""
+    county = AreaTwo(name="Tuamotus Islands", short_name="tuamotus-islands", country_id=sample_country.id)
+    db_session.add(county)
+    db_session.flush()
+    town = Locality(name="Rangiroa", short_name="rangiroa", country_id=sample_country.id, area_two_id=county.id)
+    db_session.add(town)
+    db_session.commit()
+
+    report = build_places_from_legacy(apply=True)
+    assert report["no_country"] == [] and report["unusable"] == []
+    assert get_place_by_path("/loc/us/_/tuamotus-islands").parent.path == "/loc/us"
+    assert get_place_by_path("/loc/us/_/tuamotus-islands/rangiroa").parent.path == "/loc/us/_/tuamotus-islands"
+
+
+def test_non_latin_level_is_skipped_and_its_children_move_up(db_session, sample_country):
+    # production rows like this have a broken stored URL
+    region = AreaOne(name="沖縄県", short_name="", country_id=sample_country.id, url="/loc/us/")
+    db_session.add(region)
+    db_session.flush()
+    town = Locality(name="Onna", short_name="onna", country_id=sample_country.id, area_one_id=region.id)
+    db_session.add(town)
+    db_session.flush()
+    spot = Spot(name="Cape Maeda", is_verified=True, country_id=sample_country.id, area_one_id=region.id)
+    db_session.add(spot)
+    db_session.commit()
+
+    report = build_places_from_legacy(apply=True)
+    assert report["unusable"] == [(("area_one", region.id), "沖縄県")]
+    assert get_place_by_path("/loc/us/_/_/onna").parent.path == "/loc/us"
+    assert spot.place.path == "/loc/us"
 
 
 # --- regression: geocoding crashed callers that unpack 4 values
