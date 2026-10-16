@@ -1,13 +1,57 @@
-from flask import Blueprint, request
+from flask import Blueprint, abort, request
 from sqlalchemy import and_, func
 from sqlalchemy.orm import joinedload
 
 from app import cache, db
+from app.helpers.area_lookup import get_area
 from app.helpers.get_limit import get_limit
+from app.helpers.location_stats import get_location_stats
 from app.helpers.merge_area_one import merge_area_one
 from app.models import AreaOne, AreaTwo, Country, DiveShop, Locality, Spot
 
 bp = Blueprint("locality", __name__, url_prefix="/locality")
+
+
+@bp.route("/stats")
+@cache.cached(query_string=True)
+def get_stats():
+    """Get stats for a location page
+    ---
+    get:
+        summary: Aggregate stats for a location (spot counts, depth range, seasonality, ratings)
+        description: Values backed by fewer than 3 data points are null.
+        parameters:
+            - name: country
+              in: query
+              description: country short name (eg. us)
+              type: string
+              required: true
+            - name: area_one
+              in: query
+              description: area_one short name (eg. hi)
+              type: string
+              required: false
+            - name: area_two
+              in: query
+              description: area_two short name (eg. maui), or _ for none
+              type: string
+              required: false
+            - name: locality
+              in: query
+              description: locality short name (eg. wailea-makena)
+              type: string
+              required: false
+    """
+    country = request.args.get("country")
+    if not country:
+        abort(400, "country is required")
+    area = get_area(
+        country,
+        request.args.get("area_one"),
+        request.args.get("area_two"),
+        request.args.get("locality"),
+    )
+    return {"data": get_location_stats(area)}
 
 
 @bp.route("/locality")

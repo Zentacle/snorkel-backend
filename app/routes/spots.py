@@ -10,6 +10,7 @@ from sqlalchemy import and_, or_, sql
 from sqlalchemy.orm import joinedload
 
 from app import cache, db, get_summary_reviews_helper
+from app.helpers.area_lookup import get_area
 from app.helpers.deleted_spot import deleted_spot_response
 from app.helpers.get_localities import get_localities
 from app.helpers.get_nearby_spots import get_nearby_spots
@@ -185,16 +186,12 @@ def get_spots():
     country_name = request.args.get("country")
     if locality_name:
         area_two_spot_query = Spot.area_two.has(short_name=area_two_name)
-        area_two_area_query = Locality.area_two.has(short_name=area_two_name)
         area_one_spot_query = Spot.area_one.has(short_name=area_one_name)
-        area_one_area_query = Locality.area_one.has(short_name=area_one_name)
 
         if area_two_name == "_":
             area_two_spot_query = sql.true()
-            area_two_area_query = sql.true()
         if area_one_name == "_":
             area_one_spot_query = sql.true()
-            area_one_area_query = sql.true()
 
         query = query.filter(
             and_(
@@ -204,18 +201,6 @@ def get_spots():
                 Spot.country.has(short_name=country_name),
             )
         )
-        area = (
-            Locality.query.options(joinedload("area_two"))
-            .options(joinedload("area_one"))
-            .options(joinedload("country"))
-            .filter(
-                Locality.short_name == locality_name,
-                area_two_area_query,
-                area_one_area_query,
-                Locality.country.has(short_name=country_name),
-            )
-            .first_or_404()
-        )
     elif area_two_name:
         query = query.filter(
             and_(
@@ -224,18 +209,6 @@ def get_spots():
                 Spot.country.has(short_name=country_name),
             )
         )
-        area = (
-            AreaTwo.query.options(joinedload("area_one"))
-            .options(joinedload("country"))
-            .filter(
-                and_(
-                    AreaTwo.short_name == area_two_name,
-                    AreaTwo.area_one.has(short_name=area_one_name),
-                    AreaTwo.country.has(short_name=country_name),
-                )
-            )
-            .first_or_404()
-        )
     elif area_one_name:
         query = query.filter(
             and_(
@@ -243,19 +216,9 @@ def get_spots():
                 Spot.country.has(short_name=country_name),
             )
         )
-        area = (
-            AreaOne.query.options(joinedload("country"))
-            .filter(
-                and_(
-                    AreaOne.short_name == area_one_name,
-                    AreaOne.country.has(short_name=country_name),
-                )
-            )
-            .first_or_404()
-        )
     elif country_name:
         query = query.filter(Spot.country.has(short_name=country_name))
-        area = Country.query.filter_by(short_name=country_name).first_or_404()
+    area = get_area(country_name, area_one_name, area_two_name, locality_name)
     difficulty_filter = request.args.get("difficulty")
     if difficulty_filter:
         query = query.filter(Spot.difficulty == difficulty_filter)
