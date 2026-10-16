@@ -5,6 +5,7 @@ from flask import Blueprint, request
 from sqlalchemy.orm import joinedload
 
 from app import cache, db, get_summary_reviews_helper
+from app.helpers.deleted_spot import deleted_spot_response
 from app.helpers.get_localities import get_localities
 from app.models import Spot
 
@@ -23,6 +24,8 @@ def get_spot(beach_id):
         .filter_by(id=beach_id)
         .first_or_404()
     )
+    if spot.is_deleted:
+        return deleted_spot_response(spot)
     spot_data = spot.get_dict()
     if spot.locality:
         spot_data["locality"] = spot.locality.get_dict(spot.country, spot.area_one, spot.area_two)

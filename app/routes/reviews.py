@@ -1,11 +1,11 @@
 import datetime
 import os
 
-from flask import Blueprint, abort, request
-from flask_jwt_extended import get_current_user, jwt_required
+from flask import Blueprint, abort, current_app, request
+from flask_jwt_extended import get_current_user, get_jwt_identity, jwt_required, verify_jwt_in_request
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
-from sqlalchemy import and_, func
+from sqlalchemy import and_, func, or_
 from sqlalchemy.orm import joinedload
 
 from app import cache, db
@@ -49,11 +49,7 @@ def get_recent_reviews():
         )
 
     reviews = (
-        reviews.filter(Review.beach_id != 19)
-        .order_by(Review.date_posted.desc())
-        .limit(limit)
-        .offset(offset)
-        .all()
+        reviews.filter(Review.beach_id != 19).order_by(Review.date_posted.desc()).limit(limit).offset(offset).all()
     )
     data = []
     for review in reviews:
@@ -64,8 +60,32 @@ def get_recent_reviews():
     return {"data": data}
 
 
+def _has_credentials():
+    """Requests that may carry a logged-in user can see that user's private
+    reviews, so they must not be served from (or stored in) the shared cache."""
+    return bool(
+        request.headers.get("Authorization") or request.cookies.get(current_app.config["JWT_ACCESS_COOKIE_NAME"])
+    )
+
+
+def _viewer_id():
+    try:
+        verify_jwt_in_request(optional=True)
+        identity = get_jwt_identity()
+        return int(identity) if identity is not None else None
+    except Exception:
+        return None
+
+
+def _visible_to(viewer_id):
+    """Filter: public reviews, plus the viewer's own private ones."""
+    if viewer_id:
+        return or_(Review.is_private.is_not(True), Review.author_id == viewer_id)
+    return Review.is_private.is_not(True)
+
+
 @bp.route("/get")
-@cache.cached(query_string=True)
+@cache.cached(query_string=True, unless=_has_credentials)
 def get_reviews():
     """Get Reviews
     ---
@@ -95,10 +115,12 @@ def get_reviews():
                   application/json:
                     schema: ReviewSchema
     """
+    viewer_id = _viewer_id()
     sd_id = request.args.get("sd_review_id")
     if sd_id:
         review = Review.query.filter(
-            Review.shorediving_data.has(shorediving_id=sd_id)
+            Review.shorediving_data.has(shorediving_id=sd_id),
+            _visible_to(viewer_id),
         ).first()
         if review:
             data = review.get_dict()
@@ -114,6 +136,7 @@ def get_reviews():
         .options(joinedload("images"))
         .order_by(Review.date_posted.desc())
         .filter_by(beach_id=beach_id)
+        .filter(_visible_to(viewer_id))
     )
     if limit:
         query = query.limit(limit)
@@ -157,11 +180,7 @@ def delete_shore_diving_ids():
 @bp.route("/recentemail")
 def send_recent_reviews():
     date = datetime.datetime.now() - datetime.timedelta(days=7)
-    date_str = (
-        datetime.date.strftime(date, "%m-%d-%Y")
-        if not request.args.get("date")
-        else request.args.get("date")
-    )
+    date_str = datetime.date.strftime(date, "%m-%d-%Y") if not request.args.get("date") else request.args.get("date")
     reviews = (
         Review.query.options(joinedload("user"))
         .options(joinedload("spot"))
@@ -172,7 +191,8 @@ def send_recent_reviews():
         .all()
     )
     one_star = """
-    <img style='height: 16px;width: auto;margin: 0 4px;' src='https://www.zentacle.com/_next/image?url=%2Ffullstar.png&w=64&q=75' />
+    <img style='height: 16px;width: auto;margin: 0 4px;'
+      src='https://www.zentacle.com/_next/image?url=%2Ffullstar.png&w=64&q=75' />
   """
     stars = ""
     for x in range(5):
@@ -194,7 +214,8 @@ def send_recent_reviews():
         beach_url = f"https://www.zentacle.com{review.spot.get_url()}"
         post = f"""
       <div style='padding: 8px;margin-bottom: 8px;'>
-      <a href='{beach_url}' style='font-size: 20px;font-weight: 500;margin-bottom: 8px;text-decoration:none'>{name} in {city_location}</a>
+      <a href='{beach_url}'
+        style='font-size: 20px;font-weight: 500;margin-bottom: 8px;text-decoration:none'>{name} in {city_location}</a>
       <div style='display: flex;margin-bottom: 8px;align-items: center;'>
         <div style='height: 16px;width: 16px;border-radius: 100%;overflow: hidden;margin-right: 2px;'>
           <img style='height: 100%;width: 100%;' src='{profile_pic}' />
@@ -208,12 +229,15 @@ def send_recent_reviews():
         </div>
       </div>
       <div style='display: flex;'>
-        <a href='{beach_url}' style='flex: 0 0 80px;height: 78px;width: 78px;margin-right: 8px;overflow: hidden;border-radius: 8px;'>
+        <a href='{beach_url}'
+          style='flex: 0 0 80px;height: 78px;width: 78px;margin-right: 8px;overflow: hidden;border-radius: 8px;'>
           <img style='height: 100%;width: 100%;' src='{hero_img}' />
         </a>
         <div>
           <div style='flex: 0 0 40px;overflow: hidden;text-overflow: ellipsis;margin-bottom: 8px;'>{text}</div>
-          <a style='background-color: #0087D3;border-radius: 32px;color: white;padding: 8px 16px;text-align: center;text-decoration: none;' href='{beach_url}'>
+          <a href='{beach_url}'
+            style='background-color: #0087D3;border-radius: 32px;color: white;
+              padding: 8px 16px;text-align: center;text-decoration: none;'>
             See more
           </a>
         </div>
