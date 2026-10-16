@@ -52,6 +52,9 @@ def main():
             if report["google_statuses"]:
                 print(f"google statuses: {report['google_statuses']}")
             print(f"unresolved: {len(report['unresolved_ids'])} {report['unresolved_ids'][:30]}")
+            print(f"failed (skipped, see reason): {len(report['failed'])}")
+            for item_id, reason in report["failed"][:30]:
+                print(f"  {item_id}: {reason}")
             for sample in report["samples"]:
                 print(f"  {sample}")
     print("\nApplied." if args.apply else "\nDry run, nothing written. Pass --apply to write.")
